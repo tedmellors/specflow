@@ -1,0 +1,147 @@
+#+TITLE: SpecFlow – Architecture
+#+STARTUP: overview
+
+* Architectural Overview
+
+SpecFlow consists of:
+- a small set of **Org files** that define project state and intent
+- a set of **Emacs modules** that read, write, and enforce those definitions
+- optional integration with AI assistants for context generation and formatting
+
+The architecture deliberately separates:
+- *authority* (Org files + human decisions)
+- *assistance* (AI-generated text)
+- *automation* (Emacs commands)
+
+* High-Level Components
+
+**1. Control Plane (Org)**
+A single Org file (e.g. `docs/specflow.org`) defines:
+- current phase
+- active unit
+- unit registry (paths to specs, TODOs, rules)
+- optional hierarchy (parent/child relationships)
+- optional context references
+
+This file is authoritative.
+
+**2. Master Task Driver**
+A root `todo.org` file is the canonical source of NEXT work.
+Only one NEXT task is active at a time.
+
+**3. Units**
+A unit represents a coherent scope of work (module, component, service).
+
+Each unit has:
+- `spec.org` — authoritative behavior definition
+- `todo.org` — outcome-based tasks
+- `CLAUDE.md` — unit-specific rules and stop conditions
+- `src/` — implementation
+- `tests/` — tests
+- `README.md` — usage docs (written last)
+
+**4. Emacs Tooling (SpecFlow Packages)**
+
+Initial modules are expected to include:
+
+- org-store
+  - parses and updates the control plane
+  - discovers units and metadata
+  - enforces minimal-diff writes
+
+- core
+  - shared conventions and helpers
+  - phase definitions
+  - common validation logic
+
+- bundle
+  - builds context bundles for AI assistants
+  - resolves parent chains and context references
+
+- hydrate (name TBD)
+  - opens AI workspaces (Claude, gptel)
+  - inserts generated prompts
+  - manages buffers/windows
+
+* Data Flow
+
+1. User opens a repo in Emacs
+2. SpecFlow locates the control plane
+3. Active unit and phase are read
+4. User invokes a SpecFlow command
+5. Command:
+   - validates phase
+   - gathers relevant context
+   - optionally formats or compresses context via LLM
+   - presents results to the user
+6. User reviews and sends to AI assistant
+7. User approves changes and updates control plane manually as needed
+
+* Phase Enforcement
+
+Phase enforcement is primarily *procedural*, not autonomous.
+
+- Emacs commands refuse to run if the phase is incompatible
+- Generated prompts explicitly state allowed actions
+- AI assistants are instructed to STOP at phase boundaries
+- Humans approve phase transitions by editing the control plane
+
+* Context Hierarchy
+
+Units may declare hierarchy in the control plane.
+
+- Parent units define constraints and invariants
+- Child units inherit those constraints
+- Conflicts must be resolved explicitly
+- Additional CONTEXT_REFS may be declared as advisory context
+
+* AI Integration Strategy
+
+AI models are used as:
+- text transformers
+- summarizers
+- formatters
+- reviewers
+
+They are *not* used to:
+- select tasks
+- advance phases
+- mutate the control plane
+- silently write specs, TODOs, or code
+
+All AI output is reviewed before application.
+
+* Testing Strategy
+
+- Each unit includes a `tests/` directory
+- Core logic (Org parsing/writing) must be well-tested
+- Tests are deterministic and local
+- External API usage (if any) is isolated and optional
+
+* Non-Goals
+
+- Full IDE replacement
+- Autonomous agents
+- Workflow enforcement outside Emacs
+- Complex configuration formats beyond Org
+
+* Evolution
+
+The architecture is intentionally minimal.
+
+SpecFlow should:
+- work with plain Org files
+- degrade gracefully if tooling is not used
+- allow partial adoption
+
+Future enhancements may include:
+- richer UI surfaces
+- tighter AI integrations
+- multi-project awareness
+- additional guardrails
+
+* Open Architectural Questions
+
+- How strict should enforcement be by default?
+- Should SpecFlow support multiple control planes per repo?
+- How should context bundling scale for very large projects?
