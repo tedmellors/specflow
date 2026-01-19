@@ -9,7 +9,8 @@ Derived from =units/org-store/spec.org=.
 
 * Implement
 
-** NEXT Discovery: specflow-org-store-find-control-plane
+** DONE Discovery: specflow-org-store-find-control-plane
+   CLOSED: [2025-01-19]
    Given a buffer in a SpecFlow project,
    when =specflow-org-store-find-control-plane= is called,
    then it returns the absolute path to =docs/specflow.org=.
@@ -20,7 +21,8 @@ Derived from =units/org-store/spec.org=.
    - Falls back to =specflow-control-plane-path= variable
    - Signals =specflow-control-plane-not-found= if not found
 
-** TODO Read: specflow-org-store-read-project-state
+** DONE Read: specflow-org-store-read-project-state
+   CLOSED: [2025-01-19]
    Given a valid control plane file,
    when =specflow-org-store-read-project-state= is called,
    then it returns a plist with =:phase=, =:active-unit=, =:control-plane-path=.
@@ -29,7 +31,8 @@ Derived from =units/org-store/spec.org=.
    - Parses =SPEC_FLOW_PHASE= and =SPEC_FLOW_ACTIVE_UNIT= properties
    - Signals =specflow-control-plane-malformed= if required properties missing
 
-** TODO Read: specflow-org-store-read-unit
+** DONE Read: specflow-org-store-read-unit
+   CLOSED: [2025-01-19]
    Given a unit name and control plane,
    when =specflow-org-store-read-unit= is called,
    then it returns the unit entry plist.
@@ -40,12 +43,14 @@ Derived from =units/org-store/spec.org=.
    - Signals =specflow-unit-malformed= if required properties missing
    - Returns =nil= for missing optional properties
 
-** TODO Read: specflow-org-store-read-unit-registry
+** DONE Read: specflow-org-store-read-unit-registry
+   CLOSED: [2025-01-19]
    Given a control plane file,
    when =specflow-org-store-read-unit-registry= is called,
    then it returns a list of all unit entry plists in document order.
 
-** TODO Write: specflow-org-store-write-property
+** DONE Write: specflow-org-store-write-property
+   CLOSED: [2025-01-19]
    Given a file path, heading path, property name, and value,
    when =specflow-org-store-write-property= is called,
    then the property is written with minimal diff.
@@ -58,51 +63,90 @@ Derived from =units/org-store/spec.org=.
    - Signals =specflow-heading-not-found= if heading invalid
    - Signals =specflow-file-not-writable= if cannot save
 
-** TODO Validate: specflow-org-store-validate-unit-pointers
+** DONE Validate: specflow-org-store-validate-unit-pointers
+   CLOSED: [2025-01-19]
    Given a unit entry plist,
    when =specflow-org-store-validate-unit-pointers= is called,
    then it returns =t= if SPEC/TODO/RULES files exist, else signals error.
 
-** TODO Validate: specflow-org-store-validate-parent-chain
+** DONE Validate: specflow-org-store-validate-parent-chain
+   CLOSED: [2025-01-19]
    Given a unit name,
    when =specflow-org-store-validate-parent-chain= is called,
    then it returns list of ancestor names, or signals error if parent missing.
 
 * Test
 
-** TODO ERT: Discovery tests
+** DONE ERT: Discovery tests
+   CLOSED: [2025-01-19]
    - File found at project root
    - File found 2 levels up
    - Fallback to =specflow-control-plane-path=
    - Error when not found
+   11 tests, all passing.
 
-** TODO ERT: Project state tests
+** DONE ERT: Project state tests
+   CLOSED: [2025-01-19]
    - Valid parse returns correct plist
    - Missing =SPEC_FLOW_PHASE= signals error
    - Missing =SPEC_FLOW_ACTIVE_UNIT= signals error
+   - No Project heading signals error
+   - Auto-discovery of control plane
+   - Determinism test
+   6 tests, all passing.
 
-** TODO ERT: Unit read tests
+** DONE ERT: Unit read tests
+   CLOSED: [2025-01-19]
    - Valid unit returns correct plist
    - Missing unit signals =specflow-unit-not-found=
    - Missing required property signals =specflow-unit-malformed=
    - Missing optional property returns =nil=
+   - Unit with CHILDREN property
+   - Determinism test
+   8 tests, all passing.
 
-** TODO ERT: Unit registry tests
+** DONE ERT: Unit registry tests
+   CLOSED: [2025-01-19]
    - Multiple units returned in document order
    - Empty registry returns empty list
+   - Validates each unit's required properties
+   - Determinism test
+   - Each unit has complete properties
+   5 tests, all passing.
 
-** TODO ERT: Write property tests
+** DONE ERT: Write property tests
+   CLOSED: [2025-01-19]
    - Replace existing property value
    - Add new property to existing drawer
    - Create drawer when missing
    - Heading not found signals error
    - Minimal-diff: only target line changes
+   - Idempotent: write same value twice → no change
+   - Write then read → value matches
+   - Nested heading support
+   9 tests, all passing.
 
-** TODO ERT: Validation tests
+** DONE ERT: Unit pointer validation tests
+   CLOSED: [2025-01-19]
    - Valid pointers return =t=
-   - Missing file signals =specflow-unit-pointer-invalid=
-   - Valid parent chain returns ancestors
+   - Missing SPEC signals =specflow-unit-pointer-invalid=
+   - Missing TODO signals =specflow-unit-pointer-invalid=
+   - Missing RULES signals =specflow-unit-pointer-invalid=
+   - Multiple missing files listed in error
+   - Nil path treated as missing
+   - Auto-discovers project root
+   7 tests, all passing.
+
+** DONE ERT: Parent chain validation tests
+   CLOSED: [2025-01-19]
+   - No parent returns empty list
+   - Single parent returns single-element list
+   - Multi-level hierarchy returns correct ancestor list
    - Missing parent signals =specflow-parent-not-found=
+   - Nonexistent unit signals =specflow-unit-not-found=
+   - Circular reference detected and signaled
+   - Determinism test
+   7 tests, all passing.
 
 ** TODO ERT: Determinism tests
    - Read same file twice → identical output
