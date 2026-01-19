@@ -3,8 +3,12 @@
 
 * Purpose
 
-SpecFlow is an Org-native workflow and set of Emacs tools for **spec-driven,
-phase-gated, AI-assisted software development**.
+SpecFlow is an Org-native workflow and set of Emacs tools for *spec-driven,
+phase-gated, AI-assisted software development*.
+
+The SpecFlow methodology can be used without tooling (via conventions and
+=CLAUDE.md= rules). This package provides Emacs commands, templates, and
+shortcuts that automate common SpecFlow operations.
 
 Its primary goal is to help developers use AI assistants (e.g. Claude, GPT)
 *without losing control* over:
@@ -30,30 +34,44 @@ These failures are not model bugs — they are workflow failures.
 SpecFlow addresses this by making project state, intent, and constraints
 *explicit, structured, and enforceable* using Org-mode as the source of truth.
 
+* Key Concepts
+
+*Unit*: A bounded scope of work (module, component, or service) with its own
+specification, TODOs, constraints, and lifecycle phase. Units are treated as
+independent execution targets within the project.
+
+*Control Plane*: An Org file (e.g. =docs/specflow.org=) that stores the
+authoritative project state: current phase, active unit, and unit registry.
+Used by SpecFlow tooling and AI workflows to determine what work is allowed.
+
+*Phase Transition*: A phase ends when its required artifact is produced and
+explicitly approved by the human. The control plane is then manually updated
+to the next phase. AI assistants do not advance phases autonomously.
+
 * Core Principles
 
-**1. Explicit State**
+*1. Explicit State*
 The current phase, active unit, and canonical artifacts are stored in a control plane
 Org file, not inferred from chat history.
 
-**2. Phase-Gated Work**
+*2. Phase-Gated Work*
 Work proceeds strictly through phases:
 Plan → Specify → Scaffold → Implement → Validate → Document
 
 Each phase allows only certain actions and artifacts.
 
-**3. Specs Before Code**
+*3. Specs Before Code*
 Specifications are short, explicit, and authoritative.
 Code must conform to specs; specs do not emerge from code.
 
-**4. Outcome-Based Tasks**
+*4. Outcome-Based Tasks*
 TODOs describe outcomes and behaviors, not vague actions.
 
-**5. Human-in-the-Loop Authority**
+*5. Human-in-the-Loop Authority*
 The human explicitly approves phase transitions and scope changes.
 AI assistants propose; they do not decide.
 
-**6. Minimal Diffs**
+*6. Minimal Diffs*
 Generated or updated artifacts should change only what is necessary.
 Unrelated formatting or restructuring is avoided.
 
@@ -99,7 +117,7 @@ SpecFlow is successful when:
 - A developer can open a repo and immediately see:
   - current phase
   - active unit
-  - what “NEXT” means
+  - what "NEXT" means
   - where specs and TODOs live
 
 - AI-assisted work becomes:
@@ -109,8 +127,22 @@ SpecFlow is successful when:
 
 - The tooling reduces cognitive overhead rather than adding process burden.
 
+*Measurable criteria:*
+
+- Time-to-orient: A contributor can identify active phase, active unit, and
+  NEXT task in under 30 seconds.
+- Guardrail effectiveness: Phase-incompatible SpecFlow commands refuse to run
+  (or warn) before file modifications occur.
+- Bundle completeness: The context bundle command includes control plane,
+  NEXT task, unit spec/todo/rules, and parent chain within one invocation.
+- Determinism: Running context bundling twice without repo changes produces
+  identical output.
+
 * Open Questions
 
-- How much enforcement should be “hard” vs advisory?
+- How much enforcement should be "hard" vs advisory?
 - What UI surfaces are most effective in Emacs (mode-line, buffer, transient)?
 - How should SpecFlow scale to multi-repo or monorepo setups?
+- Should phase transitions be recorded as git commits (or included in the same
+  commit as the phase's artifact), or can they be lightweight edits to the
+  control plane?

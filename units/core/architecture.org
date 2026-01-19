@@ -4,8 +4,8 @@
 * Architectural Overview
 
 SpecFlow consists of:
-- a small set of **Org files** that define project state and intent
-- a set of **Emacs modules** that read, write, and enforce those definitions
+- a small set of *Org files* that define project state and intent
+- a set of *Emacs modules* that read, write, and enforce those definitions
 - optional integration with AI assistants for context generation and formatting
 
 The architecture deliberately separates:
@@ -15,8 +15,8 @@ The architecture deliberately separates:
 
 * High-Level Components
 
-**1. Control Plane (Org)**
-A single Org file (e.g. `docs/specflow.org`) defines:
+*1. Control Plane (Org)*
+A single Org file (e.g. =docs/specflow.org=) defines:
 - current phase
 - active unit
 - unit registry (paths to specs, TODOs, rules)
@@ -25,22 +25,26 @@ A single Org file (e.g. `docs/specflow.org`) defines:
 
 This file is authoritative.
 
-**2. Master Task Driver**
-A root `todo.org` file is the canonical source of NEXT work.
+*2. Master Task Driver*
+A root =todo.org= file is the canonical source of NEXT work.
 Only one NEXT task is active at a time.
 
-**3. Units**
+*3. Units*
 A unit represents a coherent scope of work (module, component, service).
 
 Each unit has:
-- `spec.org` — authoritative behavior definition
-- `todo.org` — outcome-based tasks
-- `CLAUDE.md` — unit-specific rules and stop conditions
-- `src/` — implementation
-- `tests/` — tests
-- `README.md` — usage docs (written last)
+- =spec.org= — authoritative behavior definition
+- =todo.org= — outcome-based tasks
+- =CLAUDE.md= — unit-specific rules and stop conditions
+- =src/= — implementation
+- =tests/= — tests
+- =README.md= — usage docs (written last)
 
-**4. Emacs Tooling (SpecFlow Packages)**
+In SpecFlow, "unit" refers to a workflow scope (spec/todo/rules).
+Emacs Lisp implementation lives in separate =.el= files (e.g. =specflow-core.el=,
+=specflow-org-store.el=) and is referenced by units, but is not itself the unit.
+
+*4. Emacs Tooling (SpecFlow Packages)*
 
 Initial modules are expected to include:
 
@@ -57,11 +61,27 @@ Initial modules are expected to include:
 - bundle
   - builds context bundles for AI assistants
   - resolves parent chains and context references
+  - optional context compression via LLM (explicitly invoked, not automatic)
 
 - hydrate (name TBD)
   - opens AI workspaces (Claude, gptel)
   - inserts generated prompts
   - manages buffers/windows
+
+* Implementation Order and Dependencies
+
+- org-store (foundational): control plane discovery + read/write + unit registry access
+- core: shared constants, phase semantics, shared helpers (built on org-store API)
+- bundle: context bundling and optional LLM compression (uses org-store + core)
+- hydrate: UI/workspace commands (uses bundle + org-store + core)
+
+Dependency direction: org-store → core → bundle → hydrate
+
+* Source Layout
+
+MVP code lives in a single =specflow.el= file. As the codebase grows, it may
+be split into =specflow-org-store.el=, =specflow-core.el=, =specflow-bundle.el=,
+and =specflow-hydrate.el=.
 
 * Data Flow
 
@@ -86,14 +106,81 @@ Phase enforcement is primarily *procedural*, not autonomous.
 - AI assistants are instructed to STOP at phase boundaries
 - Humans approve phase transitions by editing the control plane
 
+* Phase Boundaries and Transitions
+
+Each SpecFlow phase has a concrete exit condition defined by an artifact
+that must be produced and explicitly approved.
+
+Phase transitions are not automatic.
+
+A phase is considered complete only when:
+- the required artifact for that phase exists
+- the human reviewer explicitly approves it
+- the control plane is manually updated to the next phase
+
+Phase boundaries are defined as follows:
+
+- Plan → Specify:
+  Plan produces a written Plan Summary (in the unit spec under a =* Plan Notes=
+  section, or in core docs for repo-wide planning). Plan ends when design
+  questions are resolved, the summary is written, and the human confirms
+  readiness to write a specification.
+
+- Specify → Scaffold:
+  Specify ends when the unit =spec.org= is complete, unambiguous,
+  and approved.
+
+- Scaffold → Implement:
+  Scaffold ends when unit =CLAUDE.md= and =todo.org= are written,
+  reviewed, and accepted.
+
+- Implement → Validate:
+  Implement ends when all TODO outcomes are implemented and tests
+  covering the specified behavior pass.
+
+- Validate → Document:
+  Validate ends when the implementation is verified against the spec
+  and no behavior changes are required.
+
+Phase transitions are recorded by manually updating the control plane.
+  
 * Context Hierarchy
 
-Units may declare hierarchy in the control plane.
+Units may declare hierarchy in the control plane using Org properties.
 
 - Parent units define constraints and invariants
 - Child units inherit those constraints
 - Conflicts must be resolved explicitly
-- Additional CONTEXT_REFS may be declared as advisory context
+- Additional =CONTEXT_REFS= may be declared as advisory context
+
+Example control plane entry:
+
+#+begin_example
+** bundle
+   :PROPERTIES:
+   :PARENT: core
+   :CONTEXT_REFS: docs/overview.org docs/architecture.org
+   :END:
+#+end_example
+
+* Master TODO Drafting (Tooling)
+
+SpecFlow may provide a command to draft the repo root =todo.org=
+from the locked-down =overview.org= and =architecture.org=.
+
+Example command:
+- =specflow-plan-master-todo=
+
+This command operates in *Plan* phase only and must:
+- read =overview.org=, =architecture.org=, and the control plane
+- produce a *draft* root =todo.org= in a scratch buffer
+- propose exactly one =NEXT= task
+- STOP and request human approval before writing files or changing phases
+
+LLM-assisted drafting is optional:
+- An LLM may be used only as a text transformer/summarizer
+- It must not choose tasks authoritatively, advance phases, or modify the control plane
+- The human reviewer approves the final =todo.org=
 
 * AI Integration Strategy
 
@@ -113,10 +200,26 @@ All AI output is reviewed before application.
 
 * Testing Strategy
 
-- Each unit includes a `tests/` directory
-- Core logic (Org parsing/writing) must be well-tested
+- Each unit includes a =tests/= directory
+- Org parsing/writing logic (org-store) must be well-tested with ERT
+- Core module tests are smaller (constants, helpers)
 - Tests are deterministic and local
 - External API usage (if any) is isolated and optional
+
+* Error Handling
+
+SpecFlow prefers deterministic failures over silent repair.
+
+*Hard failures* (must signal an error):
+- control plane is missing or malformed
+- required project properties missing (=SPEC_FLOW_PHASE=, =SPEC_FLOW_ACTIVE_UNIT=)
+- active unit not found in unit registry
+- unit pointers (=SPEC=, =TODO=, =RULES=) missing or invalid
+- parent references a nonexistent unit
+
+*Warnings* (non-fatal):
+- optional context references missing
+- optional properties absent
 
 * Non-Goals
 
@@ -139,9 +242,10 @@ Future enhancements may include:
 - tighter AI integrations
 - multi-project awareness
 - additional guardrails
-
 * Open Architectural Questions
 
 - How strict should enforcement be by default?
 - Should SpecFlow support multiple control planes per repo?
 - How should context bundling scale for very large projects?
+- When should the single =specflow.el= be split into separate module files?
+
