@@ -38,18 +38,14 @@ Implementation order: org-store → core → bundle → hydrate → docs
 
 * Active
 
-** NEXT core: Plan phase
+** NEXT bundle: Plan phase
    Given org-store is complete,
-   when core unit Plan phase is done,
-   then we have design clarity for shared constants, phase semantics, and validation helpers.
+   when bundle unit Plan phase is done,
+   then we have design clarity for context bundling and AI assistant integration.
 
-   See =units/core/= for unit artifacts.
+   See =units/bundle/= for unit artifacts.
 
 * Backlog (dependency order)
-
-** TODO core: Plan → Specify → Scaffold → Implement → Validate → Document
-   Shared constants, phase semantics, validation helpers.
-   Depends on: org-store
 
 ** TODO bundle: Plan → Specify → Scaffold → Implement → Validate → Document
    Context bundling for AI assistants, optional LLM compression.
