@@ -31,20 +31,21 @@ Implementation order: org-store → core → bundle → hydrate → docs
    CLOSED: [2025-01-19]
    =CLAUDE.md= and =todo.org= written with outcome-based tasks.
 
+** DONE org-store: Implement → Validate → Document
+   CLOSED: [2025-01-19]
+   All implementation tasks complete. 53 ERT tests passing.
+   Manual smoke tests verified. README.md written.
+
 * Active
 
-** NEXT org-store: Implement phase
-   Given Scaffold artifacts are approved,
-   when all implementation tasks in =units/org-store/todo.org= are complete,
-   then org-store is ready for Validate phase.
+** NEXT core: Plan phase
+   Given org-store is complete,
+   when core unit Plan phase is done,
+   then we have design clarity for shared constants, phase semantics, and validation helpers.
 
-   See =units/org-store/todo.org= for detailed implementation tasks.
-   First task: =specflow-org-store-find-control-plane=
+   See =units/core/= for unit artifacts.
 
 * Backlog (dependency order)
-
-** TODO org-store: Validate → Document
-   Foundational unit. Control plane parsing and minimal-diff writes.
 
 ** TODO core: Plan → Specify → Scaffold → Implement → Validate → Document
    Shared constants, phase semantics, validation helpers.

@@ -159,10 +159,12 @@ Derived from =units/org-store/spec.org=.
    CLOSED: [2025-01-19]
    53 tests, all passing.
 
-** TODO Manual smoke test
+** DONE Manual smoke test
+   CLOSED: [2025-01-19]
    - Open a SpecFlow project
    - Call each public function from =M-:=
    - Verify expected output
+   All functions tested and returning expected results.
 
 * Document
 
