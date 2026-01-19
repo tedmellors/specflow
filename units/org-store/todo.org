@@ -1,0 +1,125 @@
+#+TITLE: org-store – TODO
+#+STARTUP: overview
+#+SEQ_TODO: TODO NEXT WAITING | DONE
+
+* About
+
+Outcome-based tasks for org-store implementation.
+Derived from =units/org-store/spec.org=.
+
+* Implement
+
+** NEXT Discovery: specflow-org-store-find-control-plane
+   Given a buffer in a SpecFlow project,
+   when =specflow-org-store-find-control-plane= is called,
+   then it returns the absolute path to =docs/specflow.org=.
+
+   Outcomes:
+   - Searches upward from =default-directory=
+   - Stops at project root (=.git=, =.projectile=, =.specflow-root=)
+   - Falls back to =specflow-control-plane-path= variable
+   - Signals =specflow-control-plane-not-found= if not found
+
+** TODO Read: specflow-org-store-read-project-state
+   Given a valid control plane file,
+   when =specflow-org-store-read-project-state= is called,
+   then it returns a plist with =:phase=, =:active-unit=, =:control-plane-path=.
+
+   Outcomes:
+   - Parses =SPEC_FLOW_PHASE= and =SPEC_FLOW_ACTIVE_UNIT= properties
+   - Signals =specflow-control-plane-malformed= if required properties missing
+
+** TODO Read: specflow-org-store-read-unit
+   Given a unit name and control plane,
+   when =specflow-org-store-read-unit= is called,
+   then it returns the unit entry plist.
+
+   Outcomes:
+   - Returns plist with =:name=, =:spec=, =:todo=, =:rules=, =:parent=, etc.
+   - Signals =specflow-unit-not-found= if unit not in registry
+   - Signals =specflow-unit-malformed= if required properties missing
+   - Returns =nil= for missing optional properties
+
+** TODO Read: specflow-org-store-read-unit-registry
+   Given a control plane file,
+   when =specflow-org-store-read-unit-registry= is called,
+   then it returns a list of all unit entry plists in document order.
+
+** TODO Write: specflow-org-store-write-property
+   Given a file path, heading path, property name, and value,
+   when =specflow-org-store-write-property= is called,
+   then the property is written with minimal diff.
+
+   Outcomes:
+   - Existing property: value replaced in-place
+   - Missing property: inserted at end of drawer
+   - Missing drawer: drawer created with property
+   - No other file content modified (byte-for-byte)
+   - Signals =specflow-heading-not-found= if heading invalid
+   - Signals =specflow-file-not-writable= if cannot save
+
+** TODO Validate: specflow-org-store-validate-unit-pointers
+   Given a unit entry plist,
+   when =specflow-org-store-validate-unit-pointers= is called,
+   then it returns =t= if SPEC/TODO/RULES files exist, else signals error.
+
+** TODO Validate: specflow-org-store-validate-parent-chain
+   Given a unit name,
+   when =specflow-org-store-validate-parent-chain= is called,
+   then it returns list of ancestor names, or signals error if parent missing.
+
+* Test
+
+** TODO ERT: Discovery tests
+   - File found at project root
+   - File found 2 levels up
+   - Fallback to =specflow-control-plane-path=
+   - Error when not found
+
+** TODO ERT: Project state tests
+   - Valid parse returns correct plist
+   - Missing =SPEC_FLOW_PHASE= signals error
+   - Missing =SPEC_FLOW_ACTIVE_UNIT= signals error
+
+** TODO ERT: Unit read tests
+   - Valid unit returns correct plist
+   - Missing unit signals =specflow-unit-not-found=
+   - Missing required property signals =specflow-unit-malformed=
+   - Missing optional property returns =nil=
+
+** TODO ERT: Unit registry tests
+   - Multiple units returned in document order
+   - Empty registry returns empty list
+
+** TODO ERT: Write property tests
+   - Replace existing property value
+   - Add new property to existing drawer
+   - Create drawer when missing
+   - Heading not found signals error
+   - Minimal-diff: only target line changes
+
+** TODO ERT: Validation tests
+   - Valid pointers return =t=
+   - Missing file signals =specflow-unit-pointer-invalid=
+   - Valid parent chain returns ancestors
+   - Missing parent signals =specflow-parent-not-found=
+
+** TODO ERT: Determinism tests
+   - Read same file twice → identical output
+   - Write same value twice → no file change on second write
+   - Write then read → value matches
+
+* Validate
+
+** TODO Run full ERT suite
+   All tests pass.
+
+** TODO Manual smoke test
+   - Open a SpecFlow project
+   - Call each public function from =M-:=
+   - Verify expected output
+
+* Document
+
+** TODO Write units/org-store/README.md
+   Usage examples for each public function.

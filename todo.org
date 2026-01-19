@@ -1,3 +1,62 @@
-#+TITLE: SpecFlow – Project Milestones
+#+TITLE: SpecFlow – Master TODO
 #+STARTUP: overview
 #+SEQ_TODO: TODO NEXT WAITING | DONE
+
+* About
+
+This is the canonical task driver for the SpecFlow project.
+Only ONE task is marked NEXT at a time.
+
+Implementation order: org-store → core → bundle → hydrate → docs
+
+* Completed
+
+** DONE Draft overview.org
+   CLOSED: [2025-01-19]
+   Purpose, problem statement, principles, success criteria defined.
+
+** DONE Draft architecture.org
+   CLOSED: [2025-01-19]
+   Components, implementation order, data flow, error handling defined.
+
+** DONE Create control plane
+   CLOSED: [2025-01-19]
+   =docs/specflow.org= with unit registry and hierarchy.
+
+** DONE Review and approve org-store spec
+   CLOSED: [2025-01-19]
+   Spec covers discovery algorithm, public API, error handling, minimal-diff writes.
+
+** DONE org-store: Scaffold phase
+   CLOSED: [2025-01-19]
+   =CLAUDE.md= and =todo.org= written with outcome-based tasks.
+
+* Active
+
+** NEXT org-store: Implement phase
+   Given Scaffold artifacts are approved,
+   when all implementation tasks in =units/org-store/todo.org= are complete,
+   then org-store is ready for Validate phase.
+
+   See =units/org-store/todo.org= for detailed implementation tasks.
+   First task: =specflow-org-store-find-control-plane=
+
+* Backlog (dependency order)
+
+** TODO org-store: Validate → Document
+   Foundational unit. Control plane parsing and minimal-diff writes.
+
+** TODO core: Plan → Specify → Scaffold → Implement → Validate → Document
+   Shared constants, phase semantics, validation helpers.
+   Depends on: org-store
+
+** TODO bundle: Plan → Specify → Scaffold → Implement → Validate → Document
+   Context bundling for AI assistants, optional LLM compression.
+   Depends on: org-store, core
+
+** TODO hydrate: Plan → Specify → Scaffold → Implement → Validate → Document
+   AI workspace commands (Claude, gptel), buffer/window management.
+   Depends on: org-store, core, bundle
+
+** TODO docs: Plan → Specify → Scaffold → Implement → Validate → Document
+   User-facing documentation and README. Written last.

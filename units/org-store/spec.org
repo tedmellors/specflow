@@ -1,0 +1,277 @@
+#+TITLE: org-store – Specification
+#+STARTUP: overview
+
+* Purpose
+
+org-store is the foundational SpecFlow module responsible for:
+- discovering the control plane file
+- parsing project state and unit registry
+- reading/writing Org properties with minimal diffs
+
+All other SpecFlow modules depend on org-store.
+
+* Scope
+
+** Owns
+- Control plane discovery algorithm
+- Reading =SPEC_FLOW_PHASE= and =SPEC_FLOW_ACTIVE_UNIT= properties
+- Reading unit entries from the control plane
+- Writing property values back to Org files (minimal-diff)
+- Validation of required properties
+
+** Does Not Own
+- Phase semantics or transitions (core)
+- Context bundling (bundle)
+- UI/workspace management (hydrate)
+- LLM integration (bundle, hydrate)
+
+* Control Plane Discovery
+
+** Algorithm
+
+1. Start from =default-directory= of the current buffer.
+2. Search upward for =docs/specflow.org=.
+3. Stop conditions:
+   - File found → return path
+   - Reached filesystem root (=/=) → stop searching
+   - Reached project root (directory containing =.git=, =.projectile=, or =.specflow-root=) without finding file → stop searching
+4. If not found, check =specflow-control-plane-path= variable.
+5. If variable is set and file exists → return path.
+6. Otherwise → signal error =specflow-control-plane-not-found=.
+
+** Configurable Variable
+
+#+begin_example
+(defcustom specflow-control-plane-path nil
+  "Explicit path to SpecFlow control plane file.
+Used as fallback when automatic discovery fails."
+  :type '(choice (const nil) file)
+  :group 'specflow)
+#+end_example
+
+* Data Structures
+
+All public functions return plists. No structs in MVP.
+
+** Project State
+
+Returned by =specflow-org-store-read-project-state=:
+
+#+begin_example
+(:phase "Plan"
+ :active-unit "org-store"
+ :control-plane-path "/path/to/docs/specflow.org")
+#+end_example
+
+** Unit Entry
+
+Returned by =specflow-org-store-read-unit=:
+
+#+begin_example
+(:name "org-store"
+ :dir "src/"
+ :spec "units/org-store/spec.org"
+ :todo "units/org-store/todo.org"
+ :rules "units/org-store/CLAUDE.md"
+ :parent "core"
+ :children nil
+ :context-refs nil)
+#+end_example
+
+All paths are relative to project root.
+
+** Unit Registry
+
+Returned by =specflow-org-store-read-unit-registry=:
+
+#+begin_example
+((:name "core" :dir "src/" :spec "..." ...)
+ (:name "org-store" :dir "src/" :spec "..." ...)
+ ...)
+#+end_example
+
+List of unit entry plists in document order.
+
+* Properties
+
+** Required (Hard Failure if Missing)
+
+| Property                | Location         | Description                     |
+|-------------------------+------------------+---------------------------------|
+| =SPEC_FLOW_PHASE=       | Project heading  | Current phase (Plan, Specify…)  |
+| =SPEC_FLOW_ACTIVE_UNIT= | Project heading  | Name of active unit             |
+| =SPEC=                  | Unit heading     | Path to unit spec file          |
+| =TODO=                  | Unit heading     | Path to unit todo file          |
+| =RULES=                 | Unit heading     | Path to unit rules file         |
+
+** Optional (Warning if Missing, Absent = nil)
+
+| Property       | Location     | Description                          |
+|----------------+--------------+--------------------------------------|
+| =DIR=          | Unit heading | Source directory for unit            |
+| =PARENT=       | Unit heading | Parent unit name                     |
+| =CHILDREN=     | Unit heading | Space-separated child unit names     |
+| =CONTEXT_REFS= | Unit heading | Space-separated advisory file paths  |
+
+* Public API
+
+** specflow-org-store-find-control-plane
+
+#+begin_example
+(specflow-org-store-find-control-plane &optional START-DIR)
+#+end_example
+
+- Input: =START-DIR= (optional, defaults to =default-directory=)
+- Output: Absolute path to control plane file (string)
+- Errors: =specflow-control-plane-not-found= if discovery fails
+
+** specflow-org-store-read-project-state
+
+#+begin_example
+(specflow-org-store-read-project-state &optional CONTROL-PLANE-PATH)
+#+end_example
+
+- Input: =CONTROL-PLANE-PATH= (optional, discovered if nil)
+- Output: Project state plist
+- Errors:
+  - =specflow-control-plane-not-found= if file missing
+  - =specflow-control-plane-malformed= if required properties missing
+
+** specflow-org-store-read-unit
+
+#+begin_example
+(specflow-org-store-read-unit UNIT-NAME &optional CONTROL-PLANE-PATH)
+#+end_example
+
+- Input: =UNIT-NAME= (string), =CONTROL-PLANE-PATH= (optional)
+- Output: Unit entry plist
+- Errors:
+  - =specflow-unit-not-found= if unit not in registry
+  - =specflow-unit-malformed= if required properties missing
+
+** specflow-org-store-read-unit-registry
+
+#+begin_example
+(specflow-org-store-read-unit-registry &optional CONTROL-PLANE-PATH)
+#+end_example
+
+- Input: =CONTROL-PLANE-PATH= (optional)
+- Output: List of unit entry plists
+- Errors: =specflow-control-plane-malformed= if parsing fails
+
+** specflow-org-store-write-property
+
+#+begin_example
+(specflow-org-store-write-property FILE-PATH HEADING-PATH PROPERTY VALUE)
+#+end_example
+
+- Input:
+  - =FILE-PATH=: Absolute path to Org file
+  - =HEADING-PATH=: List of heading titles (e.g., =("Project")= or =("Units" "org-store")=)
+  - =PROPERTY=: Property name (string, e.g., "SPEC_FLOW_PHASE")
+  - =VALUE=: New value (string)
+- Output: =t= on success
+- Errors:
+  - =specflow-heading-not-found= if heading path invalid
+  - =specflow-file-not-writable= if file cannot be saved
+- Constraint: Must use minimal-diff write strategy (see below)
+
+** specflow-org-store-validate-unit-pointers
+
+#+begin_example
+(specflow-org-store-validate-unit-pointers UNIT-ENTRY &optional PROJECT-ROOT)
+#+end_example
+
+- Input: =UNIT-ENTRY= plist, =PROJECT-ROOT= (optional, discovered if nil)
+- Output: =t= if all required files exist
+- Errors: =specflow-unit-pointer-invalid= listing missing files
+
+** specflow-org-store-validate-parent-chain
+
+#+begin_example
+(specflow-org-store-validate-parent-chain UNIT-NAME &optional CONTROL-PLANE-PATH)
+#+end_example
+
+- Input: =UNIT-NAME=, =CONTROL-PLANE-PATH= (optional)
+- Output: List of ancestor unit names (e.g., =("core")=)
+- Errors: =specflow-parent-not-found= if parent references nonexistent unit
+
+* Error Handling
+
+** Hard Failures (signal error)
+
+| Error Symbol                       | Condition                                      |
+|------------------------------------+------------------------------------------------|
+| =specflow-control-plane-not-found= | Discovery failed and no fallback configured    |
+| =specflow-control-plane-malformed= | Required project properties missing or invalid |
+| =specflow-unit-not-found=          | Requested unit not in registry                 |
+| =specflow-unit-malformed=          | Unit missing required properties               |
+| =specflow-unit-pointer-invalid=    | SPEC/TODO/RULES file does not exist            |
+| =specflow-parent-not-found=        | PARENT references nonexistent unit             |
+| =specflow-heading-not-found=       | Write target heading not found                 |
+| =specflow-file-not-writable=       | Cannot save file                               |
+
+** Warnings (message, do not fail)
+
+| Condition                        | Behavior                         |
+|----------------------------------+----------------------------------|
+| Optional property missing        | Return =nil= for that key        |
+| =CONTEXT_REFS= file not found    | Log warning, include path anyway |
+
+* Minimal-Diff Write Strategy
+
+When writing a property value:
+
+1. Open file in temporary buffer (do not visit).
+2. Navigate to target heading using =HEADING-PATH=.
+3. If property drawer exists:
+   - If property exists: replace value in-place (preserve whitespace alignment if reasonable)
+   - If property missing: insert new property at end of drawer
+4. If no property drawer: create one with single property.
+5. Write buffer to file.
+6. Do NOT reformat, re-indent, or modify any content outside the property drawer.
+
+** Invariant
+
+Running =specflow-org-store-write-property= followed by reading the same property
+must return the written value. No other file content may change (byte-for-byte
+outside the modified property line).
+
+* Caching
+
+No caching in MVP. Every read function re-reads from disk.
+
+Rationale: Determinism and simplicity. Caching may be added later with explicit
+invalidation hooks.
+
+* Testing Requirements
+
+** ERT Test Coverage
+
+- Discovery: file found at various depths, fallback to variable, error on not found
+- Project state: valid parse, missing =SPEC_FLOW_PHASE=, missing =SPEC_FLOW_ACTIVE_UNIT=
+- Unit read: valid unit, missing unit, missing required properties
+- Unit registry: multiple units, empty registry
+- Write property: existing property, new property, new drawer, heading not found
+- Validation: valid pointers, missing files, parent chain valid, parent not found
+
+** Determinism Tests
+
+- Read same file twice → identical output
+- Write property twice with same value → no file change on second write
+- Write property → read property → value matches
+
+* Non-Goals
+
+- Caching (deferred to later version)
+- Async/concurrent access
+- Multiple control planes per repo
+- Org-element full AST manipulation (use targeted parsing only)
+- Phase transition logic (owned by core)
+
+* Plan Notes
+
+Decisions confirmed [2025-01-19]:
+1. Discovery: search upward, stop at project root, fallback to =specflow-control-plane-path=
+2. No caching in MVP
+3. Plists for all return values (no structs)
