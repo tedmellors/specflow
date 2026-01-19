@@ -155,8 +155,9 @@ Derived from =units/org-store/spec.org=.
 
 * Validate
 
-** TODO Run full ERT suite
-   All tests pass.
+** DONE Run full ERT suite
+   CLOSED: [2025-01-19]
+   53 tests, all passing.
 
 ** TODO Manual smoke test
    - Open a SpecFlow project
@@ -165,5 +166,6 @@ Derived from =units/org-store/spec.org=.
 
 * Document
 
-** TODO Write units/org-store/README.md
+** DONE Write units/org-store/README.md
+   CLOSED: [2025-01-19]
    Usage examples for each public function.
