@@ -252,11 +252,17 @@ The control plane registers units with pointers to their spec, todo, and rules f
 ## Running Tests
 
 ```bash
-emacs --batch -L src -L tests \
+emacs --batch \
+  -L src \
+  -L units/org-store/src -L units/bundle/src -L units/hydrate/src \
+  -L units/compose/src -L units/initiate/src -L units/rules/src \
   -l specflow.el \
-  -l test-specflow-org-store.el \
-  -l test-specflow-bundle.el \
-  -l test-specflow-hydrate.el \
+  -l units/org-store/tests/test-specflow-org-store.el \
+  -l units/bundle/tests/test-specflow-bundle.el \
+  -l units/hydrate/tests/test-specflow-hydrate.el \
+  -l units/compose/tests/test-specflow-compose.el \
+  -l units/initiate/tests/test-specflow-initiate.el \
+  -l units/rules/tests/test-specflow-rules.el \
   -f ert-run-tests-batch-and-exit
 ```
 
