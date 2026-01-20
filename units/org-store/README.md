@@ -222,7 +222,7 @@ Add a TODO task to the root `todo.org` file.
 M-x specflow-add-root-task RET
 ```
 
-Prompts for a task headline. Inserts `** TODO <headline>` at the end of the Active section in the project's root `todo.org`.
+Prompts for a task headline. Inserts `** TODO <headline>` at the end of the Backlog section in the project's root `todo.org`.
 
 ```elisp
 ;; Programmatic use
@@ -231,7 +231,7 @@ Prompts for a task headline. Inserts `** TODO <headline>` at the end of the Acti
 ```
 
 **Errors:**
-- `specflow-heading-not-found` - No "Active" heading in todo.org
+- `specflow-heading-not-found` - No "Backlog" heading in todo.org
 - `specflow-file-not-writable` - Cannot save todo.org
 
 ### specflow-refine-task

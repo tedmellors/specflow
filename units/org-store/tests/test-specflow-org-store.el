@@ -1035,8 +1035,18 @@ Content under org-store.
 "
   "Test todo.org without Active section.")
 
+(defconst specflow-test-todo-org-no-backlog
+  "#+TITLE: Test TODO
+
+* Active
+
+** NEXT First task
+   Some description.
+"
+  "Test todo.org without Backlog section.")
+
 (ert-deftest specflow-test-add-root-task-adds-task ()
-  "Test that add-root-task adds a task to Active section."
+  "Test that add-root-task adds a task to Backlog section."
   (specflow-test-with-temp-project
       '(".git/" "docs/")
     (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
@@ -1069,8 +1079,8 @@ Content under org-store.
           (goto-char (point-min))
           (should-not (search-forward "** NEXT Another task" nil t)))))))
 
-(ert-deftest specflow-test-add-root-task-inserts-in-active-section ()
-  "Test that task is inserted at end of Active section."
+(ert-deftest specflow-test-add-root-task-inserts-in-backlog-section ()
+  "Test that task is inserted at end of Backlog section."
   (specflow-test-with-temp-project
       '(".git/" "docs/")
     (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
@@ -1078,23 +1088,22 @@ Content under org-store.
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-org nil todo-path)
       (let ((default-directory project-root))
-        (specflow-add-root-task "End of active task")
+        (specflow-add-root-task "End of backlog task")
         (with-temp-buffer
           (insert-file-contents todo-path)
-          ;; Task should appear before Backlog section
-          (let ((task-pos (progn (search-forward "End of active task" nil t) (point)))
-                (backlog-pos (progn (goto-char (point-min))
-                                    (search-forward "* Backlog" nil t) (point))))
-            (should (< task-pos backlog-pos))))))))
+          ;; Task should appear after Backlog heading
+          (let ((backlog-pos (progn (search-forward "* Backlog" nil t) (point)))
+                (task-pos (progn (search-forward "End of backlog task" nil t) (point))))
+            (should (> task-pos backlog-pos))))))))
 
-(ert-deftest specflow-test-add-root-task-missing-active-heading ()
-  "Test error when Active heading not found."
+(ert-deftest specflow-test-add-root-task-missing-backlog-heading ()
+  "Test error when Backlog heading not found."
   (specflow-test-with-temp-project
       '(".git/" "docs/")
     (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
           (todo-path (expand-file-name "todo.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
-      (write-region specflow-test-todo-org-no-active nil todo-path)
+      (write-region specflow-test-todo-org-no-backlog nil todo-path)
       (let ((default-directory project-root))
         (should-error (specflow-add-root-task "Orphan task")
                       :type 'specflow-heading-not-found)))))

@@ -636,16 +636,16 @@ Returns t on success."
     t))
 
 (defun specflow-add-root-task (headline)
-  "Add a TODO task with HEADLINE to root todo.org under Active section.
+  "Add a TODO task with HEADLINE to root todo.org under Backlog section.
 
 Interactively, prompts for headline string.
 
-The task is inserted as a level-2 TODO heading at the end of the Active
+The task is inserted as a level-2 TODO heading at the end of the Backlog
 section (before the next level-1 heading or end of file).
 
 Returns t on success.
 
-Signals `specflow-heading-not-found' if Active heading not found in todo.org.
+Signals `specflow-heading-not-found' if Backlog heading not found in todo.org.
 Signals `specflow-file-not-writable' if todo.org cannot be saved."
   (interactive "sTask headline: ")
   (let* ((cp-path (specflow-org-store-find-control-plane))
@@ -658,18 +658,18 @@ Signals `specflow-file-not-writable' if todo.org cannot be saved."
           (with-current-buffer buf
             (insert-file-contents todo-file)
             (goto-char (point-min))
-            ;; Find "* Active" heading
-            (unless (re-search-forward "^\\*[ \t]+Active[ \t]*$" nil t)
+            ;; Find "* Backlog" heading (matches "Backlog" or "Backlog (future enhancements)" etc.)
+            (unless (re-search-forward "^\\*[ \t]+Backlog\\b" nil t)
               (signal 'specflow-heading-not-found
-                      (list (format "Heading 'Active' not found in %s" todo-file))))
-            ;; Find end of Active section (next level-1 heading or EOF)
-            (let ((active-start (point))
-                  (active-end nil))
+                      (list (format "Heading 'Backlog' not found in %s" todo-file))))
+            ;; Find end of Backlog section (next level-1 heading or EOF)
+            (let ((backlog-start (point))
+                  (backlog-end nil))
               (if (re-search-forward "^\\*[ \t]" nil t)
-                  (setq active-end (match-beginning 0))
-                (setq active-end (point-max)))
-              ;; Go to end of Active section
-              (goto-char active-end)
+                  (setq backlog-end (match-beginning 0))
+                (setq backlog-end (point-max)))
+              ;; Go to end of Backlog section
+              (goto-char backlog-end)
               ;; Ensure we're on a new line
               (unless (bolp)
                 (insert "\n"))
