@@ -11,18 +11,29 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
 
 * Active
 
-(Modular restructuring complete. See Backlog for future enhancements.)
+** NEXT org-store: Add workflow commands
+   Add two interactive commands to org-store:
+
+   1. =specflow-phase-shift= — change current phase in control plane
+      - Prompt for phase (Plan, Specify, Scaffold, Implement, Validate, Document)
+      - Write to SPEC_FLOW_PHASE property
+      - Display confirmation message
+
+   2. =specflow-add-root-task= — append task to root todo.org
+      - Prompt for task headline
+      - Append as TODO under Active section
+      - Optionally prompt for parent unit context
+
+   Dependencies: Uses existing org-store write infrastructure.
 
 * Backlog (future enhancements)
-** TODO M-x specflow add-root-task
-- task is added, need to indicate that we should update core pareent docs
-- should probably define parent and child so taht when the task is picked up, claude will know to update parent before going to child
-- thes manually written tasks should be 'revised, fleshed out', when the time comes to pick them up again
-** TODO M-x specflow-phase-shift
-- command to switch to a particular phase
 ** TODO lock down standard workflow for commiting and pushing
 - Plan → Specify → Scaffold - [COMMIT AND PUSH]
 - Implement → Validate → Document [COMMIT AND PUSH]
+** TODO add rule to auto-save working plan at 10% until compaction as a 'temp-plan-artifact.org'
+- this should be added as a reference doc on the NEXT actionable task.
+- post compaction we should hydrate.
+- we need rules to spend remaining context on saving where we are and documenting rather than trying to sqeeze out more work. 
 ** TODO need to figure out better system to manage rules rather than dumping everythign into claude.md
 ** TODO need to have better phase change enforcement
 ** TODO lock down modular unit structure with src/ and tests/

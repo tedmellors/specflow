@@ -8,6 +8,9 @@ This unit owns:
 - Unit registry reading (`specflow-org-store-read-unit`, `specflow-org-store-read-unit-registry`)
 - Property writing with minimal diffs (`specflow-org-store-write-property`)
 - Validation (`specflow-org-store-validate-unit-pointers`, `specflow-org-store-validate-parent-chain`)
+- Workflow commands:
+  - `specflow-phase-shift` — change SPEC_FLOW_PHASE in control plane
+  - `specflow-add-root-task` — append TODO to root todo.org Active section
 
 This unit does NOT own:
 - Phase semantics or transitions (core)

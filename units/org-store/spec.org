@@ -196,6 +196,46 @@ List of unit entry plists in document order.
 - Output: List of ancestor unit names (e.g., =("core")=)
 - Errors: =specflow-parent-not-found= if parent references nonexistent unit
 
+* Interactive Commands
+
+** specflow-phase-shift
+
+#+begin_example
+(specflow-phase-shift PHASE)
+#+end_example
+
+- Input: =PHASE= (string, one of: "Plan", "Specify", "Scaffold", "Implement", "Validate", "Document")
+- Interactive: Prompts with =completing-read= from valid phase list
+- Behavior:
+  1. Find control plane via =specflow-org-store-find-control-plane=
+  2. Validate =PHASE= is in allowed list
+  3. Write =SPEC_FLOW_PHASE= property to =("Project")= heading
+  4. Display confirmation message: "Phase changed to <PHASE>"
+- Output: =t= on success
+- Errors:
+  - =user-error= if =PHASE= is not a valid phase name
+  - Inherits errors from =specflow-org-store-write-property=
+
+** specflow-add-root-task
+
+#+begin_example
+(specflow-add-root-task HEADLINE)
+#+end_example
+
+- Input: =HEADLINE= (string, task description)
+- Interactive: Prompts for headline string
+- Behavior:
+  1. Find project root from control plane
+  2. Open =todo.org= at project root
+  3. Find =Active= heading (level 1)
+  4. Insert =** TODO <HEADLINE>= at end of Active section (before next level-1 heading or EOF)
+  5. Save file with minimal diff
+  6. Display confirmation message: "Task added: <HEADLINE>"
+- Output: =t= on success
+- Errors:
+  - =specflow-heading-not-found= if =Active= heading not found in todo.org
+  - =specflow-file-not-writable= if todo.org cannot be saved
+
 * Error Handling
 
 ** Hard Failures (signal error)
@@ -254,6 +294,8 @@ invalidation hooks.
 - Unit registry: multiple units, empty registry
 - Write property: existing property, new property, new drawer, heading not found
 - Validation: valid pointers, missing files, parent chain valid, parent not found
+- Phase shift: valid phase change, invalid phase rejected, confirmation displayed
+- Add root task: task added to Active section, missing Active heading error, confirmation displayed
 
 ** Determinism Tests
 

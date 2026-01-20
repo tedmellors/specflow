@@ -153,6 +153,48 @@ Derived from =units/org-store/spec.org=.
    - Write same value twice → no file change on second write
    - Write then read → value matches
 
+* Workflow Commands
+
+** NEXT Implement: specflow-phase-shift
+   Given a valid phase name,
+   when =specflow-phase-shift= is called interactively,
+   then it updates SPEC_FLOW_PHASE in control plane and displays confirmation.
+
+   Outcomes:
+   - Prompts with =completing-read= from valid phase list
+   - Valid phases: Plan, Specify, Scaffold, Implement, Validate, Document
+   - Writes to =("Project")= heading in control plane
+   - Signals =user-error= if phase is invalid
+   - Displays "Phase changed to <PHASE>" on success
+
+** TODO Implement: specflow-add-root-task
+   Given a task headline,
+   when =specflow-add-root-task= is called interactively,
+   then it appends a TODO entry to root todo.org under Active section.
+
+   Outcomes:
+   - Prompts for headline string
+   - Finds project root from control plane path
+   - Opens =todo.org= at project root
+   - Finds =Active= heading (level 1)
+   - Inserts =** TODO <HEADLINE>= at end of Active section
+   - Saves file with minimal diff
+   - Signals =specflow-heading-not-found= if Active heading missing
+   - Displays "Task added: <HEADLINE>" on success
+
+** TODO ERT: specflow-phase-shift tests
+   - Changes phase successfully
+   - Validates phase input (rejects invalid phases)
+   - Displays confirmation message
+   - Uses existing write infrastructure
+
+** TODO ERT: specflow-add-root-task tests
+   - Adds task to Active section
+   - Creates TODO (not NEXT)
+   - Handles missing Active section gracefully
+   - Displays confirmation message
+   - Minimal-diff write (no other content modified)
+
 * Validate
 
 ** DONE Run full ERT suite

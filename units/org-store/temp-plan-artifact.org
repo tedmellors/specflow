@@ -1,0 +1,106 @@
+#+TITLE: org-store – Plan Artifact: Workflow Commands
+#+DATE: [2026-01-20]
+
+* Summary
+
+Adding two interactive commands to org-store:
+
+1. =specflow-phase-shift= — Change SPEC_FLOW_PHASE in control plane
+2. =specflow-add-root-task= — Append task to root todo.org
+
+* Existing Infrastructure
+
+org-store already has:
+- =specflow-org-store-find-control-plane= — discovers control plane path
+- =specflow-org-store-read-project-state= — reads current phase/unit
+- =specflow-org-store-write-property= — writes property to existing heading
+
+* Command Designs
+
+** specflow-phase-shift
+
+Behavior:
+#+begin_src elisp
+(defun specflow-phase-shift (phase)
+  "Change the current phase to PHASE."
+  (interactive (list (completing-read "Phase: "
+                       '("Plan" "Specify" "Scaffold" "Implement" "Validate" "Document"))))
+  ;; 1. Find control plane
+  ;; 2. Write SPEC_FLOW_PHASE property to ("Project") heading
+  ;; 3. Display confirmation
+  )
+#+end_src
+
+Implementation: Straightforward — uses existing =specflow-org-store-write-property=.
+
+** specflow-add-root-task
+
+Behavior:
+#+begin_src elisp
+(defun specflow-add-root-task (headline)
+  "Add a TODO task with HEADLINE to root todo.org under Active section."
+  (interactive "sTask headline: ")
+  ;; 1. Find project root (from control plane)
+  ;; 2. Open todo.org
+  ;; 3. Find "Active" heading
+  ;; 4. Insert new "** TODO <headline>" at end of Active section
+  ;; 5. Display confirmation
+  )
+#+end_src
+
+Challenge: The existing =specflow-org-store-write-property= writes *properties*, not *headings*. We need a way to insert a new heading.
+
+* Key Design Decision
+
+How to insert new headings?
+
+| Option | Description              | Pros             | Cons              |
+|--------+--------------------------+------------------+-------------------|
+| A      | Add insert-heading API   | Clean, reusable  | More API surface  |
+| B      | Handle inline in command | Simple, minimal  | Less reusable     |
+| C      | Add append-subheading    | Focused API      | Still new function|
+
+Decision: Option B for MVP — handle heading insertion directly in =specflow-add-root-task=. If we need this functionality elsewhere later, we can extract it.
+
+* Constraints (from CLAUDE.md)
+
+- No external dependencies
+- Deterministic
+- Minimal-diff writes (only modify target area)
+- No caching
+
+* Design Decisions
+
+** Validation for phase-shift
+
+Should validate the phase value against known phases.
+Valid phases: Plan, Specify, Scaffold, Implement, Validate, Document
+
+** Default task state
+
+New tasks should be TODO (not NEXT).
+Only one NEXT at a time per SpecFlow rules.
+
+** Parent unit context for add-root-task
+
+Deferred for MVP — just add headline. Can enhance later with optional unit context.
+
+* Implementation Steps
+
+1. Add =specflow-phase-shift= command
+2. Add =specflow-add-root-task= command
+3. Add ERT tests for both commands
+4. Update README.md
+
+* Tests Required
+
+** specflow-phase-shift tests
+- Changes phase successfully
+- Validates phase input (rejects invalid phases)
+- Displays confirmation message
+
+** specflow-add-root-task tests
+- Adds task to Active section
+- Creates TODO (not NEXT)
+- Handles missing Active section gracefully
+- Displays confirmation message

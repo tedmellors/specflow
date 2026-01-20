@@ -52,6 +52,9 @@ Initial modules are expected to include:
   - parses and updates the control plane
   - discovers units and metadata
   - enforces minimal-diff writes
+  - workflow commands:
+    - specflow-phase-shift: change current phase in control plane
+    - specflow-add-root-task: append task to root todo.org
 
 - core
   - shared conventions and helpers
