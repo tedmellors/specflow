@@ -201,6 +201,53 @@ Derived from =units/org-store/spec.org=.
    - Displays confirmation message
    - Minimal-diff write (no other content modified)
 
+* Task Management Commands
+
+** NEXT Implement: specflow-refine-task
+   Given a backlog task,
+   when =specflow-refine-task= is called interactively,
+   then it generates a prompt for Claude and copies to kill-ring.
+
+   Outcomes:
+   - Parses Backlog section for level-2 headings
+   - Displays task headlines via =completing-read=
+   - Prompts for optional unit hint (free text)
+   - Prompts for additional context
+   - Generates formatted prompt with task, context, guidelines
+   - Copies prompt to kill-ring
+   - Displays "Task prompt copied to kill-ring"
+   - Signals =specflow-heading-not-found= if Backlog missing
+
+** TODO Implement: specflow-activate-task
+   Given a backlog task,
+   when =specflow-activate-task= is called interactively,
+   then it generates prompt AND promotes task to NEXT.
+
+   Outcomes:
+   - All outcomes from =specflow-refine-task=, plus:
+   - Finds current NEXT in Active section (if any)
+   - Demotes NEXT → TODO (keeps in Active)
+   - Moves selected task from Backlog → Active
+   - Promotes selected task TODO → NEXT
+   - Saves with minimal diff
+   - Displays "Task activated: <HEADLINE>"
+
+** TODO ERT: specflow-refine-task tests
+   - Lists backlog tasks correctly
+   - Handles empty unit input
+   - Includes user context in prompt
+   - Generates correct prompt format
+   - Copies to kill-ring
+   - Handles missing Backlog section
+
+** TODO ERT: specflow-activate-task tests
+   - Demotes current NEXT to TODO
+   - Keeps demoted task in Active section
+   - Moves task from Backlog to Active
+   - Promotes to NEXT
+   - Handles case with no existing NEXT
+   - Handles missing sections gracefully
+
 * Validate
 
 ** DONE Run full ERT suite

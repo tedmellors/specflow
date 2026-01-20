@@ -11,11 +11,27 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
 
 * Active
 
-(No active task. See Backlog for future enhancements.)
+** NEXT org-store: Add task management commands
+   Add two commands to org-store for backlog task workflow:
+
+   1. =specflow-refine-task= — Generate prompt for Claude to improve a task
+      - Select task from backlog via completing-read
+      - Optionally select related unit
+      - User adds comment/context for Claude
+      - Output: kill-ring prompt with task, unit context, guidelines
+
+   2. =specflow-activate-task= — Same + promote to NEXT
+      - Demote current NEXT → TODO (keep in Active)
+      - Move selected task from Backlog → Active
+      - Promote to NEXT
+
+   See: units/org-store/temp-plan-artifact.org
 
 * Backlog (future enhancements)
+** TODO build M-x specflow-activate-backlog-task
 ** TODO i think M-x specflow-add-root-task should add it to the backlog, not active
-** TODO add M-x specflow-change-unit to org-store
+** TODO edit functionality of M-x specflow-phase-shift
+- it should also ask to change active unit. 
 ** TODO lock down standard workflow for commiting and pushing
 - Plan → Specify → Scaffold - [COMMIT AND PUSH]
 - Implement → Validate → Document [COMMIT AND PUSH]

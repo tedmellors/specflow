@@ -1,106 +1,108 @@
-#+TITLE: org-store – Plan Artifact: Workflow Commands
+#+TITLE: org-store – Plan Artifact: Task Management Commands
 #+DATE: [2026-01-20]
 
 * Summary
 
-Adding two interactive commands to org-store:
+Adding two task management commands to org-store:
 
-1. =specflow-phase-shift= — Change SPEC_FLOW_PHASE in control plane
-2. =specflow-add-root-task= — Append task to root todo.org
-
-* Existing Infrastructure
-
-org-store already has:
-- =specflow-org-store-find-control-plane= — discovers control plane path
-- =specflow-org-store-read-project-state= — reads current phase/unit
-- =specflow-org-store-write-property= — writes property to existing heading
+1. =specflow-refine-task= — Generate prompt for Claude to improve a backlog task
+2. =specflow-activate-task= — Same + promote to NEXT, demote current NEXT
 
 * Command Designs
 
-** specflow-phase-shift
+** specflow-refine-task
 
-Behavior:
-#+begin_src elisp
-(defun specflow-phase-shift (phase)
-  "Change the current phase to PHASE."
-  (interactive (list (completing-read "Phase: "
-                       '("Plan" "Specify" "Scaffold" "Implement" "Validate" "Document"))))
-  ;; 1. Find control plane
-  ;; 2. Write SPEC_FLOW_PHASE property to ("Project") heading
-  ;; 3. Display confirmation
-  )
-#+end_src
+Interactive workflow:
+1. Display backlog tasks via =completing-read=
+2. Prompt: "Related unit (or none):" with unit names + "none" option
+3. Prompt: "Additional context for Claude:"
+4. Generate prompt and copy to kill-ring
+5. Display confirmation message
 
-Implementation: Straightforward — uses existing =specflow-org-store-write-property=.
+Prompt output structure:
+#+begin_example
+## Task to Refine
 
-** specflow-add-root-task
+<task headline and body>
 
-Behavior:
-#+begin_src elisp
-(defun specflow-add-root-task (headline)
-  "Add a TODO task with HEADLINE to root todo.org under Active section."
-  (interactive "sTask headline: ")
-  ;; 1. Find project root (from control plane)
-  ;; 2. Open todo.org
-  ;; 3. Find "Active" heading
-  ;; 4. Insert new "** TODO <headline>" at end of Active section
-  ;; 5. Display confirmation
-  )
-#+end_src
+## Related Unit Context
 
-Challenge: The existing =specflow-org-store-write-property= writes *properties*, not *headings*. We need a way to insert a new heading.
+Unit: <unit-name>
+Phase: <current phase>
+Parent chain: <ancestors>
+Spec summary: <first ~10 lines of spec or "See full spec at path">
 
-* Key Design Decision
+## Your Instructions
 
-How to insert new headings?
+<user's comment>
 
-| Option | Description              | Pros             | Cons              |
-|--------+--------------------------+------------------+-------------------|
-| A      | Add insert-heading API   | Clean, reusable  | More API surface  |
-| B      | Handle inline in command | Simple, minimal  | Less reusable     |
-| C      | Add append-subheading    | Focused API      | Still new function|
+## Guidelines
 
-Decision: Option B for MVP — handle heading insertion directly in =specflow-add-root-task=. If we need this functionality elsewhere later, we can extract it.
+Rewrite this task to be actionable and outcome-based:
+- Use Given/When/Then format where appropriate
+- Be specific about expected outcomes
+- Include acceptance criteria if possible
+- Keep it concise (3-5 bullets max)
 
-* Constraints (from CLAUDE.md)
+Return only the revised task text.
+#+end_example
 
-- No external dependencies
-- Deterministic
-- Minimal-diff writes (only modify target area)
-- No caching
+** specflow-activate-task
+
+Same as =specflow-refine-task=, plus:
+
+After generating prompt:
+1. Find current NEXT task in Active section
+2. Change NEXT → TODO (keep in Active section)
+3. Move selected task from Backlog to Active section
+4. Change TODO → NEXT on selected task
+5. Display confirmation: "Task activated: <headline>"
+
+* Implementation Notes
+
+** Reading backlog tasks
+
+Need new helper to parse tasks from Backlog section:
+- Find "* Backlog" heading
+- Extract all level-2 headings with their bodies
+- Return list of (headline . body) pairs
+
+** Writing task state changes
+
+Use existing =specflow-org-store-write-property= pattern but for TODO state:
+- Need new helper to change TODO keyword on a heading
+- Or use simple regex replacement (minimal-diff)
+
+** Unit context assembly
+
+If user selects a unit:
+- Use =specflow-org-store-read-unit= to get unit entry
+- Use =specflow-org-store-validate-parent-chain= for ancestors
+- Read first N lines of spec file for summary
 
 * Design Decisions
 
-** Validation for phase-shift
-
-Should validate the phase value against known phases.
-Valid phases: Plan, Specify, Scaffold, Implement, Validate, Document
-
-** Default task state
-
-New tasks should be TODO (not NEXT).
-Only one NEXT at a time per SpecFlow rules.
-
-** Parent unit context for add-root-task
-
-Deferred for MVP — just add headline. Can enhance later with optional unit context.
-
-* Implementation Steps
-
-1. Add =specflow-phase-shift= command
-2. Add =specflow-add-root-task= command
-3. Add ERT tests for both commands
-4. Update README.md
+1. User selects unit manually (no auto-detection)
+2. User can add free-form comment for Claude
+3. Demoted NEXT stays in Active section (not moved to Backlog)
+4. Prompt goes to kill-ring (consistent with other commands)
 
 * Tests Required
 
-** specflow-phase-shift tests
-- Changes phase successfully
-- Validates phase input (rejects invalid phases)
-- Displays confirmation message
+** specflow-refine-task tests
+- Lists backlog tasks correctly
+- Handles "none" unit selection
+- Includes user comment in prompt
+- Copies prompt to kill-ring
 
-** specflow-add-root-task tests
-- Adds task to Active section
-- Creates TODO (not NEXT)
-- Handles missing Active section gracefully
-- Displays confirmation message
+** specflow-activate-task tests
+- Demotes current NEXT to TODO
+- Promotes selected task to NEXT
+- Moves task from Backlog to Active
+- Handles case with no current NEXT
+
+* Open Questions
+
+1. Should we show task body in completing-read or just headline?
+2. Max lines of spec to include in context?
+3. Should prompt include full unit spec or just summary?

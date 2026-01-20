@@ -236,6 +236,72 @@ List of unit entry plists in document order.
   - =specflow-heading-not-found= if =Active= heading not found in todo.org
   - =specflow-file-not-writable= if todo.org cannot be saved
 
+** specflow-refine-task
+
+#+begin_example
+(specflow-refine-task)
+#+end_example
+
+- Input: None (all input gathered interactively)
+- Interactive:
+  1. Prompts with =completing-read= to select a task from Backlog section
+  2. Prompts for related unit (optional, free text, RET to skip)
+  3. Prompts for additional context/instructions for Claude
+- Behavior:
+  1. Find project root from control plane
+  2. Read =todo.org= and parse Backlog section for level-2 headings
+  3. Display task headlines via =completing-read=
+  4. Prompt for optional unit hint
+  5. Prompt for user context/instructions
+  6. Generate prompt with task text, unit hint, user context, and guidelines
+  7. Copy prompt to kill-ring
+  8. Display confirmation message: "Task prompt copied to kill-ring"
+- Output: Generated prompt string (also in kill-ring)
+- Prompt Format:
+  #+begin_example
+  ## Task to Refine
+
+  <task headline and body from todo.org>
+
+  ## Context
+
+  Related unit: <user input or "Not specified">
+  Notes: <user's additional context>
+
+  ## Guidelines
+
+  Rewrite this task to be actionable and outcome-based:
+  - Use Given/When/Then format where appropriate
+  - Be specific about expected outcomes
+  - If unit placement is unclear, recommend where it should live
+  - Keep it concise (3-5 bullets max)
+
+  Return only the revised task text.
+  #+end_example
+- Errors:
+  - =specflow-heading-not-found= if =Backlog= heading not found in todo.org
+
+** specflow-activate-task
+
+#+begin_example
+(specflow-activate-task)
+#+end_example
+
+- Input: None (all input gathered interactively)
+- Interactive: Same as =specflow-refine-task=
+- Behavior:
+  1. Perform all steps from =specflow-refine-task= (generate prompt, copy to kill-ring)
+  2. Find current NEXT task in Active section (if any)
+  3. Demote current NEXT to TODO (keep in Active section)
+  4. Move selected task from Backlog section to end of Active section
+  5. Promote selected task from TODO to NEXT
+  6. Save file with minimal diff
+  7. Display confirmation message: "Task activated: <HEADLINE>"
+- Output: Generated prompt string (also in kill-ring), =t= on file write success
+- Errors:
+  - =specflow-heading-not-found= if =Backlog= or =Active= heading not found
+  - =specflow-file-not-writable= if todo.org cannot be saved
+
 * Error Handling
 
 ** Hard Failures (signal error)
@@ -296,6 +362,8 @@ invalidation hooks.
 - Validation: valid pointers, missing files, parent chain valid, parent not found
 - Phase shift: valid phase change, invalid phase rejected, confirmation displayed
 - Add root task: task added to Active section, missing Active heading error, confirmation displayed
+- Refine task: lists backlog tasks, handles empty unit input, generates correct prompt format, copies to kill-ring
+- Activate task: demotes current NEXT, moves task to Active, promotes to NEXT, handles no existing NEXT
 
 ** Determinism Tests
 
