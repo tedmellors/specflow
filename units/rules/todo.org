@@ -161,15 +161,19 @@ Derived from =units/rules/spec.org=.
 
 * Validate
 
-** TODO Run full ERT suite
-   All tests passing.
+** DONE Run full ERT suite
+   CLOSED: [2026-01-20]
+   All 25 tests passing.
 
-** TODO Manual smoke test
-   - Call =specflow-rules-load= from M-:
-   - Call =specflow-rules-for-phase "implement"=
-   - Verify output format
+** DONE Manual smoke test
+   CLOSED: [2026-01-20]
+   - specflow-rules-load: 18 rules loaded
+   - specflow-rules-for-phase "implement": 16 rules
+   - specflow-rules-mandatory: 14 rules
+   - specflow-rules-format-for-context: output verified
 
 * Document
 
-** TODO Write units/rules/README.md
+** DONE Write units/rules/README.md
+   CLOSED: [2026-01-20]
    Usage examples for each public function.
