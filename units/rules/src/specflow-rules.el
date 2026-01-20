@@ -94,7 +94,7 @@ Returns absolute path to rules file (string)."
 (defun specflow-rules--get-heading-content ()
   "Get content of current heading, excluding property drawer.
 Assumes point is at the heading line.
-Returns the text content as a string."
+Returns the text content as a string, including any subsections."
   (save-excursion
     (let ((start nil)
           (end nil))
@@ -105,8 +105,9 @@ Returns the text content as a string."
         (re-search-forward "^[ \t]*:END:" nil t)
         (forward-line 1))
       (setq start (point))
-      ;; Find end (next heading or end of buffer)
-      (if (re-search-forward "^\\*+ " nil t)
+      ;; Find end (next level-1 heading or end of buffer)
+      ;; Only stop at ^* (single asterisk) to include subsections
+      (if (re-search-forward "^\\* " nil t)
           (progn
             (beginning-of-line)
             (setq end (point)))

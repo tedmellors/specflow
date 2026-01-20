@@ -127,6 +127,56 @@ This repo uses a top-down documentation pipeline:
 These artifacts are created or updated **only when explicitly requested**.
 Do not generate or modify them "opportunistically."
 
+** overview.org (Intent Layer)
+
+=overview.org= defines:
+- the product/system goal
+- user workflow and success criteria
+- scope boundaries and non-goals
+- key invariants and constraints
+- glossary / shared vocabulary (optional)
+
+When I ask to draft or revise =overview.org=:
+- stay high-level (no module internals)
+- prefer clear constraints and examples
+- capture open questions explicitly
+- STOP and request review before moving to architecture
+
+** architecture.org (Structure Layer)
+
+=architecture.org= derives from =overview.org= and defines:
+- system decomposition into units/modules
+- data flow / state model
+- interfaces/contracts (as needed)
+- phase plan: what gets built first and why
+- validation strategy (how we know it works)
+
+When I ask to draft or revise =architecture.org=:
+- do not invent new product requirements beyond overview
+- keep it implementable (but still high-level)
+- STOP and request review before moving to master todo
+
+** root todo.org (Execution Layer)
+
+The root =todo.org= is the canonical task driver.
+It is generated from =overview.org= + =architecture.org= **only when prompted**.
+
+When I ask to bootstrap or revise root =todo.org=:
+- produce a phase-structured roadmap
+- include exactly ONE =NEXT= task
+- keep tasks outcome-based (Given/When/Then style)
+- preserve DONE history if updating an existing file
+- STOP and request approval before proceeding to unit work
+
+** Unit-level work (Child Units)
+
+Child units are created/refined only after root =todo.org= explicitly points to them.
+
+When root =todo.org= points to a unit:
+- consult parent chain specs (if declared) before implementation
+- create/update unit =spec.org= and =todo.org= per phase rules
+- do not skip phases or jump to implementation
+
 ---
 
 ## Master TODO to Unit Handoff
@@ -320,6 +370,32 @@ Each unit progresses strictly through:
 **Plan → Specify → Scaffold → Implement → Validate → Document**
 
 Claude MUST obey the following rules:
+
+** Plan
+- Do NOT write or modify code
+- Do NOT write specs or TODOs
+- ONLY:
+  - summarize understanding
+  - identify constraints
+  - list open design questions
+  - propose options
+  - request confirmation
+
+** Specify
+- ONLY edit =spec.org=
+- Do NOT write code
+- Ask for review before proceeding
+
+** Scaffold
+- ONLY write =CLAUDE.md= and =todo.org=
+- Do NOT write implementation code
+
+** Implement
+- Write code and tests strictly per spec and TODOs
+
+** Validate / Document
+- Do NOT change behavior
+- ONLY validate, test, or document existing behavior
 
 ---
 
