@@ -246,6 +246,9 @@ M-x specflow-refine-task RET
 2. Prompts for an optional unit hint (free text, can be empty)
 3. Prompts for additional context for Claude
 4. Generates a formatted prompt and copies it to the kill-ring
+5. Displays "Task prompt copied to kill-ring"
+
+**Note:** This command does NOT modify `todo.org`. The generated prompt instructs Claude to make the changes.
 
 **Prompt format:**
 
@@ -262,6 +265,8 @@ Notes: <user's additional context>
 ## Guidelines
 
 Rewrite this task to be actionable and outcome-based...
+
+Refine this task and update it in the root todo.org file.
 ```
 
 ```elisp
@@ -280,34 +285,30 @@ Rewrite this task to be actionable and outcome-based...
 
 ### specflow-activate-task
 
-Generate a Claude prompt AND promote a backlog task to NEXT.
+Generate a Claude prompt to refine AND activate a backlog task.
 
 ```
 M-x specflow-activate-task RET
 ```
 
-Performs all actions of `specflow-refine-task`, plus:
-1. Demotes any current NEXT task in Active section to TODO (keeps it in Active)
-2. Moves the selected task from Backlog to Active section
-3. Promotes the task to NEXT status
+Performs the same interactive prompts as `specflow-refine-task`, but generates a prompt with additional activation instructions telling Claude to:
+1. Move the task from Backlog to Active section as NEXT
+2. Demote any existing NEXT task in Active to TODO
 
-```elisp
-;; Before:
-;; * Active
-;; ** NEXT Current work
-;; * Backlog
-;; ** TODO New feature
+**Note:** This command does NOT modify `todo.org`. The generated prompt instructs Claude to make the changes.
 
-;; After M-x specflow-activate-task (selecting "New feature"):
-;; * Active
-;; ** TODO Current work
-;; ** NEXT New feature
-;; * Backlog
+**Prompt format:** Same as `specflow-refine-task`, with additional instructions:
+
+```
+...
+Refine this task and update it in the root todo.org file.
+
+After refining, move this task from Backlog to Active section as NEXT.
+If there is an existing NEXT task in Active, demote it to TODO.
 ```
 
 **Errors:**
-- `specflow-heading-not-found` - No "Active" or "Backlog" heading in todo.org
-- `specflow-file-not-writable` - Cannot save todo.org
+- `specflow-heading-not-found` - No "Backlog" heading in todo.org
 
 ## Error Handling
 
