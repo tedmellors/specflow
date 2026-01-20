@@ -137,7 +137,8 @@ Derived from =units/rules/spec.org=.
 
 * Migrate
 
-** TODO Create rules.org from CLAUDE.md
+** DONE Create rules.org from CLAUDE.md
+   CLOSED: [2026-01-20]
    Given the existing root CLAUDE.md,
    when migration is complete,
    then rules.org contains all operational rules in structured format.
