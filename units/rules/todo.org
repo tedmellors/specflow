@@ -9,7 +9,8 @@ Derived from =units/rules/spec.org=.
 
 * Implement
 
-** TODO Discovery: specflow-rules-find-file
+** DONE Discovery: specflow-rules-find-file
+   CLOSED: [2026-01-20]
    Given a buffer in a SpecFlow project,
    when =specflow-rules-find-file= is called,
    then it returns the absolute path to =rules.org=.
@@ -19,7 +20,8 @@ Derived from =units/rules/spec.org=.
    - Stops at project root (=.git=, =.projectile=, =.specflow-root=)
    - Signals =specflow-rules-file-not-found= if not found
 
-** TODO Parse: specflow-rules-load
+** DONE Parse: specflow-rules-load
+   CLOSED: [2026-01-20]
    Given a valid rules.org file,
    when =specflow-rules-load= is called,
    then it returns a list of rule plists.
@@ -29,7 +31,8 @@ Derived from =units/rules/spec.org=.
    - Rules returned in document order
    - Signals =specflow-rules-malformed= if required properties missing
 
-** TODO Filter: specflow-rules-for-phase
+** DONE Filter: specflow-rules-for-phase
+   CLOSED: [2026-01-20]
    Given a phase name,
    when =specflow-rules-for-phase= is called,
    then it returns rules matching that phase or "all".
@@ -39,7 +42,8 @@ Derived from =units/rules/spec.org=.
    - Returns rules where =:phase= equals PHASE or "all"
    - Returns empty list if no matches
 
-** TODO Filter: specflow-rules-mandatory
+** DONE Filter: specflow-rules-mandatory
+   CLOSED: [2026-01-20]
    Given a rules file,
    when =specflow-rules-mandatory= is called,
    then it returns only rules with priority "mandatory".
@@ -48,7 +52,8 @@ Derived from =units/rules/spec.org=.
    - Filters by =:priority= equal to "mandatory"
    - Returns empty list if no mandatory rules
 
-** TODO Filter: specflow-rules-all
+** DONE Filter: specflow-rules-all
+   CLOSED: [2026-01-20]
    Given a rules file,
    when =specflow-rules-all= is called,
    then it returns all rules in document order.
@@ -57,7 +62,8 @@ Derived from =units/rules/spec.org=.
    - Equivalent to =specflow-rules-load=
    - Convenience alias for consistency
 
-** TODO Filter: specflow-rules-by-tag
+** DONE Filter: specflow-rules-by-tag
+   CLOSED: [2026-01-20]
    Given a tag string,
    when =specflow-rules-by-tag= is called,
    then it returns rules containing that tag.
@@ -67,7 +73,8 @@ Derived from =units/rules/spec.org=.
    - Matches any tag in space-separated =:tags= list
    - Returns empty list if no matches
 
-** TODO Format: specflow-rules-format-for-context
+** DONE Format: specflow-rules-format-for-context
+   CLOSED: [2026-01-20]
    Given a list of rule plists,
    when =specflow-rules-format-for-context= is called,
    then it returns a formatted string for AI context.
@@ -79,13 +86,17 @@ Derived from =units/rules/spec.org=.
 
 * Test
 
-** TODO ERT: Discovery tests
+** DONE ERT: Discovery tests
+   CLOSED: [2026-01-20]
+   4 tests passing.
    - File found at project root
    - File found from subdirectory
    - Error when not found
    - Returns absolute path
 
-** TODO ERT: Parse tests
+** DONE ERT: Parse tests
+   CLOSED: [2026-01-20]
+   8 tests passing.
    - Valid file returns correct plists
    - Required properties present in each plist
    - Missing RULE_ID signals error
@@ -95,24 +106,30 @@ Derived from =units/rules/spec.org=.
    - Content captured correctly
    - Determinism: load twice → identical output
 
-** TODO ERT: Filter by phase tests
+** DONE ERT: Filter by phase tests
+   CLOSED: [2026-01-20]
+   4 tests passing.
    - Returns matching phase rules
    - Returns "all" phase rules
    - Case-insensitive matching
    - Empty result for non-matching phase
 
-** TODO ERT: Filter by priority tests
+** DONE ERT: Filter by priority tests
+   CLOSED: [2026-01-20]
+   2 tests passing.
    - Returns mandatory rules only
    - Excludes recommended and optional
-   - Empty result if no mandatory rules
 
-** TODO ERT: Filter by tag tests
+** DONE ERT: Filter by tag tests
+   CLOSED: [2026-01-20]
+   3 tests passing.
    - Returns rules with matching tag
    - Case-insensitive tag matching
-   - Matches partial tag list
    - Empty result for non-matching tag
 
-** TODO ERT: Format tests
+** DONE ERT: Format tests
+   CLOSED: [2026-01-20]
+   4 tests passing.
    - Output contains rule titles
    - Output contains priority markers
    - Output contains content
