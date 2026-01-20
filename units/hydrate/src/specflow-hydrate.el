@@ -12,13 +12,14 @@
 ;; It generates headers with phase context, file pointers, and NEXT tasks.
 ;; It also provides navigation helpers and optional phase violation scanning.
 ;;
-;; Dependencies: specflow-org-store only (no bundle dependency per spec).
+;; Dependencies: specflow-org-store and specflow-rules (no bundle dependency).
 
 ;;; Code:
 
 ;;;; Requirements
 
 (require 'specflow-org-store)
+(require 'specflow-rules)
 
 ;;;; Helper Functions
 
@@ -353,6 +354,77 @@ Returns list of (line-num . matched-text) pairs."
       (message "%d potential violations in region: %s"
                (length violations)
                (mapconcat (lambda (v) (format "L%d" (car v))) violations ", ")))))
+
+;;;; CLAUDE.md Generation
+
+(defconst specflow-hydrate--rules-path "units/rules/src/rules.org"
+  "Path to rules.org relative to specflow root.")
+
+(defun specflow-hydrate--format-rule-as-markdown (rule)
+  "Format a single RULE plist as markdown.
+Returns a string with ## heading and content."
+  (let ((title (plist-get rule :title))
+        (content (plist-get rule :content)))
+    (format "## %s\n\n%s" title content)))
+
+(defun specflow-hydrate--format-rules-as-markdown (rules)
+  "Format RULES list as markdown for CLAUDE.md.
+Returns a complete markdown string with header and all rules."
+  (let ((header (concat
+                 "# SpecFlow – AI Assistant Rules\n\n"
+                 "<!-- AUTO-GENERATED from rules.org – DO NOT EDIT DIRECTLY -->\n"
+                 "<!-- Regenerate with: M-x specflow-hydrate-rules -->\n"
+                 (format "<!-- Generated: %s -->\n" (format-time-string "%Y-%m-%d"))
+                 "\n---\n"))
+        (body (mapconcat #'specflow-hydrate--format-rule-as-markdown
+                         rules
+                         "\n\n---\n\n")))
+    (concat header "\n" body "\n")))
+
+(defun specflow-hydrate--find-specflow-root ()
+  "Find the specflow installation root directory.
+Searches for units/rules/src/rules.org starting from `load-file-name'
+or the current file's directory."
+  (let ((start-dir (or (and load-file-name (file-name-directory load-file-name))
+                       (and buffer-file-name (file-name-directory buffer-file-name))
+                       default-directory)))
+    ;; Walk up looking for the rules.org file
+    (let ((dir start-dir)
+          (found nil))
+      (while (and (not found)
+                  (not (string= dir (file-name-directory (directory-file-name dir)))))
+        (let ((candidate (expand-file-name specflow-hydrate--rules-path dir)))
+          (if (file-exists-p candidate)
+              (setq found dir)
+            (setq dir (file-name-directory (directory-file-name dir))))))
+      found)))
+
+(defun specflow-hydrate-rules (&optional target-dir specflow-root)
+  "Generate CLAUDE.md from rules.org.
+
+TARGET-DIR is the directory to write CLAUDE.md to.
+Defaults to the project root (from control plane).
+
+SPECFLOW-ROOT is the specflow installation directory.
+Defaults to auto-detection via `specflow-hydrate--find-specflow-root'.
+
+Loads all rules from specflow's rules.org, formats them as markdown,
+and writes to CLAUDE.md in the target directory."
+  (interactive)
+  (let* ((sf-root (or specflow-root (specflow-hydrate--find-specflow-root)))
+         (_ (unless sf-root
+              (user-error "Cannot find specflow installation (rules.org not found)")))
+         (rules-path (expand-file-name specflow-hydrate--rules-path sf-root))
+         (rules (specflow-rules-load rules-path))
+         (markdown (specflow-hydrate--format-rules-as-markdown rules))
+         (target (or target-dir
+                     (specflow-org-store--project-root-from-control-plane)))
+         (_ (unless target
+              (user-error "Cannot determine target directory")))
+         (output-path (expand-file-name "CLAUDE.md" target)))
+    (with-temp-file output-path
+      (insert markdown))
+    (message "CLAUDE.md regenerated (%d rules)" (length rules))))
 
 (provide 'specflow-hydrate)
 ;;; specflow-hydrate.el ends here

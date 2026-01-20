@@ -10,7 +10,8 @@
 
 (let ((dir (file-name-directory (or load-file-name buffer-file-name))))
   (add-to-list 'load-path (expand-file-name "../src" dir))
-  (add-to-list 'load-path (expand-file-name "../../org-store/src" dir)))
+  (add-to-list 'load-path (expand-file-name "../../org-store/src" dir))
+  (add-to-list 'load-path (expand-file-name "../../rules/src" dir)))
 
 (require 'ert)
 (require 'specflow-hydrate)
@@ -324,6 +325,86 @@ Sets up control plane, units, and files for hydrate testing."
 (ert-deftest specflow-test-hydrate-split-paths-empty ()
   "Test splitting empty string returns nil."
   (should (null (specflow-hydrate--split-paths ""))))
+
+;;;; Hydrate Rules Tests
+
+(ert-deftest specflow-test-hydrate-format-rule-as-markdown ()
+  "Test formatting a single rule as markdown."
+  (let ((rule '(:id "test-rule"
+                :title "Test Rule"
+                :priority "mandatory"
+                :phase "all"
+                :tags ("test")
+                :content "This is the rule content.")))
+    (let ((result (specflow-hydrate--format-rule-as-markdown rule)))
+      (should (string-match-p "^## Test Rule" result))
+      (should (string-match-p "This is the rule content" result)))))
+
+(ert-deftest specflow-test-hydrate-format-rules-as-markdown-header ()
+  "Test that formatted markdown includes generation header."
+  (let ((rules '((:id "rule1" :title "Rule One" :priority "mandatory"
+                  :phase "all" :tags nil :content "Content one."))))
+    (let ((result (specflow-hydrate--format-rules-as-markdown rules)))
+      (should (string-match-p "^# SpecFlow – AI Assistant Rules" result))
+      (should (string-match-p "AUTO-GENERATED from rules.org" result))
+      (should (string-match-p "DO NOT EDIT DIRECTLY" result))
+      (should (string-match-p "M-x specflow-hydrate-rules" result))
+      (should (string-match-p "Generated:" result)))))
+
+(ert-deftest specflow-test-hydrate-format-rules-as-markdown-separators ()
+  "Test that rules are separated by ---."
+  (let ((rules '((:id "rule1" :title "Rule One" :priority "mandatory"
+                  :phase "all" :tags nil :content "Content one.")
+                 (:id "rule2" :title "Rule Two" :priority "recommended"
+                  :phase "plan" :tags nil :content "Content two."))))
+    (let ((result (specflow-hydrate--format-rules-as-markdown rules)))
+      (should (string-match-p "---" result))
+      (should (string-match-p "## Rule One" result))
+      (should (string-match-p "## Rule Two" result)))))
+
+(ert-deftest specflow-test-hydrate-format-rules-clean-headings ()
+  "Test that headings are clean (no priority/phase markers)."
+  (let ((rules '((:id "rule1" :title "Test Rule" :priority "mandatory"
+                  :phase "all" :tags nil :content "Content."))))
+    (let ((result (specflow-hydrate--format-rules-as-markdown rules)))
+      ;; Should have clean heading
+      (should (string-match-p "## Test Rule\n" result))
+      ;; Should NOT have priority/phase markers
+      (should-not (string-match-p "\\[mandatory\\]" result))
+      (should-not (string-match-p "\\[all\\]" result)))))
+
+(ert-deftest specflow-test-hydrate-rules-writes-file ()
+  "Test that hydrate-rules writes CLAUDE.md."
+  ;; Save the specflow root before we change default-directory
+  (let* ((specflow-root default-directory)
+         (project-root (make-temp-file "specflow-hydrate-rules-test-" t)))
+    (unwind-protect
+        (let ((default-directory project-root))
+          ;; Create minimal project structure
+          (make-directory (expand-file-name ".git" project-root) t)
+          (make-directory (expand-file-name "docs" project-root) t)
+          ;; Write control plane
+          (write-region
+           "#+TITLE: Test
+* Project
+  :PROPERTIES:
+  :SPEC_FLOW_PHASE: Implement
+  :SPEC_FLOW_ACTIVE_UNIT: test
+  :END:
+"
+           nil (expand-file-name "docs/specflow.org" project-root))
+          ;; Call hydrate-rules with explicit specflow-root
+          (specflow-hydrate-rules project-root specflow-root)
+          ;; Check file exists
+          (should (file-exists-p (expand-file-name "CLAUDE.md" project-root)))
+          ;; Check content
+          (let ((content (with-temp-buffer
+                           (insert-file-contents
+                            (expand-file-name "CLAUDE.md" project-root))
+                           (buffer-string))))
+            (should (string-match-p "SpecFlow – AI Assistant Rules" content))
+            (should (string-match-p "AUTO-GENERATED" content))))
+      (delete-directory project-root t))))
 
 (provide 'test-specflow-hydrate)
 ;;; test-specflow-hydrate.el ends here

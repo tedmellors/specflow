@@ -9,7 +9,8 @@ See =spec.org= for requirements, =CLAUDE.md= for constraints.
 
 * Active
 
-** TODO Implement: specflow-hydrate-rules command
+** DONE Implement: specflow-hydrate-rules command
+   CLOSED: [2026-01-20]
    Given rules.org as source of truth for operational rules,
    when =specflow-hydrate-rules= is called,
    then CLAUDE.md is regenerated from rules.org.
@@ -21,11 +22,14 @@ See =spec.org= for requirements, =CLAUDE.md= for constraints.
    - Write to CLAUDE.md in target directory
    - Display message: "CLAUDE.md regenerated (N rules)"
 
-** TODO Test: ERT tests for hydrate-rules
+** DONE Test: ERT tests for hydrate-rules
+   CLOSED: [2026-01-20]
+   5 tests added, 34 total hydrate tests passing.
    - Test formatting produces valid markdown
    - Test generation header is present
-   - Test all rules are included
-   - Test message is displayed
+   - Test separators between rules
+   - Test clean headings (no markers)
+   - Test file write
 
 * Completed
 
