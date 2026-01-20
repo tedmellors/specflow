@@ -24,11 +24,21 @@
 
 ;;; Code:
 
+;; Set up load-path for unit modules relative to this file's location
+(let ((specflow-root (file-name-directory
+                      (directory-file-name
+                       (file-name-directory
+                        (or load-file-name buffer-file-name))))))
+  (dolist (unit '("org-store" "bundle" "hydrate" "compose" "initiate" "rules"))
+    (add-to-list 'load-path
+                 (expand-file-name (format "units/%s/src" unit) specflow-root))))
+
 (require 'specflow-org-store)
 (require 'specflow-bundle)
 (require 'specflow-hydrate)
 (require 'specflow-compose)
 (require 'specflow-initiate)
+(require 'specflow-rules)
 
 (provide 'specflow)
 ;;; specflow.el ends here
