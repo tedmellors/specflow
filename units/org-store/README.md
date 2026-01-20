@@ -192,13 +192,17 @@ Returns list of ancestor unit names from immediate parent to root.
 
 ### specflow-phase-shift
 
-Change the current SpecFlow phase.
+Change the current SpecFlow phase and active unit.
 
 ```
 M-x specflow-phase-shift RET
 ```
 
-Prompts for a phase name with completion. Valid phases:
+Prompts for:
+1. Phase (with current phase as default)
+2. Unit (with current unit as default, from registry)
+
+Valid phases:
 - Plan
 - Specify
 - Scaffold
@@ -206,13 +210,21 @@ Prompts for a phase name with completion. Valid phases:
 - Validate
 - Document
 
-Updates `SPEC_FLOW_PHASE` in the control plane and displays confirmation.
+Updates both `SPEC_FLOW_PHASE` and `SPEC_FLOW_ACTIVE_UNIT` in the control plane.
 
 ```elisp
 ;; Programmatic use
-(specflow-phase-shift "Validate")
-;; => t (displays "Phase changed to Validate")
+(specflow-phase-shift "Validate" "bundle")
+;; => t (displays "Phase: Validate, Unit: bundle")
+
+;; Keep current unit, change phase only
+(specflow-phase-shift "Document" "org-store")
+;; => t
 ```
+
+**Errors:**
+- `user-error` - Invalid phase name
+- `user-error` - Unit not in registry
 
 ### specflow-add-root-task
 
@@ -345,4 +357,4 @@ emacs --batch -L units/org-store/src -l units/org-store/tests/test-specflow-org-
   -f ert-run-tests-batch-and-exit
 ```
 
-76 tests covering all public functions, interactive commands, error conditions, and determinism.
+79 tests covering all public functions, interactive commands, error conditions, and determinism.
