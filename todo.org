@@ -10,16 +10,6 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** NEXT org-store: Change specflow-add-root-task to add to Backlog
-   Given a task headline,
-   when =specflow-add-root-task= is called,
-   then it appends =** TODO <headline>= to the Backlog section (not Active).
-
-   Outcomes:
-   - Find "Backlog" heading instead of "Active"
-   - Insert at end of Backlog section
-   - Update ERT tests to expect Backlog insertion
-   - Update README.md usage example
 
 * Backlog (future enhancements)
 ** TODO edit functionality of M-x specflow-phase-shift
@@ -133,4 +123,7 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    - specflow-activate-task: same + demote current NEXT, promote selected to NEXT
    11 new ERT tests (76 org-store, 207 total). README.md updated.
 
-
+** DONE org-store: Change specflow-add-root-task to add to Backlog
+   CLOSED: [2026-01-20]
+   Changed target section from Active to Backlog for new task insertion.
+   Tests and documentation updated. 76 org-store tests passing.
