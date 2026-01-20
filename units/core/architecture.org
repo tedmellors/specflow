@@ -54,7 +54,10 @@ Initial modules are expected to include:
   - enforces minimal-diff writes
   - workflow commands:
     - specflow-phase-shift: change current phase in control plane
-    - specflow-add-root-task: append task to root todo.org
+    - specflow-add-root-task: append task to root todo.org Backlog section
+  - task management commands (prompt-only, do not modify todo.org):
+    - specflow-refine-task: generate Claude prompt for task refinement
+    - specflow-activate-task: generate prompt with activation instructions
 
 - core
   - shared conventions and helpers

@@ -15,7 +15,7 @@ It does NOT own:
 ## Constraints
 
 1. **Documentation only** — core has no implementation code
-2. **Parent to all modules** — org-store, bundle, hydrate, docs are children
+2. **Parent to all modules** — org-store, bundle, hydrate, docs, compose, initiate are children
 3. **Authoritative constraints** — child units must respect core's documented invariants
 
 ## Phase
