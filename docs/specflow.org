@@ -5,7 +5,7 @@
 * Project
   :PROPERTIES:
   :SPEC_FLOW_PHASE: Plan
-  :SPEC_FLOW_ACTIVE_UNIT: org-store
+  :SPEC_FLOW_ACTIVE_UNIT: core
   :END:
 
 This file is the **SpecFlow control plane**.
