@@ -10,16 +10,8 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** NEXT hydrate: Add specflow-hydrate-rules command
-   Given rules.org as source of truth for operational rules,
-   when user runs M-x specflow-hydrate-rules,
-   then root CLAUDE.md is regenerated from rules.org.
 
-   Outcomes:
-   - Load rules from units/rules/src/rules.org
-   - Format as markdown with generation header
-   - Write to project root CLAUDE.md
-   - Support target directory parameter for other projects
+(No active task - select from backlog)
 
 * Backlog (future enhancements)
 ** TODO lock down standard workflow for commiting and pushing
@@ -159,6 +151,13 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    - specflow-rules-format-for-context for AI output
    - Migrated 18 rules from root CLAUDE.md to units/rules/src/rules.org
    README.md written.
+
+** DONE hydrate: Add specflow-hydrate-rules command
+   CLOSED: [2026-01-20]
+   CLAUDE.md generation from rules.org. 34 hydrate tests passing.
+   - M-x specflow-hydrate-rules regenerates CLAUDE.md
+   - Clean markdown format with generation header
+   - rules.org is now single source of truth for operational rules
 
 
 
