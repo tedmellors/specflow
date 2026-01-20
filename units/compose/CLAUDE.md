@@ -73,13 +73,27 @@ All prompts MUST include:
 
 ## Implementation Notes
 
-- All compose code lives in `src/specflow.el` (lines 1211-1653)
-- 5 interactive commands defined
+### Current Structure (pre-extraction)
+
+- Compose code in `src/specflow.el` (lines 1211-1686)
+- 5 interactive commands + minor mode
 - 33 ERT tests in `tests/test-specflow-compose.el`
 - README at `units/compose/README.md`
 
+### Target Structure (post-extraction)
+
+- `units/compose/src/specflow-compose.el` — compose implementation
+- `units/compose/tests/test-specflow-compose.el` — compose tests
+
+### Dependencies
+
+Compose requires:
+- `specflow-org-store` — control plane discovery and reading
+
+Compose does NOT depend on hydrate or bundle (per spec).
+
 ## Phase
 
-This unit has completed: Plan → Specify → Scaffold → Implement → Validate → Document
+MVP complete: Plan → Specify → Scaffold → Implement → Validate → Document
 
-Status: **Complete** (MVP)
+Current: **Code extraction — Scaffold phase**

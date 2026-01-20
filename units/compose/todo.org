@@ -9,7 +9,28 @@ See =spec.org= for requirements, =CLAUDE.md= for constraints.
 
 * Active
 
-(Unit complete. No active tasks.)
+** NEXT Code extraction: Modular file structure
+   Extract compose code from monolithic =src/specflow.el= to =units/compose/src/=.
+
+   Current state:
+   - Compose code in =src/specflow.el= (lines 1211-1686)
+   - Tests in =tests/test-specflow-compose.el=
+
+   Target state:
+   - =units/compose/src/specflow-compose.el= — compose implementation
+   - =units/compose/tests/test-specflow-compose.el= — compose tests
+
+   Dependencies: org-store only (no local helpers needed)
+
+   Implementation steps:
+   - [ ] Create =units/compose/src/specflow-compose.el= with proper header
+   - [ ] Add =(require 'specflow-org-store)=
+   - [ ] Copy compose functions from =src/specflow.el=
+   - [ ] Add =(provide 'specflow-compose)=
+   - [ ] Move tests to =units/compose/tests/=
+   - [ ] Update test file with load-path setup
+   - [ ] Verify 33 tests pass
+   - [ ] Update documentation
 
 * Backlog
 

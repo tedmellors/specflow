@@ -9,8 +9,65 @@ Only ONE task is marked NEXT at a time.
 
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
-* Completed
+* Active
+** NEXT compose: Extract to modular structure
+   Extract compose code from =src/specflow.el= to =units/compose/src/specflow-compose.el=.
 
+   Given hydrate extraction pattern,
+   when compose code is extracted,
+   then:
+   - =units/compose/src/specflow-compose.el= exists with proper header
+   - =units/compose/tests/test-specflow-compose.el= uses load-path setup
+   - All compose tests pass
+   - Documentation updated
+
+   Dependencies to verify:
+   - compose uses org-store (required)
+   - compose uses hydrate patterns (verify, may need local helpers)
+
+** TODO initiate: Extract to modular structure
+   Extract initiate code from =src/specflow.el= to =units/initiate/src/specflow-initiate.el=.
+
+   Same pattern as compose:
+   - Create =units/initiate/src/specflow-initiate.el=
+   - Move tests to =units/initiate/tests/=
+   - Update load-path in tests
+   - Verify all tests pass
+
+** TODO facade: Convert src/specflow.el to loader
+   After all units extracted, convert =src/specflow.el= to a facade.
+
+   Given all units extracted,
+   when facade is complete,
+   then =src/specflow.el= contains only:
+   - Package header/commentary
+   - Requires for all unit modules
+   - =(provide 'specflow)=
+
+   Facade requires (per architecture.org):
+   #+begin_src elisp
+   (require 'specflow-org-store)
+   (require 'specflow-bundle)
+   (require 'specflow-hydrate)
+   (require 'specflow-compose)
+   (require 'specflow-initiate)
+   (provide 'specflow)
+   #+end_src
+
+* Backlog (future enhancements)
+** TODO M-x specflow-phase-shitf
+- command to switch to a particular phase
+** TODO Lock down expected todo.org structure/formatting
+- requirements for NEXT
+- requirements for TODO
+- requirements for DONE
+** TODO lock down phase workflow always: Plan → Specify → Scaffold → Implement → Validate → Document
+** someday:
+*** TODO gptel integration for hydrate
+*** TODO Transient menus for command discovery
+*** TODO LLM compression for bundle
+
+* Completed
 ** DONE Draft overview.org
    CLOSED: [2025-01-19]
    Purpose, problem statement, principles, success criteria defined.
@@ -48,18 +105,6 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    - =specflow-bundle-text= outputs full content (~600 lines) for gptel/web
    90 ERT tests passing (37 bundle + 53 org-store).
 
-* Active
-
-(All current units complete. See Backlog for future enhancements.)
-
-* Backlog (future enhancements)
-
-** TODO gptel integration for hydrate
-** TODO Transient menus for command discovery
-** TODO LLM compression for bundle
-
-* Completed (moved from Active)
-
 ** DONE hydrate: Plan → Specify → Scaffold → Implement → Validate → Document
    CLOSED: [2025-01-20]
    AI conversation framing. 25 ERT tests passing (115 total).
@@ -82,3 +127,4 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    Project bootstrapping. 21 ERT tests passing (169 total).
    M-x specflow-initiate creates control plane, CLAUDE.md, todo.org, .specflow marker.
    README.md written.
+

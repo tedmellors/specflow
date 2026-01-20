@@ -100,9 +100,17 @@ Dependency direction: org-store → core → bundle → hydrate → compose → 
 
 * Source Layout
 
-MVP code lives in a single =specflow.el= file. As the codebase grows, it may
-be split into =specflow-org-store.el=, =specflow-core.el=, =specflow-bundle.el=,
-and =specflow-hydrate.el=.
+Each unit has implementation in =units/<unit>/src/= and tests in =units/<unit>/tests/=.
+The root =src/specflow.el= is a facade that loads all unit modules.
+
+Unit module files:
+- =units/org-store/src/specflow-org-store.el=
+- =units/bundle/src/specflow-bundle.el=
+- =units/hydrate/src/specflow-hydrate.el=
+- =units/compose/src/specflow-compose.el=
+- =units/initiate/src/specflow-initiate.el=
+
+The =core= and =docs= units have no implementation code (documentation only).
 
 * Data Flow
 

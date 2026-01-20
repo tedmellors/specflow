@@ -41,13 +41,28 @@ STOP and ask for confirmation if:
 
 ## Implementation Notes
 
-- All hydrate code lives in `src/specflow.el` (lines 886-1210)
-- 11 interactive commands defined
-- 25 ERT tests in `tests/test-specflow-hydrate.el`
-- README at `units/hydrate/README.md`
+### File Structure
+
+- `units/hydrate/src/specflow-hydrate.el` — hydrate implementation
+- `units/hydrate/tests/test-specflow-hydrate.el` — 29 ERT tests
+- `units/hydrate/README.md` — user documentation
+
+### Dependencies
+
+Hydrate requires:
+- `specflow-org-store` — control plane discovery and reading
+
+Hydrate does NOT depend on bundle (per spec). Uses local `specflow-hydrate--split-paths` helper.
+
+### Commands
+
+11 interactive commands:
+- 4 header commands (copy, preview, insert-header, insert-next)
+- 5 navigation helpers (open control-plane, root-todo, unit-spec, unit-todo, unit-rules)
+- 2 scan commands (scan-buffer, scan-region)
 
 ## Phase
 
-This unit has completed: Plan → Specify → Scaffold → Implement → Validate → Document
+MVP complete: Plan → Specify → Scaffold → Implement → Validate → Document
 
-Status: **Complete** (MVP)
+Code extraction: **Complete** (2026-01-20)

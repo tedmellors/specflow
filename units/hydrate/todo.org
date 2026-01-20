@@ -7,7 +7,21 @@
 This file tracks outcome-based tasks for the hydrate unit.
 See =spec.org= for requirements, =CLAUDE.md= for constraints.
 
+* Active
+
+(No active tasks)
+
 * Completed
+
+** DONE Code extraction: Modular file structure
+   CLOSED: [2026-01-20]
+   Extracted hydrate code from monolithic =src/specflow.el= to modular structure.
+
+   Results:
+   - =units/hydrate/src/specflow-hydrate.el= — hydrate implementation
+   - =units/hydrate/tests/test-specflow-hydrate.el= — 29 ERT tests passing
+   - Local =specflow-hydrate--split-paths= helper (no bundle dependency)
+   - Test file uses relative load-path setup
 
 ** DONE Plan phase: Design conversation header format
    CLOSED: [2025-01-20]
