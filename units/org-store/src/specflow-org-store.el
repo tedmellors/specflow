@@ -608,5 +608,84 @@ Returns a list of path strings, or nil if VALUE is nil or empty."
   (when (and value (not (string-empty-p (string-trim value))))
     (split-string value "[ \t]+" t)))
 
+;;;; Interactive Commands
+
+(defconst specflow-valid-phases
+  '("Plan" "Specify" "Scaffold" "Implement" "Validate" "Document")
+  "List of valid SpecFlow phase names.")
+
+(defun specflow-phase-shift (phase)
+  "Change the current SpecFlow phase to PHASE.
+
+PHASE must be one of: Plan, Specify, Scaffold, Implement, Validate, Document.
+
+Interactively, prompts with `completing-read' from valid phase list.
+
+Updates the SPEC_FLOW_PHASE property in the control plane's Project heading.
+Returns t on success."
+  (interactive
+   (list (completing-read "Phase: " specflow-valid-phases nil t)))
+  ;; Validate phase
+  (unless (member phase specflow-valid-phases)
+    (user-error "Invalid phase: %s. Must be one of: %s"
+                phase (mapconcat #'identity specflow-valid-phases ", ")))
+  ;; Find control plane and write property
+  (let ((cp-path (specflow-org-store-find-control-plane)))
+    (specflow-org-store-write-property cp-path '("Project") "SPEC_FLOW_PHASE" phase)
+    (message "Phase changed to %s" phase)
+    t))
+
+(defun specflow-add-root-task (headline)
+  "Add a TODO task with HEADLINE to root todo.org under Active section.
+
+Interactively, prompts for headline string.
+
+The task is inserted as a level-2 TODO heading at the end of the Active
+section (before the next level-1 heading or end of file).
+
+Returns t on success.
+
+Signals `specflow-heading-not-found' if Active heading not found in todo.org.
+Signals `specflow-file-not-writable' if todo.org cannot be saved."
+  (interactive "sTask headline: ")
+  (let* ((cp-path (specflow-org-store-find-control-plane))
+         (project-root (specflow-org-store--project-root-from-control-plane cp-path))
+         (todo-file (expand-file-name "todo.org" project-root))
+         (buf (generate-new-buffer " *specflow-add-task*")))
+    (unwind-protect
+        (progn
+          ;; Read todo.org into buffer
+          (with-current-buffer buf
+            (insert-file-contents todo-file)
+            (goto-char (point-min))
+            ;; Find "* Active" heading
+            (unless (re-search-forward "^\\*[ \t]+Active[ \t]*$" nil t)
+              (signal 'specflow-heading-not-found
+                      (list (format "Heading 'Active' not found in %s" todo-file))))
+            ;; Find end of Active section (next level-1 heading or EOF)
+            (let ((active-start (point))
+                  (active-end nil))
+              (if (re-search-forward "^\\*[ \t]" nil t)
+                  (setq active-end (match-beginning 0))
+                (setq active-end (point-max)))
+              ;; Go to end of Active section
+              (goto-char active-end)
+              ;; Ensure we're on a new line
+              (unless (bolp)
+                (insert "\n"))
+              ;; Insert the new task
+              (insert (format "** TODO %s\n" headline)))
+            ;; Write buffer to file
+            (condition-case err
+                (write-region (point-min) (point-max) todo-file nil 'quiet)
+              (error
+               (signal 'specflow-file-not-writable
+                       (list (format "Cannot write to %s: %s"
+                                     todo-file (error-message-string err)))))))
+          (message "Task added: %s" headline)
+          t)
+      ;; Cleanup
+      (kill-buffer buf))))
+
 (provide 'specflow-org-store)
 ;;; specflow-org-store.el ends here

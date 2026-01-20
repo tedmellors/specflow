@@ -939,5 +939,221 @@ Content under org-store.
       (should (equal (specflow-org-store-validate-parent-chain "org-store" cp-path)
                      (specflow-org-store-validate-parent-chain "org-store" cp-path))))))
 
+;;;; Workflow Command Tests - specflow-phase-shift
+
+(ert-deftest specflow-test-phase-shift-changes-phase ()
+  "Test that phase-shift successfully changes the phase."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (let ((default-directory project-root))
+        ;; Change phase
+        (should (specflow-phase-shift "Validate"))
+        ;; Verify phase changed
+        (let ((state (specflow-org-store-read-project-state cp-path)))
+          (should (equal (plist-get state :phase) "Validate")))))))
+
+(ert-deftest specflow-test-phase-shift-all-valid-phases ()
+  "Test that all valid phases can be set."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (let ((default-directory project-root))
+        (dolist (phase specflow-valid-phases)
+          (specflow-phase-shift phase)
+          (let ((state (specflow-org-store-read-project-state cp-path)))
+            (should (equal (plist-get state :phase) phase))))))))
+
+(ert-deftest specflow-test-phase-shift-rejects-invalid-phase ()
+  "Test that invalid phase is rejected with user-error."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (let ((default-directory project-root))
+        (should-error (specflow-phase-shift "InvalidPhase")
+                      :type 'user-error)))))
+
+(ert-deftest specflow-test-phase-shift-displays-message ()
+  "Test that phase-shift displays confirmation message."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (messages nil))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (let ((default-directory project-root))
+        ;; Capture messages
+        (cl-letf (((symbol-function 'message)
+                   (lambda (fmt &rest args)
+                     (push (apply #'format fmt args) messages))))
+          (specflow-phase-shift "Document"))
+        ;; Check message
+        (should (member "Phase changed to Document" messages))))))
+
+(ert-deftest specflow-test-phase-shift-uses-write-property ()
+  "Test that phase-shift uses existing write infrastructure."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (let ((default-directory project-root))
+        (specflow-phase-shift "Scaffold")
+        ;; Verify file was updated correctly (minimal diff behavior)
+        (with-temp-buffer
+          (insert-file-contents cp-path)
+          ;; Should have new phase
+          (should (search-forward "SPEC_FLOW_PHASE: Scaffold" nil t))
+          ;; Other content should be unchanged
+          (goto-char (point-min))
+          (should (search-forward "SPEC_FLOW_ACTIVE_UNIT: org-store" nil t)))))))
+
+;;;; Workflow Command Tests - specflow-add-root-task
+
+(defconst specflow-test-todo-org
+  "#+TITLE: Test TODO
+#+STARTUP: overview
+
+* Active
+
+** NEXT First task
+   Some description.
+
+* Backlog
+
+** TODO Future task
+"
+  "Test todo.org with Active section.")
+
+(defconst specflow-test-todo-org-no-active
+  "#+TITLE: Test TODO
+
+* Backlog
+
+** TODO Future task
+"
+  "Test todo.org without Active section.")
+
+(ert-deftest specflow-test-add-root-task-adds-task ()
+  "Test that add-root-task adds a task to Active section."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-org nil todo-path)
+      (let ((default-directory project-root))
+        ;; Add task
+        (should (specflow-add-root-task "New test task"))
+        ;; Verify task was added
+        (with-temp-buffer
+          (insert-file-contents todo-path)
+          (should (search-forward "** TODO New test task" nil t)))))))
+
+(ert-deftest specflow-test-add-root-task-creates-todo-not-next ()
+  "Test that new tasks are TODO, not NEXT."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-org nil todo-path)
+      (let ((default-directory project-root))
+        (specflow-add-root-task "Another task")
+        (with-temp-buffer
+          (insert-file-contents todo-path)
+          ;; Should have TODO, not NEXT
+          (should (search-forward "** TODO Another task" nil t))
+          ;; Should not create as NEXT
+          (goto-char (point-min))
+          (should-not (search-forward "** NEXT Another task" nil t)))))))
+
+(ert-deftest specflow-test-add-root-task-inserts-in-active-section ()
+  "Test that task is inserted at end of Active section."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-org nil todo-path)
+      (let ((default-directory project-root))
+        (specflow-add-root-task "End of active task")
+        (with-temp-buffer
+          (insert-file-contents todo-path)
+          ;; Task should appear before Backlog section
+          (let ((task-pos (progn (search-forward "End of active task" nil t) (point)))
+                (backlog-pos (progn (goto-char (point-min))
+                                    (search-forward "* Backlog" nil t) (point))))
+            (should (< task-pos backlog-pos))))))))
+
+(ert-deftest specflow-test-add-root-task-missing-active-heading ()
+  "Test error when Active heading not found."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-org-no-active nil todo-path)
+      (let ((default-directory project-root))
+        (should-error (specflow-add-root-task "Orphan task")
+                      :type 'specflow-heading-not-found)))))
+
+(ert-deftest specflow-test-add-root-task-displays-message ()
+  "Test that add-root-task displays confirmation message."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root))
+          (messages nil))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-org nil todo-path)
+      (let ((default-directory project-root))
+        (cl-letf (((symbol-function 'message)
+                   (lambda (fmt &rest args)
+                     (push (apply #'format fmt args) messages))))
+          (specflow-add-root-task "Message test task"))
+        (should (member "Task added: Message test task" messages))))))
+
+(ert-deftest specflow-test-add-root-task-minimal-diff ()
+  "Test that only the new task is added (minimal diff)."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-org nil todo-path)
+      (let ((default-directory project-root))
+        (specflow-add-root-task "Minimal diff task")
+        (with-temp-buffer
+          (insert-file-contents todo-path)
+          ;; Original content should be preserved
+          (should (search-forward "** NEXT First task" nil t))
+          (goto-char (point-min))
+          (should (search-forward "Some description." nil t))
+          (goto-char (point-min))
+          (should (search-forward "* Backlog" nil t))
+          (goto-char (point-min))
+          (should (search-forward "** TODO Future task" nil t)))))))
+
+(ert-deftest specflow-test-add-root-task-multiple-tasks ()
+  "Test adding multiple tasks sequentially."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-org nil todo-path)
+      (let ((default-directory project-root))
+        (specflow-add-root-task "Task one")
+        (specflow-add-root-task "Task two")
+        (specflow-add-root-task "Task three")
+        (with-temp-buffer
+          (insert-file-contents todo-path)
+          ;; All three tasks should be present
+          (should (search-forward "** TODO Task one" nil t))
+          (should (search-forward "** TODO Task two" nil t))
+          (should (search-forward "** TODO Task three" nil t)))))))
+
 (provide 'test-specflow-org-store)
 ;;; test-specflow-org-store.el ends here

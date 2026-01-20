@@ -155,7 +155,8 @@ Derived from =units/org-store/spec.org=.
 
 * Workflow Commands
 
-** NEXT Implement: specflow-phase-shift
+** DONE Implement: specflow-phase-shift
+   CLOSED: [2026-01-20]
    Given a valid phase name,
    when =specflow-phase-shift= is called interactively,
    then it updates SPEC_FLOW_PHASE in control plane and displays confirmation.
@@ -167,7 +168,8 @@ Derived from =units/org-store/spec.org=.
    - Signals =user-error= if phase is invalid
    - Displays "Phase changed to <PHASE>" on success
 
-** TODO Implement: specflow-add-root-task
+** DONE Implement: specflow-add-root-task
+   CLOSED: [2026-01-20]
    Given a task headline,
    when =specflow-add-root-task= is called interactively,
    then it appends a TODO entry to root todo.org under Active section.
@@ -182,13 +184,17 @@ Derived from =units/org-store/spec.org=.
    - Signals =specflow-heading-not-found= if Active heading missing
    - Displays "Task added: <HEADLINE>" on success
 
-** TODO ERT: specflow-phase-shift tests
+** DONE ERT: specflow-phase-shift tests
+   CLOSED: [2026-01-20]
+   5 tests passing.
    - Changes phase successfully
    - Validates phase input (rejects invalid phases)
    - Displays confirmation message
    - Uses existing write infrastructure
 
-** TODO ERT: specflow-add-root-task tests
+** DONE ERT: specflow-add-root-task tests
+   CLOSED: [2026-01-20]
+   7 tests passing.
    - Adds task to Active section
    - Creates TODO (not NEXT)
    - Handles missing Active section gracefully

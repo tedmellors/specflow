@@ -30,6 +30,7 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
 ** TODO lock down standard workflow for commiting and pushing
 - Plan → Specify → Scaffold - [COMMIT AND PUSH]
 - Implement → Validate → Document [COMMIT AND PUSH]
+** TODO seems to move automatically from implementatin-validate-document. need rule to stop and confirm at every phase shift
 ** TODO add rule to auto-save working plan at 10% until compaction as a 'temp-plan-artifact.org'
 - this should be added as a reference doc on the NEXT actionable task.
 - post compaction we should hydrate.
