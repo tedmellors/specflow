@@ -201,19 +201,29 @@ List of unit entry plists in document order.
 ** specflow-phase-shift
 
 #+begin_example
-(specflow-phase-shift PHASE)
+(specflow-phase-shift PHASE UNIT)
 #+end_example
 
-- Input: =PHASE= (string, one of: "Plan", "Specify", "Scaffold", "Implement", "Validate", "Document")
-- Interactive: Prompts with =completing-read= from valid phase list
+- Input:
+  - =PHASE= (string, one of: "Plan", "Specify", "Scaffold", "Implement", "Validate", "Document")
+  - =UNIT= (string, must be a unit name from the registry)
+- Interactive:
+  1. Read current phase and active unit from control plane
+  2. Prompt for phase with =completing-read= (current phase as default)
+  3. Prompt for unit with =completing-read= from unit registry (current unit as default)
 - Behavior:
   1. Find control plane via =specflow-org-store-find-control-plane=
-  2. Validate =PHASE= is in allowed list
-  3. Write =SPEC_FLOW_PHASE= property to =("Project")= heading
-  4. Display confirmation message: "Phase changed to <PHASE>"
+  2. Read current state via =specflow-org-store-read-project-state=
+  3. Read unit registry via =specflow-org-store-read-unit-registry=
+  4. Validate =PHASE= is in allowed list
+  5. Validate =UNIT= exists in registry
+  6. Write =SPEC_FLOW_PHASE= property to =("Project")= heading
+  7. Write =SPEC_FLOW_ACTIVE_UNIT= property to =("Project")= heading
+  8. Display confirmation message: "Phase: <PHASE>, Unit: <UNIT>"
 - Output: =t= on success
 - Errors:
   - =user-error= if =PHASE= is not a valid phase name
+  - =user-error= if =UNIT= is not in the unit registry
   - Inherits errors from =specflow-org-store-write-property=
 
 ** specflow-add-root-task
