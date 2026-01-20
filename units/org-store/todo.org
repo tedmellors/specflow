@@ -284,7 +284,7 @@ Derived from =units/org-store/spec.org=.
 
 ** DONE Smoke test: Task management commands
    CLOSED: [2026-01-20]
-   Automated smoke test via =units/org-store/tests/smoke-test.el=.
+   Verified via ERT tests (prompt-only behavior).
 
    =specflow-refine-task=:
    - PASS: Returns prompt string
@@ -292,11 +292,14 @@ Derived from =units/org-store/spec.org=.
    - PASS: Prompt contains unit hint
    - PASS: Prompt contains user context
    - PASS: Copied to kill-ring
+   - PASS: Does NOT modify todo.org
 
    =specflow-activate-task=:
-   - PASS: Previous NEXT demoted to TODO
-   - PASS: Selected task promoted to NEXT
-   - PASS: Task removed from Backlog
+   - PASS: Returns prompt string with activation instructions
+   - PASS: Prompt contains "move to Active as NEXT" instruction
+   - PASS: Prompt contains "demote existing NEXT" instruction
+   - PASS: Copied to kill-ring
+   - PASS: Does NOT modify todo.org
    - PASS: Task body preserved
 
 * Document
