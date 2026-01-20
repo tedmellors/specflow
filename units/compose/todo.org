@@ -1,0 +1,143 @@
+#+TITLE: compose – Unit TODO
+#+STARTUP: overview
+#+SEQ_TODO: TODO NEXT WAITING | DONE
+
+* About
+
+This file tracks outcome-based tasks for the compose unit.
+See =spec.org= for requirements, =CLAUDE.md= for constraints.
+
+* Active
+
+(Unit complete. No active tasks.)
+
+* Backlog
+
+(empty)
+
+* Done
+
+** DONE Implement specflow-compose-mode minor mode
+   CLOSED: [2026-01-20]
+   Given spec defines template buffer behavior,
+   when specflow-compose-mode is implemented,
+   then:
+   - C-c C-c generates prompt and copies to kill-ring
+   - C-c C-k cancels and kills buffer
+   - Mode is activated in template buffers
+
+** DONE Implement template buffer creation
+   CLOSED: [2026-01-20]
+   Given a task type (new-unit, edit-spec, etc.),
+   when template buffer is created,
+   then:
+   - Buffer contains Org headings for each question
+   - Required vs optional fields are marked
+   - Footer shows keybinding hints
+
+** DONE Implement prompt generation from buffer
+   CLOSED: [2026-01-20]
+   Given a filled template buffer,
+   when user presses C-c C-c,
+   then:
+   - All heading contents are extracted
+   - Required fields are validated (warn if empty)
+   - Prompt is assembled per spec format
+   - Prompt is copied to kill-ring
+   - Prompt is displayed in preview buffer
+
+** DONE Implement context file selection
+   CLOSED: [2026-01-20]
+   Given a task type,
+   when prompt is generated,
+   then correct context files are included:
+   - new-unit: architecture.org, control plane, root todo
+   - edit-spec: unit spec, parent specs, control plane
+   - new-feature: unit spec, unit todo, parent specs
+   - refactor: unit spec, relevant source files
+
+** DONE Implement phase enforcement
+   CLOSED: [2026-01-20]
+   Given current phase from control plane,
+   when compose command is invoked,
+   then:
+   - If Plan phase: proceed normally
+   - If not Plan: show error, do not open buffer
+
+** DONE Implement specflow-compose dispatcher
+   CLOSED: [2026-01-20]
+   Given user runs M-x specflow-compose,
+   when dispatcher is shown,
+   then:
+   - Menu displays 4 options (new-unit, edit-spec, new-feature, refactor)
+   - Single keypress selects option
+   - Selected option opens corresponding template buffer
+
+** DONE Implement specflow-compose-new-unit
+   CLOSED: [2026-01-20]
+   Given user runs M-x specflow-compose-new-unit,
+   when in Plan phase,
+   then:
+   - Template buffer opens with 8 questions
+   - Generated prompt includes unit creation instructions
+   - Prompt includes artifact preservation section
+
+** DONE Implement specflow-compose-edit-spec
+   CLOSED: [2026-01-20]
+   Given user runs M-x specflow-compose-edit-spec,
+   when in Plan phase,
+   then:
+   - Template buffer opens with 4 questions
+   - Default unit is active unit
+   - Generated prompt includes spec editing instructions
+
+** DONE Implement specflow-compose-new-feature
+   CLOSED: [2026-01-20]
+   Given user runs M-x specflow-compose-new-feature,
+   when in Plan phase,
+   then:
+   - Template buffer opens with 5 questions
+   - Includes "affects parent?" question
+   - Context varies based on parent answer
+
+** DONE Implement specflow-compose-refactor
+   CLOSED: [2026-01-20]
+   Given user runs M-x specflow-compose-refactor,
+   when in Plan phase,
+   then:
+   - Template buffer opens with 4 questions
+   - Generated prompt includes refactoring instructions
+
+** DONE Write ERT tests for compose functions
+   CLOSED: [2026-01-20]
+   Given implementation is complete,
+   when ERT tests are run,
+   then:
+   - Template buffer creation is tested (33 tests)
+   - Prompt generation is tested
+   - Phase enforcement is tested
+   - Context file selection is tested
+
+** DONE Validate all commands work end-to-end
+   CLOSED: [2026-01-20]
+   Given all implementation complete,
+   when each command is run manually,
+   then generated prompts match spec format.
+
+** DONE Validate artifact preservation in prompts
+   CLOSED: [2026-01-20]
+   Given any compose command,
+   when prompt is generated,
+   then artifact preservation section is present.
+
+** DONE Write README.md
+   CLOSED: [2026-01-20]
+   Given implementation validated,
+   when README is written,
+   then users can understand and use compose commands.
+
+** DONE Delete temp-planning-artifacts.org
+   CLOSED: [2026-01-20]
+   Given README and spec are complete,
+   when temp file is no longer needed,
+   then delete units/compose/temp-planning-artifacts.org.

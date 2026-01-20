@@ -50,15 +50,7 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
 
 * Active
 
-** NEXT compose: Plan phase
-   Given architecture.org updated with compose unit description,
-   when compose unit Plan phase is done,
-   then we have design clarity for task prompt generation commands.
-
-   Compose generates task-specific prompts for AI assistants via guided
-   template buffers. Commands: new-unit, edit-spec, new-feature, refactor.
-
-   See =units/compose/= for unit artifacts (to be created).
+(All current units complete. See Backlog for future enhancements.)
 
 * Backlog (future enhancements)
 
@@ -78,3 +70,9 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    CLOSED: [2025-01-20]
    User-facing documentation. Root README.md written (187 lines).
    All 9 required sections present, validated against spec.
+
+** DONE compose: Plan → Specify → Scaffold → Implement → Validate → Document
+   CLOSED: [2026-01-20]
+   Task-specific prompt generation. 33 ERT tests passing (148 total).
+   5 interactive commands: specflow-compose, new-unit, edit-spec, new-feature, refactor.
+   Template buffers with C-c C-c / C-c C-k keybindings. README.md written.
