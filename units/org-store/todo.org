@@ -261,11 +261,28 @@ Derived from =units/org-store/spec.org=.
    76 tests, all passing.
 
 ** DONE Manual smoke test
-   CLOSED: [2025-01-19]
+   CLOSED: [2026-01-20]
    - Open a SpecFlow project
    - Call each public function from =M-:=
    - Verify expected output
    All functions tested and returning expected results.
+
+** DONE Smoke test: Task management commands
+   CLOSED: [2026-01-20]
+   Automated smoke test via =units/org-store/tests/smoke-test.el=.
+
+   =specflow-refine-task=:
+   - PASS: Returns prompt string
+   - PASS: Prompt contains task headline
+   - PASS: Prompt contains unit hint
+   - PASS: Prompt contains user context
+   - PASS: Copied to kill-ring
+
+   =specflow-activate-task=:
+   - PASS: Previous NEXT demoted to TODO
+   - PASS: Selected task promoted to NEXT
+   - PASS: Task removed from Backlog
+   - PASS: Task body preserved
 
 * Document
 

@@ -10,7 +10,6 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-
 ** NEXT org-store: Add task management commands
    Add two commands to org-store for backlog task workflow:
 
