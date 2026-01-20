@@ -140,6 +140,8 @@ For detailed documentation on each module:
 - [hydrate](units/hydrate/README.md) – Conversation header generation
 - [bundle](units/bundle/README.md) – Context bundling for AI assistants
 - [org-store](units/org-store/README.md) – Control plane parsing and writing
+- [compose](units/compose/README.md) – Task-specific prompt generation
+- [initiate](units/initiate/README.md) – Project bootstrapping
 - [rules](units/rules/README.md) – Operational rules management
 
 ## Operational Rules Workflow
