@@ -10,18 +10,6 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** NEXT org-store: Enhance specflow-phase-shift to also set active unit
-   Given the current phase and active unit from control plane,
-   when =specflow-phase-shift= is called interactively,
-   then it prompts for phase (pre-selected to current) and unit (pre-selected to current),
-   and updates both SPEC_FLOW_PHASE and SPEC_FLOW_ACTIVE_UNIT in control plane.
-
-   Outcomes:
-   - Phase prompt: current phase is default, user can change or accept
-   - Unit prompt: current unit is default, shows all units from registry
-   - Both properties written to control plane with minimal diff
-   - Display "Phase: <PHASE>, Unit: <UNIT>" on success
-   - Update ERT tests and README.md
 * Backlog (future enhancements)
 ** TODO lock down standard workflow for commiting and pushing
 - Plan → Specify → Scaffold - [COMMIT AND PUSH]
@@ -144,6 +132,14 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    - specflow-activate-task: same, plus activation instructions
    - Neither modifies todo.org directly
    76 ERT tests passing. README.md updated.
+
+** DONE org-store: Enhance specflow-phase-shift to also set active unit
+   CLOSED: [2026-01-20]
+   Enhanced specflow-phase-shift to prompt for both phase and unit.
+   - Both prompts show current values as defaults
+   - Unit validated against control plane registry
+   - Writes both SPEC_FLOW_PHASE and SPEC_FLOW_ACTIVE_UNIT
+   79 ERT tests passing. README.md updated.
 
 
 
