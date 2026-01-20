@@ -105,6 +105,7 @@ Follow the phase rules. When ready to advance, update the control plane manually
 | `specflow-hydrate-open-active-unit-rules` | Open active unit's CLAUDE.md |
 | `specflow-hydrate-scan-buffer` | Scan for phase violations |
 | `specflow-hydrate-scan-region` | Scan region for violations |
+| `specflow-hydrate-rules` | Generate CLAUDE.md from rules.org |
 
 ### bundle – Context Assembly
 
@@ -132,6 +133,78 @@ For detailed documentation on each module:
 - [hydrate](units/hydrate/README.md) – Conversation header generation
 - [bundle](units/bundle/README.md) – Context bundling for AI assistants
 - [org-store](units/org-store/README.md) – Control plane parsing and writing
+- [rules](units/rules/README.md) – Operational rules management
+
+## Operational Rules Workflow
+
+SpecFlow uses a structured `rules.org` file as the source of truth for AI operational rules. The root `CLAUDE.md` is auto-generated from this file.
+
+### The workflow
+
+```
+units/rules/src/rules.org   (source of truth - edit this)
+         ↓
+    M-x specflow-hydrate-rules
+         ↓
+./CLAUDE.md                 (generated - Claude Code reads this)
+```
+
+### Editing rules
+
+Rules are defined in `rules.org` as org-mode headings with properties:
+
+```org
+* Control Plane Authority
+  :PROPERTIES:
+  :RULE_ID: control-plane-authority
+  :PRIORITY: mandatory
+  :PHASE: all
+  :TAGS: control-plane startup
+  :END:
+
+  The control plane is authoritative for project state.
+  Always read it before starting work.
+```
+
+Each rule has:
+- **RULE_ID**: Unique identifier
+- **PRIORITY**: `mandatory`, `recommended`, or `optional`
+- **PHASE**: `all`, `plan`, `specify`, `scaffold`, `implement`, `validate`, or `document`
+- **TAGS**: Space-separated tags for filtering
+
+### Regenerating CLAUDE.md
+
+After editing `rules.org`, regenerate `CLAUDE.md`:
+
+```elisp
+M-x specflow-hydrate-rules
+;; => "CLAUDE.md regenerated (18 rules)"
+```
+
+The generated file includes a header warning not to edit directly:
+
+```markdown
+# SpecFlow – AI Assistant Rules
+
+<!-- AUTO-GENERATED from rules.org – DO NOT EDIT DIRECTLY -->
+<!-- Regenerate with: M-x specflow-hydrate-rules -->
+```
+
+### Querying rules programmatically
+
+```elisp
+;; Load all rules
+(specflow-rules-load "/path/to/rules.org")
+
+;; Get rules for a specific phase
+(specflow-rules-for-phase "implement" "/path/to/rules.org")
+
+;; Get mandatory rules only
+(specflow-rules-mandatory "/path/to/rules.org")
+
+;; Get rules by tag
+(specflow-rules-by-tag "control-plane" "/path/to/rules.org")
+```
 
 ## The SpecFlow Workflow
 
@@ -180,7 +253,7 @@ emacs --batch -L src -L tests \
   -f ert-run-tests-batch-and-exit
 ```
 
-115 tests covering org-store (53), bundle (37), and hydrate (25).
+175 tests covering org-store (79), bundle (37), hydrate (34), and rules (25).
 
 ## License
 
