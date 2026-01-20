@@ -10,24 +10,8 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** NEXT org-store: Add task management commands
-   Add two commands to org-store for backlog task workflow:
-
-   1. =specflow-refine-task= — Generate prompt for Claude to improve a task
-      - Select task from backlog via completing-read
-      - Optionally select related unit
-      - User adds comment/context for Claude
-      - Output: kill-ring prompt with task, unit context, guidelines
-
-   2. =specflow-activate-task= — Same + promote to NEXT
-      - Demote current NEXT → TODO (keep in Active)
-      - Move selected task from Backlog → Active
-      - Promote to NEXT
-
-   See: units/org-store/temp-plan-artifact.org
 
 * Backlog (future enhancements)
-** TODO build M-x specflow-activate-backlog-task
 ** TODO i think M-x specflow-add-root-task should add it to the backlog, not active
 ** TODO edit functionality of M-x specflow-phase-shift
 - it should also ask to change active unit. 
@@ -132,5 +116,12 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    CLOSED: [2026-01-20]
    Two new interactive commands: specflow-phase-shift and specflow-add-root-task.
    12 new ERT tests (65 org-store, 195 total). README.md updated.
+
+** DONE org-store: Add task management commands
+   CLOSED: [2026-01-20]
+   Two new interactive commands for backlog task workflow:
+   - specflow-refine-task: generate Claude prompt for task refinement
+   - specflow-activate-task: same + demote current NEXT, promote selected to NEXT
+   11 new ERT tests (76 org-store, 207 total). README.md updated.
 
 
