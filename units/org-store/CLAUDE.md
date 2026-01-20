@@ -12,8 +12,8 @@ This unit owns:
   - `specflow-phase-shift` — change SPEC_FLOW_PHASE in control plane
   - `specflow-add-root-task` — append TODO to root todo.org Active section
 - Task management commands:
-  - `specflow-refine-task` — generate prompt for Claude to improve backlog task
-  - `specflow-activate-task` — same + promote to NEXT, demote current NEXT
+  - `specflow-refine-task` — move task from Backlog → Active (as TODO), generate prompt for Claude
+  - `specflow-activate-task` — move task from Backlog → Active (as NEXT), demote existing NEXT, generate prompt
 
 This unit does NOT own:
 - Phase semantics or transitions (core)

@@ -254,6 +254,33 @@ Derived from =units/org-store/spec.org=.
    - Handles case with no existing NEXT
    - Handles missing sections gracefully
 
+** TODO Refactor: specflow-refine-task to move task
+   Given a backlog task,
+   when =specflow-refine-task= is called,
+   then the task is moved from Backlog → Active (as TODO) in addition to generating prompt.
+
+   Outcomes:
+   - Move task from Backlog to Active section (keep as TODO)
+   - Save file with minimal diff
+   - Change message to "Task refined: <HEADLINE>"
+   - Update prompt ending to "Refine this task and update it in the root todo.org file."
+
+** TODO Refactor: specflow-activate-task prompt format
+   Update prompt ending to match refine-task.
+
+   Outcomes:
+   - Change prompt ending from "Return only the revised task text." to
+     "Refine this task and update it in the root todo.org file."
+
+** TODO ERT: Update refine-task tests
+   - Test that task moves from Backlog to Active
+   - Test that task remains as TODO (not NEXT)
+   - Test new message "Task refined: ..."
+   - Test prompt ends with edit instruction
+
+** TODO ERT: Update activate-task tests
+   - Test prompt ends with edit instruction
+
 * Validate
 
 ** DONE Run full ERT suite
