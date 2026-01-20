@@ -687,5 +687,213 @@ Signals `specflow-file-not-writable' if todo.org cannot be saved."
       ;; Cleanup
       (kill-buffer buf))))
 
+;;;; Task Management Commands
+
+(defun specflow-org-store--parse-backlog-tasks (todo-file)
+  "Parse backlog tasks from TODO-FILE.
+Returns a list of (HEADLINE . BODY) cons cells for each level-2 heading
+in the Backlog section."
+  (let ((buf (generate-new-buffer " *specflow-parse-backlog*"))
+        (tasks nil))
+    (unwind-protect
+        (with-current-buffer buf
+          (insert-file-contents todo-file)
+          (goto-char (point-min))
+          ;; Find "* Backlog" heading (with optional suffix like "future enhancements")
+          (unless (re-search-forward "^\\*[ \t]+Backlog\\b" nil t)
+            (signal 'specflow-heading-not-found
+                    (list (format "Heading 'Backlog' not found in %s" todo-file))))
+          ;; Find end of Backlog section
+          (let ((backlog-end nil))
+            (save-excursion
+              (if (re-search-forward "^\\*[ \t]" nil t)
+                  (setq backlog-end (match-beginning 0))
+                (setq backlog-end (point-max))))
+            ;; Parse level-2 headings within Backlog
+            (while (re-search-forward "^\\*\\*[ \t]+\\(TODO\\|NEXT\\|WAITING\\)?[ \t]*\\(.+\\)$" backlog-end t)
+              (let* ((headline (string-trim (match-string 2)))
+                     (body-start (1+ (line-end-position)))
+                     (body-end nil)
+                     (body nil))
+                ;; Find body end (next heading or section end)
+                (save-excursion
+                  (if (re-search-forward "^\\*\\*[ \t]" backlog-end t)
+                      (setq body-end (match-beginning 0))
+                    (setq body-end backlog-end)))
+                ;; Extract body
+                (when (< body-start body-end)
+                  (setq body (string-trim
+                              (buffer-substring-no-properties body-start body-end))))
+                (push (cons headline (or body "")) tasks)))))
+      (kill-buffer buf))
+    (nreverse tasks)))
+
+(defun specflow-org-store--format-refine-prompt (headline body unit-hint user-context)
+  "Format a prompt for refining a task.
+HEADLINE is the task headline.
+BODY is the task body text.
+UNIT-HINT is the optional related unit (may be empty string).
+USER-CONTEXT is the user's additional context."
+  (concat
+   "## Task to Refine\n\n"
+   "** TODO " headline "\n"
+   (if (and body (not (string-empty-p body)))
+       (concat body "\n")
+     "")
+   "\n## Context\n\n"
+   "Related unit: " (if (and unit-hint (not (string-empty-p unit-hint)))
+                        unit-hint
+                      "Not specified") "\n"
+   "Notes: " (if (and user-context (not (string-empty-p user-context)))
+                 user-context
+               "None") "\n"
+   "\n## Guidelines\n\n"
+   "Rewrite this task to be actionable and outcome-based:\n"
+   "- Use Given/When/Then format where appropriate\n"
+   "- Be specific about expected outcomes\n"
+   "- If unit placement is unclear, recommend where it should live\n"
+   "- Keep it concise (3-5 bullets max)\n\n"
+   "Return only the revised task text.\n"))
+
+(defun specflow-refine-task ()
+  "Generate a prompt for Claude to improve a backlog task.
+
+Interactively:
+1. Select a task from the Backlog section
+2. Optionally specify a related unit
+3. Add additional context for Claude
+
+The generated prompt is copied to the kill-ring.
+
+Signals `specflow-heading-not-found' if Backlog section not found."
+  (interactive)
+  (let* ((cp-path (specflow-org-store-find-control-plane))
+         (project-root (specflow-org-store--project-root-from-control-plane cp-path))
+         (todo-file (expand-file-name "todo.org" project-root))
+         (tasks (specflow-org-store--parse-backlog-tasks todo-file))
+         (headlines (mapcar #'car tasks))
+         (selected-headline (completing-read "Select task: " headlines nil t))
+         (selected-task (assoc selected-headline tasks))
+         (body (cdr selected-task))
+         (unit-hint (read-string "Related unit (optional, RET to skip): "))
+         (user-context (read-string "Additional context for Claude: "))
+         (prompt (specflow-org-store--format-refine-prompt
+                  selected-headline body unit-hint user-context)))
+    (kill-new prompt)
+    (message "Task prompt copied to kill-ring")
+    prompt))
+
+(defun specflow-activate-task ()
+  "Generate a prompt for Claude AND promote a backlog task to NEXT.
+
+Interactively:
+1. Select a task from the Backlog section
+2. Optionally specify a related unit
+3. Add additional context for Claude
+
+Then:
+- Demotes current NEXT task to TODO (keeps in Active section)
+- Moves selected task from Backlog to Active section
+- Promotes selected task to NEXT
+
+The generated prompt is copied to the kill-ring.
+
+Signals `specflow-heading-not-found' if Backlog or Active section not found.
+Signals `specflow-file-not-writable' if todo.org cannot be saved."
+  (interactive)
+  (let* ((cp-path (specflow-org-store-find-control-plane))
+         (project-root (specflow-org-store--project-root-from-control-plane cp-path))
+         (todo-file (expand-file-name "todo.org" project-root))
+         (tasks (specflow-org-store--parse-backlog-tasks todo-file))
+         (headlines (mapcar #'car tasks))
+         (selected-headline (completing-read "Select task to activate: " headlines nil t))
+         (selected-task (assoc selected-headline tasks))
+         (body (cdr selected-task))
+         (unit-hint (read-string "Related unit (optional, RET to skip): "))
+         (user-context (read-string "Additional context for Claude: "))
+         (prompt (specflow-org-store--format-refine-prompt
+                  selected-headline body unit-hint user-context))
+         (buf (generate-new-buffer " *specflow-activate-task*")))
+    ;; Copy prompt to kill-ring first
+    (kill-new prompt)
+    ;; Now modify the todo.org file
+    (unwind-protect
+        (with-current-buffer buf
+          (let ((task-text nil))  ;; Outer binding for task-text
+            (insert-file-contents todo-file)
+            ;; 1. Demote current NEXT to TODO in Active section
+            (goto-char (point-min))
+            (when (re-search-forward "^\\*[ \t]+Active\\b" nil t)
+              (let ((active-end nil))
+                (save-excursion
+                  (if (re-search-forward "^\\*[ \t]" nil t)
+                      (setq active-end (match-beginning 0))
+                    (setq active-end (point-max))))
+                ;; Find and demote NEXT to TODO
+                (while (re-search-forward "^\\(\\*\\*[ \t]+\\)NEXT\\([ \t]+\\)" active-end t)
+                  (replace-match "\\1TODO\\2"))))
+            ;; 2. Find and remove the task from Backlog
+            (goto-char (point-min))
+            (unless (re-search-forward "^\\*[ \t]+Backlog\\b" nil t)
+              (signal 'specflow-heading-not-found
+                      (list (format "Heading 'Backlog' not found in %s" todo-file))))
+            (let ((backlog-start (point))
+                  (backlog-end nil)
+                  (task-start nil)
+                  (task-end nil))
+              (save-excursion
+                (if (re-search-forward "^\\*[ \t]" nil t)
+                    (setq backlog-end (match-beginning 0))
+                  (setq backlog-end (point-max))))
+              ;; Find the specific task
+              (let ((task-re (format "^\\*\\*[ \t]+\\(TODO\\|NEXT\\|WAITING\\)?[ \t]*%s[ \t]*$"
+                                     (regexp-quote selected-headline))))
+                (unless (re-search-forward task-re backlog-end t)
+                  (signal 'specflow-heading-not-found
+                          (list (format "Task '%s' not found in Backlog" selected-headline))))
+                (setq task-start (line-beginning-position))
+                ;; Find task end
+                (forward-line 1)
+                (if (re-search-forward "^\\*\\*[ \t]" backlog-end t)
+                    (setq task-end (match-beginning 0))
+                  (setq task-end backlog-end))
+                ;; Extract task text (we'll rewrite it as NEXT)
+                (setq task-text (buffer-substring-no-properties task-start task-end))
+                ;; Delete the task from Backlog
+                (delete-region task-start task-end)))
+            ;; 3. Insert task at end of Active section as NEXT
+            (goto-char (point-min))
+            (unless (re-search-forward "^\\*[ \t]+Active\\b" nil t)
+              (signal 'specflow-heading-not-found
+                      (list (format "Heading 'Active' not found in %s" todo-file))))
+            (let ((active-end nil))
+              (save-excursion
+                (if (re-search-forward "^\\*[ \t]" nil t)
+                    (setq active-end (match-beginning 0))
+                  (setq active-end (point-max))))
+              (goto-char active-end)
+              ;; Ensure we're on a new line
+              (unless (bolp)
+                (insert "\n"))
+              ;; Insert task, changing TODO to NEXT
+              (let ((new-task (replace-regexp-in-string
+                               "^\\(\\*\\*[ \t]+\\)\\(TODO\\|WAITING\\)?[ \t]*"
+                               "\\1NEXT "
+                               task-text)))
+                (insert new-task)
+                ;; Ensure trailing newline
+                (unless (string-suffix-p "\n" new-task)
+                  (insert "\n"))))
+            ;; Write buffer to file
+            (condition-case err
+                (write-region (point-min) (point-max) todo-file nil 'quiet)
+              (error
+               (signal 'specflow-file-not-writable
+                       (list (format "Cannot write to %s: %s"
+                                     todo-file (error-message-string err))))))))
+      (kill-buffer buf))
+    (message "Task activated: %s" selected-headline)
+    prompt))
+
 (provide 'specflow-org-store)
 ;;; specflow-org-store.el ends here

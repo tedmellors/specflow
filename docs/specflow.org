@@ -4,7 +4,7 @@
 
 * Project
   :PROPERTIES:
-  :SPEC_FLOW_PHASE: Scaffold
+  :SPEC_FLOW_PHASE: Implement
   :SPEC_FLOW_ACTIVE_UNIT: org-store
   :END:
 

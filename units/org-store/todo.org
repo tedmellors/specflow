@@ -203,7 +203,8 @@ Derived from =units/org-store/spec.org=.
 
 * Task Management Commands
 
-** NEXT Implement: specflow-refine-task
+** DONE Implement: specflow-refine-task
+   CLOSED: [2026-01-20]
    Given a backlog task,
    when =specflow-refine-task= is called interactively,
    then it generates a prompt for Claude and copies to kill-ring.
@@ -218,7 +219,8 @@ Derived from =units/org-store/spec.org=.
    - Displays "Task prompt copied to kill-ring"
    - Signals =specflow-heading-not-found= if Backlog missing
 
-** TODO Implement: specflow-activate-task
+** DONE Implement: specflow-activate-task
+   CLOSED: [2026-01-20]
    Given a backlog task,
    when =specflow-activate-task= is called interactively,
    then it generates prompt AND promotes task to NEXT.
@@ -232,7 +234,9 @@ Derived from =units/org-store/spec.org=.
    - Saves with minimal diff
    - Displays "Task activated: <HEADLINE>"
 
-** TODO ERT: specflow-refine-task tests
+** DONE ERT: specflow-refine-task tests
+   CLOSED: [2026-01-20]
+   5 tests, all passing.
    - Lists backlog tasks correctly
    - Handles empty unit input
    - Includes user context in prompt
@@ -240,7 +244,9 @@ Derived from =units/org-store/spec.org=.
    - Copies to kill-ring
    - Handles missing Backlog section
 
-** TODO ERT: specflow-activate-task tests
+** DONE ERT: specflow-activate-task tests
+   CLOSED: [2026-01-20]
+   6 tests, all passing.
    - Demotes current NEXT to TODO
    - Keeps demoted task in Active section
    - Moves task from Backlog to Active
@@ -251,8 +257,8 @@ Derived from =units/org-store/spec.org=.
 * Validate
 
 ** DONE Run full ERT suite
-   CLOSED: [2025-01-19]
-   53 tests, all passing.
+   CLOSED: [2026-01-20]
+   76 tests, all passing.
 
 ** DONE Manual smoke test
    CLOSED: [2025-01-19]

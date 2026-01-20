@@ -1155,5 +1155,248 @@ Content under org-store.
           (should (search-forward "** TODO Task two" nil t))
           (should (search-forward "** TODO Task three" nil t)))))))
 
+;;;; Task Management Command Tests - specflow-refine-task
+
+(defconst specflow-test-todo-with-backlog
+  "#+TITLE: Test TODO
+
+* Active
+
+** NEXT Current active task
+   Working on this now.
+
+* Backlog (future enhancements)
+
+** TODO First backlog task
+   Description of first task.
+   - bullet point one
+   - bullet point two
+
+** TODO Second backlog task
+   Another task description.
+
+** TODO Third task without body
+
+* Completed
+
+** DONE Old completed task
+"
+  "Test todo.org with Active and Backlog sections.")
+
+(defconst specflow-test-todo-no-backlog
+  "#+TITLE: Test TODO
+
+* Active
+
+** NEXT Current task
+
+* Completed
+"
+  "Test todo.org without Backlog section.")
+
+(ert-deftest specflow-test-parse-backlog-tasks ()
+  "Test parsing backlog tasks from todo.org."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-todo-with-backlog nil todo-path)
+      (let ((tasks (specflow-org-store--parse-backlog-tasks todo-path)))
+        ;; Should have 3 tasks
+        (should (= (length tasks) 3))
+        ;; Check first task
+        (should (equal (car (nth 0 tasks)) "First backlog task"))
+        (should (string-match-p "bullet point one" (cdr (nth 0 tasks))))
+        ;; Check second task
+        (should (equal (car (nth 1 tasks)) "Second backlog task"))
+        ;; Check third task (no body)
+        (should (equal (car (nth 2 tasks)) "Third task without body"))))))
+
+(ert-deftest specflow-test-parse-backlog-tasks-missing-backlog ()
+  "Test error when Backlog section missing."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-todo-no-backlog nil todo-path)
+      (should-error (specflow-org-store--parse-backlog-tasks todo-path)
+                    :type 'specflow-heading-not-found))))
+
+(ert-deftest specflow-test-format-refine-prompt ()
+  "Test prompt formatting."
+  (let ((prompt (specflow-org-store--format-refine-prompt
+                 "Test task headline"
+                 "Task body here"
+                 "org-store"
+                 "Some user context")))
+    ;; Check structure
+    (should (string-match-p "## Task to Refine" prompt))
+    (should (string-match-p "Test task headline" prompt))
+    (should (string-match-p "Task body here" prompt))
+    (should (string-match-p "Related unit: org-store" prompt))
+    (should (string-match-p "Notes: Some user context" prompt))
+    (should (string-match-p "## Guidelines" prompt))))
+
+(ert-deftest specflow-test-format-refine-prompt-empty-unit ()
+  "Test prompt formatting with empty unit."
+  (let ((prompt (specflow-org-store--format-refine-prompt
+                 "Test task"
+                 ""
+                 ""
+                 "")))
+    (should (string-match-p "Related unit: Not specified" prompt))
+    (should (string-match-p "Notes: None" prompt))))
+
+(ert-deftest specflow-test-refine-task-copies-to-kill-ring ()
+  "Test that refine-task copies prompt to kill-ring."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-with-backlog nil todo-path)
+      (let ((default-directory project-root))
+        ;; Mock completing-read and read-string
+        (cl-letf (((symbol-function 'completing-read)
+                   (lambda (&rest _) "First backlog task"))
+                  ((symbol-function 'read-string)
+                   (lambda (prompt &rest _)
+                     (if (string-match-p "unit" prompt) "test-unit" "test context"))))
+          (specflow-refine-task)
+          ;; Check kill-ring
+          (should (string-match-p "First backlog task" (car kill-ring)))
+          (should (string-match-p "test-unit" (car kill-ring)))
+          (should (string-match-p "test context" (car kill-ring))))))))
+
+;;;; Task Management Command Tests - specflow-activate-task
+
+(ert-deftest specflow-test-activate-task-demotes-next ()
+  "Test that activate-task demotes current NEXT to TODO."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-with-backlog nil todo-path)
+      (let ((default-directory project-root))
+        (cl-letf (((symbol-function 'completing-read)
+                   (lambda (&rest _) "First backlog task"))
+                  ((symbol-function 'read-string)
+                   (lambda (&rest _) "")))
+          (specflow-activate-task)
+          ;; Verify old NEXT is now TODO
+          (with-temp-buffer
+            (insert-file-contents todo-path)
+            (should (search-forward "** TODO Current active task" nil t))))))))
+
+(ert-deftest specflow-test-activate-task-moves-to-active ()
+  "Test that activate-task moves task from Backlog to Active."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-with-backlog nil todo-path)
+      (let ((default-directory project-root))
+        (cl-letf (((symbol-function 'completing-read)
+                   (lambda (&rest _) "First backlog task"))
+                  ((symbol-function 'read-string)
+                   (lambda (&rest _) "")))
+          (specflow-activate-task)
+          (with-temp-buffer
+            (insert-file-contents todo-path)
+            ;; Task should be in Active section as NEXT
+            (goto-char (point-min))
+            (should (search-forward "* Active" nil t))
+            (should (search-forward "** NEXT First backlog task" nil t))
+            ;; Task should NOT be in Backlog anymore
+            (goto-char (point-min))
+            (search-forward "* Backlog" nil t)
+            (let ((backlog-start (point)))
+              (should-not (search-forward "First backlog task" nil t)))))))))
+
+(ert-deftest specflow-test-activate-task-promotes-to-next ()
+  "Test that activate-task promotes selected task to NEXT."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-with-backlog nil todo-path)
+      (let ((default-directory project-root))
+        (cl-letf (((symbol-function 'completing-read)
+                   (lambda (&rest _) "Second backlog task"))
+                  ((symbol-function 'read-string)
+                   (lambda (&rest _) "")))
+          (specflow-activate-task)
+          (with-temp-buffer
+            (insert-file-contents todo-path)
+            (should (search-forward "** NEXT Second backlog task" nil t))))))))
+
+(ert-deftest specflow-test-activate-task-handles-no-existing-next ()
+  "Test that activate-task works when there's no existing NEXT."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root))
+          (todo-no-next "#+TITLE: Test TODO
+
+* Active
+
+(No active task)
+
+* Backlog
+
+** TODO Some backlog task
+   Description here.
+"))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region todo-no-next nil todo-path)
+      (let ((default-directory project-root))
+        (cl-letf (((symbol-function 'completing-read)
+                   (lambda (&rest _) "Some backlog task"))
+                  ((symbol-function 'read-string)
+                   (lambda (&rest _) "")))
+          ;; Should not error
+          (specflow-activate-task)
+          (with-temp-buffer
+            (insert-file-contents todo-path)
+            (should (search-forward "** NEXT Some backlog task" nil t))))))))
+
+(ert-deftest specflow-test-activate-task-copies-to-kill-ring ()
+  "Test that activate-task copies prompt to kill-ring."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-with-backlog nil todo-path)
+      (let ((default-directory project-root))
+        (cl-letf (((symbol-function 'completing-read)
+                   (lambda (&rest _) "First backlog task"))
+                  ((symbol-function 'read-string)
+                   (lambda (&rest _) "my context")))
+          (specflow-activate-task)
+          (should (string-match-p "First backlog task" (car kill-ring)))
+          (should (string-match-p "my context" (car kill-ring))))))))
+
+(ert-deftest specflow-test-activate-task-preserves-task-body ()
+  "Test that activate-task preserves the task body when moving."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+          (todo-path (expand-file-name "todo.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-todo-with-backlog nil todo-path)
+      (let ((default-directory project-root))
+        (cl-letf (((symbol-function 'completing-read)
+                   (lambda (&rest _) "First backlog task"))
+                  ((symbol-function 'read-string)
+                   (lambda (&rest _) "")))
+          (specflow-activate-task)
+          (with-temp-buffer
+            (insert-file-contents todo-path)
+            ;; Body should be preserved
+            (should (search-forward "bullet point one" nil t))
+            (should (search-forward "bullet point two" nil t))))))))
+
 (provide 'test-specflow-org-store)
 ;;; test-specflow-org-store.el ends here
