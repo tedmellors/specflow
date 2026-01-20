@@ -10,25 +10,8 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** NEXT facade: Convert src/specflow.el to loader
-   After all units extracted, convert =src/specflow.el= to a facade.
 
-   Given all units extracted,
-   when facade is complete,
-   then =src/specflow.el= contains only:
-   - Package header/commentary
-   - Requires for all unit modules
-   - =(provide 'specflow)=
-
-   Facade requires (per architecture.org):
-   #+begin_src elisp
-   (require 'specflow-org-store)
-   (require 'specflow-bundle)
-   (require 'specflow-hydrate)
-   (require 'specflow-compose)
-   (require 'specflow-initiate)
-   (provide 'specflow)
-   #+end_src
+(Modular restructuring complete. See Backlog for future enhancements.)
 
 * Backlog (future enhancements)
 ** TODO M-x specflow add-root-task
@@ -38,6 +21,9 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
 ** TODO M-x specflow-phase-shift
 - command to switch to a particular phase
 ** TODO lock down standard workflow for commiting and pushing
+- Plan → Specify → Scaffold - [COMMIT AND PUSH]
+- Implement → Validate → Document [COMMIT AND PUSH]
+** TODO need to figure out better system to manage rules rather than dumping everythign into claude.md
 ** TODO need to have better phase change enforcement
 ** TODO lock down modular unit structure with src/ and tests/
 ** TODO Lock down expected todo.org structure/formatting
@@ -120,5 +106,10 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    CLOSED: [2026-01-20]
    Extracted initiate code to units/initiate/src/specflow-initiate.el.
    21 ERT tests passing. Documentation updated.
+
+** DONE facade: Convert src/specflow.el to loader
+   CLOSED: [2026-01-20]
+   Converted monolithic src/specflow.el (1845 lines) to minimal facade (34 lines).
+   All 183 tests pass across 5 modules. Modular restructuring complete.
 
 

@@ -9,20 +9,7 @@ Core is documentation-only; it owns architecture.org and overview.org.
 
 * Active
 
-** NEXT Facade: Convert src/specflow.el to loader
-   Convert monolithic src/specflow.el to minimal facade.
-
-   Given all units extracted to modular structure,
-   when facade conversion is complete,
-   then src/specflow.el contains only:
-   - Package header/commentary
-   - Requires for all unit modules
-   - (provide 'specflow)
-
-   Implementation:
-   - [ ] Replace src/specflow.el with minimal facade
-   - [ ] Verify all unit tests still pass
-   - [ ] Update documentation
+(empty)
 
 * Backlog
 
@@ -30,4 +17,7 @@ Core is documentation-only; it owns architecture.org and overview.org.
 
 * Done
 
-(empty)
+** DONE Facade: Convert src/specflow.el to loader
+   CLOSED: [2026-01-20]
+   Converted monolithic src/specflow.el (1845 lines) to minimal facade (34 lines).
+   All 183 tests pass across 5 modules.
