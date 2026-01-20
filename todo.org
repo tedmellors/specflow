@@ -159,6 +159,12 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    - Clean markdown format with generation header
    - rules.org is now single source of truth for operational rules
 
+** DONE docs: Add specflow-activate-task and specflow-refine-task to README.md
+   CLOSED: [2026-01-20]
+   Updated root README.md org-store section with 4 interactive commands.
+   - Added Commands table with phase-shift, add-root-task, refine-task, activate-task
+   - Updated test count from 175 to 239 (added compose/initiate to breakdown)
+
 
 
 

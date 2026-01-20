@@ -116,6 +116,13 @@ Follow the phase rules. When ready to advance, update the control plane manually
 
 ### org-store – Control Plane Operations
 
+| Command | Description |
+|---------|-------------|
+| `specflow-phase-shift` | Change current phase and active unit |
+| `specflow-add-root-task` | Add TODO to root todo.org Backlog |
+| `specflow-refine-task` | Generate Claude prompt to refine a backlog task |
+| `specflow-activate-task` | Generate Claude prompt to refine and activate a backlog task |
+
 | Function | Description |
 |----------|-------------|
 | `specflow-org-store-find-control-plane` | Discover control plane file |
@@ -253,7 +260,7 @@ emacs --batch -L src -L tests \
   -f ert-run-tests-batch-and-exit
 ```
 
-175 tests covering org-store (79), bundle (37), hydrate (34), and rules (25).
+239 tests covering org-store (79), bundle (37), hydrate (34), compose (43), initiate (21), and rules (25).
 
 ## License
 
