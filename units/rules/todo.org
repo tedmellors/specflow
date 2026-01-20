@@ -1,0 +1,157 @@
+#+TITLE: rules – TODO
+#+STARTUP: overview
+#+SEQ_TODO: TODO NEXT WAITING | DONE
+
+* About
+
+Outcome-based tasks for rules unit implementation.
+Derived from =units/rules/spec.org=.
+
+* Implement
+
+** TODO Discovery: specflow-rules-find-file
+   Given a buffer in a SpecFlow project,
+   when =specflow-rules-find-file= is called,
+   then it returns the absolute path to =rules.org=.
+
+   Outcomes:
+   - Searches upward from =default-directory=
+   - Stops at project root (=.git=, =.projectile=, =.specflow-root=)
+   - Signals =specflow-rules-file-not-found= if not found
+
+** TODO Parse: specflow-rules-load
+   Given a valid rules.org file,
+   when =specflow-rules-load= is called,
+   then it returns a list of rule plists.
+
+   Outcomes:
+   - Each plist has =:id=, =:title=, =:priority=, =:phase=, =:tags=, =:content=
+   - Rules returned in document order
+   - Signals =specflow-rules-malformed= if required properties missing
+
+** TODO Filter: specflow-rules-for-phase
+   Given a phase name,
+   when =specflow-rules-for-phase= is called,
+   then it returns rules matching that phase or "all".
+
+   Outcomes:
+   - Case-insensitive phase matching
+   - Returns rules where =:phase= equals PHASE or "all"
+   - Returns empty list if no matches
+
+** TODO Filter: specflow-rules-mandatory
+   Given a rules file,
+   when =specflow-rules-mandatory= is called,
+   then it returns only rules with priority "mandatory".
+
+   Outcomes:
+   - Filters by =:priority= equal to "mandatory"
+   - Returns empty list if no mandatory rules
+
+** TODO Filter: specflow-rules-all
+   Given a rules file,
+   when =specflow-rules-all= is called,
+   then it returns all rules in document order.
+
+   Outcomes:
+   - Equivalent to =specflow-rules-load=
+   - Convenience alias for consistency
+
+** TODO Filter: specflow-rules-by-tag
+   Given a tag string,
+   when =specflow-rules-by-tag= is called,
+   then it returns rules containing that tag.
+
+   Outcomes:
+   - Case-insensitive tag matching
+   - Matches any tag in space-separated =:tags= list
+   - Returns empty list if no matches
+
+** TODO Format: specflow-rules-format-for-context
+   Given a list of rule plists,
+   when =specflow-rules-format-for-context= is called,
+   then it returns a formatted string for AI context.
+
+   Outcomes:
+   - Each rule formatted as: ## Title [priority] [phase]\n\nContent\n\n---
+   - Rules separated by horizontal rules
+   - Suitable for inclusion in bundle output
+
+* Test
+
+** TODO ERT: Discovery tests
+   - File found at project root
+   - File found from subdirectory
+   - Error when not found
+   - Returns absolute path
+
+** TODO ERT: Parse tests
+   - Valid file returns correct plists
+   - Required properties present in each plist
+   - Missing RULE_ID signals error
+   - Missing PRIORITY signals error
+   - Missing PHASE signals error
+   - Tags parsed as list
+   - Content captured correctly
+   - Determinism: load twice → identical output
+
+** TODO ERT: Filter by phase tests
+   - Returns matching phase rules
+   - Returns "all" phase rules
+   - Case-insensitive matching
+   - Empty result for non-matching phase
+
+** TODO ERT: Filter by priority tests
+   - Returns mandatory rules only
+   - Excludes recommended and optional
+   - Empty result if no mandatory rules
+
+** TODO ERT: Filter by tag tests
+   - Returns rules with matching tag
+   - Case-insensitive tag matching
+   - Matches partial tag list
+   - Empty result for non-matching tag
+
+** TODO ERT: Format tests
+   - Output contains rule titles
+   - Output contains priority markers
+   - Output contains content
+   - Multiple rules separated correctly
+
+* Migrate
+
+** TODO Create rules.org from CLAUDE.md
+   Given the existing root CLAUDE.md,
+   when migration is complete,
+   then rules.org contains all operational rules in structured format.
+
+   Outcomes:
+   - All 18 sections migrated per mapping in spec
+   - Each rule has RULE_ID, PRIORITY, PHASE properties
+   - Content preserved accurately
+   - rules.org placed at project root
+
+** TODO Update bundle to auto-include rules
+   Given the bundle unit,
+   when =specflow-bundle= is called,
+   then rules for current phase are included in output.
+
+   Outcomes:
+   - Bundle calls =specflow-rules-for-phase= with current phase
+   - Formatted rules appear after control plane in output
+   - No change to bundle API (internal enhancement)
+
+* Validate
+
+** TODO Run full ERT suite
+   All tests passing.
+
+** TODO Manual smoke test
+   - Call =specflow-rules-load= from M-:
+   - Call =specflow-rules-for-phase "implement"=
+   - Verify output format
+
+* Document
+
+** TODO Write units/rules/README.md
+   Usage examples for each public function.
