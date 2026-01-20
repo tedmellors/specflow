@@ -9,7 +9,7 @@ See =spec.org= for requirements, =CLAUDE.md= for constraints.
 
 * Active
 
-(Unit complete. No active tasks.)
+(empty)
 
 * Backlog
 
@@ -19,6 +19,14 @@ See =spec.org= for requirements, =CLAUDE.md= for constraints.
    then delete units/initiate/temp-planning-artifacts.org.
 
 * Done
+
+** DONE Code extraction: Modular file structure
+   CLOSED: [2026-01-20]
+   Extracted initiate code to modular structure.
+   - =units/initiate/src/specflow-initiate.el= created
+   - =units/initiate/tests/test-specflow-initiate.el= with load-path setup
+   - 21 ERT tests passing
+   - Documentation updated
 
 ** DONE Implement specflow-initiate command
    CLOSED: [2026-01-20]

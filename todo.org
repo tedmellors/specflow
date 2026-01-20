@@ -10,31 +10,7 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** NEXT compose: Extract to modular structure
-   Extract compose code from =src/specflow.el= to =units/compose/src/specflow-compose.el=.
-
-   Given hydrate extraction pattern,
-   when compose code is extracted,
-   then:
-   - =units/compose/src/specflow-compose.el= exists with proper header
-   - =units/compose/tests/test-specflow-compose.el= uses load-path setup
-   - All compose tests pass
-   - Documentation updated
-
-   Dependencies to verify:
-   - compose uses org-store (required)
-   - compose uses hydrate patterns (verify, may need local helpers)
-
-** TODO initiate: Extract to modular structure
-   Extract initiate code from =src/specflow.el= to =units/initiate/src/specflow-initiate.el=.
-
-   Same pattern as compose:
-   - Create =units/initiate/src/specflow-initiate.el=
-   - Move tests to =units/initiate/tests/=
-   - Update load-path in tests
-   - Verify all tests pass
-
-** TODO facade: Convert src/specflow.el to loader
+** NEXT facade: Convert src/specflow.el to loader
    After all units extracted, convert =src/specflow.el= to a facade.
 
    Given all units extracted,
@@ -55,8 +31,15 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    #+end_src
 
 * Backlog (future enhancements)
-** TODO M-x specflow-phase-shitf
+** TODO M-x specflow add-root-task
+- task is added, need to indicate that we should update core pareent docs
+- should probably define parent and child so taht when the task is picked up, claude will know to update parent before going to child
+- thes manually written tasks should be 'revised, fleshed out', when the time comes to pick them up again
+** TODO M-x specflow-phase-shift
 - command to switch to a particular phase
+** TODO lock down standard workflow for commiting and pushing
+** TODO need to have better phase change enforcement
+** TODO lock down modular unit structure with src/ and tests/
 ** TODO Lock down expected todo.org structure/formatting
 - requirements for NEXT
 - requirements for TODO
@@ -127,4 +110,15 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    Project bootstrapping. 21 ERT tests passing (169 total).
    M-x specflow-initiate creates control plane, CLAUDE.md, todo.org, .specflow marker.
    README.md written.
+
+** DONE compose: Extract to modular structure
+   CLOSED: [2026-01-20]
+   Extracted compose code to units/compose/src/specflow-compose.el.
+   43 ERT tests passing. Documentation updated.
+
+** DONE initiate: Extract to modular structure
+   CLOSED: [2026-01-20]
+   Extracted initiate code to units/initiate/src/specflow-initiate.el.
+   21 ERT tests passing. Documentation updated.
+
 

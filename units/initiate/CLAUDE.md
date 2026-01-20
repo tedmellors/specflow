@@ -58,13 +58,18 @@ Templates use `<project-name>` placeholder:
 
 ## Implementation Notes
 
-- All initiate code lives in `src/specflow.el` (lines 1652-1807)
-- 1 interactive command defined
-- 21 ERT tests in `tests/test-specflow-initiate.el`
-- README at `units/initiate/README.md`
+### Structure
+
+- `units/initiate/src/specflow-initiate.el` — implementation
+- `units/initiate/tests/test-specflow-initiate.el` — 21 ERT tests
+- `units/initiate/README.md` — usage documentation
+
+### Dependencies
+
+None. Initiate is standalone (uses only basic Emacs file operations).
 
 ## Phase
 
-This unit has completed: Plan → Specify → Scaffold → Implement → Validate → Document
+MVP complete: Plan → Specify → Scaffold → Implement → Validate → Document
 
-Status: **Complete** (MVP)
+Code extraction complete.

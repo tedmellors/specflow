@@ -2,3 +2,32 @@
 #+STARTUP: overview
 #+SEQ_TODO: TODO NEXT WAITING | DONE
 
+* About
+
+This file tracks outcome-based tasks for the core unit.
+Core is documentation-only; it owns architecture.org and overview.org.
+
+* Active
+
+** NEXT Facade: Convert src/specflow.el to loader
+   Convert monolithic src/specflow.el to minimal facade.
+
+   Given all units extracted to modular structure,
+   when facade conversion is complete,
+   then src/specflow.el contains only:
+   - Package header/commentary
+   - Requires for all unit modules
+   - (provide 'specflow)
+
+   Implementation:
+   - [ ] Replace src/specflow.el with minimal facade
+   - [ ] Verify all unit tests still pass
+   - [ ] Update documentation
+
+* Backlog
+
+(empty)
+
+* Done
+
+(empty)
