@@ -45,6 +45,12 @@ It complements =hydrate=:
    - User's answers as requirements
    - Phase-appropriate instructions
 
+6. *Planning artifact preservation* — generated prompts MUST instruct Claude to:
+   - Save planning discussions/decisions to =temp-planning-artifacts.org= in the unit directory
+   - This preserves context across sessions and context window compaction
+   - Artifacts are temporary reference material, deleted after official docs are finalized
+   - Format: Org file with dated sections capturing design decisions, Q&A, rationale
+
 ** Proposed Commands
 
 | Command | Purpose | Key Questions |
