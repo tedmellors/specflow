@@ -1,0 +1,159 @@
+#+TITLE: compose – Specification
+#+STARTUP: overview
+
+* Plan Notes
+
+This section captures design decisions from Plan phase.
+To be refined into formal specification in Specify phase.
+
+** Purpose
+
+=compose= generates task-specific prompts for AI assistants.
+
+It complements =hydrate=:
+- hydrate = continue workflow (generic conversation header)
+- compose = start new task (task-specific prompt with requirements)
+
+** How It Works
+
+1. User runs command (e.g., =specflow-compose-new-unit=)
+2. Buffer pops up with template questions (Org format)
+3. User fills in answers under each heading
+4. User presses =C-c C-c= to generate prompt
+5. Prompt is copied to kill-ring / displayed in buffer
+6. User pastes prompt into AI chat
+7. AI does the actual work based on prompt
+
+** Key Design Decisions
+
+1. *Prompt generation, not file editing* — compose generates prompts for Claude,
+   it does not directly edit files
+
+2. *Phase enforcement* — compose commands require Plan phase
+
+3. *Org buffer for input* — simple, fast, familiar interface
+   - Headings as question prompts
+   - User types under each heading
+   - =C-c C-c= to generate, =C-c C-k= to cancel
+
+4. *Single dispatcher + direct commands* — =specflow-compose= offers menu,
+   direct commands (=specflow-compose-new-unit=) for power users
+
+5. *Context inclusion* — generated prompts include:
+   - Current state (phase, unit, parent chain)
+   - Relevant file pointers
+   - User's answers as requirements
+   - Phase-appropriate instructions
+
+** Proposed Commands
+
+| Command | Purpose | Key Questions |
+|---------+---------+---------------|
+| =specflow-compose= | Dispatcher menu | What do you want to do? |
+| =specflow-compose-new-unit= | Create new unit | name, parent, purpose, problem, scope, deps, functions |
+| =specflow-compose-edit-spec= | Edit a spec | what to change, why, constraints |
+| =specflow-compose-new-feature= | Add feature | which unit, description, scope |
+| =specflow-compose-refactor= | Refactor code | what, why, constraints |
+
+** Template Buffer Example
+
+#+begin_example
+#+TITLE: New Unit
+
+* Unit Name
+cache
+
+* Parent
+core
+
+* Purpose (one line)
+Add caching layer for org-store reads
+
+* Problem
+Repeated reads are slow on large projects
+
+* In Scope
+- In-memory cache
+- Invalidation on file change
+
+* Out of Scope
+- Persistent cache
+- Distributed cache
+
+* Dependencies
+org-store
+
+* Key Commands
+specflow-cache-get, specflow-cache-invalidate
+
+────────────────────────────────────────
+C-c C-c  Generate prompt
+C-c C-k  Cancel
+#+end_example
+
+** Generated Prompt Structure
+
+#+begin_example
+## Task: Create new unit "cache"
+
+### Current State
+- Active unit: core
+- Phase: Plan
+- Parent chain: none
+
+### Context Files
+Read these files for context:
+- units/core/architecture.org (architecture)
+- docs/specflow.org (control plane)
+- todo.org (root tasks)
+
+### Requirements
+- Unit name: cache
+- Parent: core
+- Purpose: Add caching layer for org-store reads
+- Problem: Repeated reads are slow on large projects
+- In scope:
+  - In-memory cache
+  - Invalidation on file change
+- Out of scope:
+  - Persistent cache
+  - Distributed cache
+- Dependencies: org-store
+- Key commands: specflow-cache-get, specflow-cache-invalidate
+
+### Instructions
+You are in Plan phase. Create this new unit by:
+1. Update architecture.org with cache unit description
+2. Add cache entry to Units section in control plane
+3. Create units/cache/ directory
+4. Draft spec.org based on requirements above
+5. Update root todo.org with NEXT task
+
+Phase rules: Do NOT write implementation code. Planning only.
+#+end_example
+
+** Workflow Direction
+
+For =specflow-compose-new-feature=, prompt can ask:
+
+> "Does this feature require changes to parent unit architecture?"
+> - Yes → Include parent context, instruct Claude to start from parent
+> - No → Include only child context, work in child
+> - Unsure → Include both, ask Claude to determine
+
+** Dependencies
+
+- org-store: read control plane, project state, unit info
+- References hydrate patterns but no direct dependency
+
+** Open Questions (for Specify phase)
+
+1. Exact keybindings for template buffer
+2. Whether to include hydrate-style header in generated prompts
+3. Error handling for missing context files
+4. Whether to support custom template definitions
+
+* Specification
+
+/To be written in Specify phase./
+

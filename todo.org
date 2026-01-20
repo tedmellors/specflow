@@ -7,7 +7,7 @@
 This is the canonical task driver for the SpecFlow project.
 Only ONE task is marked NEXT at a time.
 
-Implementation order: org-store → core → bundle → hydrate → docs
+Implementation order: org-store → core → bundle → hydrate → docs → compose
 
 * Completed
 
@@ -50,7 +50,15 @@ Implementation order: org-store → core → bundle → hydrate → docs
 
 * Active
 
-No active tasks. All MVP units complete.
+** NEXT compose: Plan phase
+   Given architecture.org updated with compose unit description,
+   when compose unit Plan phase is done,
+   then we have design clarity for task prompt generation commands.
+
+   Compose generates task-specific prompts for AI assistants via guided
+   template buffers. Commands: new-unit, edit-spec, new-feature, refactor.
+
+   See =units/compose/= for unit artifacts (to be created).
 
 * Backlog (future enhancements)
 

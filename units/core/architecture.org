@@ -71,14 +71,23 @@ Initial modules are expected to include:
   - optional phase violation scanning (heuristic, non-blocking)
   - does NOT manage windows, buffers, or workspaces
 
+- compose
+  - generates task-specific prompts for AI assistants
+  - provides guided template buffers for common workflows
+  - enforces Plan phase for task initiation
+  - commands: new-unit, edit-spec, new-feature, refactor
+  - complements hydrate: hydrate = continue workflow, compose = start task
+  - does NOT execute tasks; generates prompts for human review
+
 * Implementation Order and Dependencies
 
 - org-store (foundational): control plane discovery + read/write + unit registry access
 - core: shared constants, phase semantics, shared helpers (built on org-store API)
 - bundle: context bundling and optional LLM compression (uses org-store + core)
-- hydrate: UI/workspace commands (uses bundle + org-store + core)
+- hydrate: conversation framing (uses org-store)
+- compose: task prompt generation (uses org-store, hydrate patterns)
 
-Dependency direction: org-store → core → bundle → hydrate
+Dependency direction: org-store → core → bundle → hydrate → compose
 
 * Source Layout
 
