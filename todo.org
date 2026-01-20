@@ -50,17 +50,13 @@ Implementation order: org-store → core → bundle → hydrate → docs
 
 * Active
 
-** NEXT docs: Plan phase
-   Given hydrate is complete,
-   when docs unit Plan phase is done,
-   then we have design clarity for user-facing documentation.
+No active tasks. All MVP units complete.
 
-   See =units/docs/= for unit artifacts (to be created).
+* Backlog (future enhancements)
 
-* Backlog (dependency order)
-
-** TODO docs: Plan → Specify → Scaffold → Implement → Validate → Document
-   User-facing documentation and README. Written last.
+** TODO gptel integration for hydrate
+** TODO Transient menus for command discovery
+** TODO LLM compression for bundle
 
 * Completed (moved from Active)
 
@@ -69,3 +65,8 @@ Implementation order: org-store → core → bundle → hydrate → docs
    AI conversation framing. 25 ERT tests passing (115 total).
    M-x specflow-hydrate-copy-header and 10 other commands working.
    README.md written.
+
+** DONE docs: Plan → Specify → Scaffold → Implement → Validate → Document
+   CLOSED: [2025-01-20]
+   User-facing documentation. Root README.md written (187 lines).
+   All 9 required sections present, validated against spec.
