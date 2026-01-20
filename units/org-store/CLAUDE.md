@@ -9,7 +9,7 @@ This unit owns:
 - Property writing with minimal diffs (`specflow-org-store-write-property`)
 - Validation (`specflow-org-store-validate-unit-pointers`, `specflow-org-store-validate-parent-chain`)
 - Workflow commands:
-  - `specflow-phase-shift` — change SPEC_FLOW_PHASE in control plane
+  - `specflow-phase-shift` — change SPEC_FLOW_PHASE and SPEC_FLOW_ACTIVE_UNIT in control plane
   - `specflow-add-root-task` — append TODO to root todo.org Backlog section
 - Task management commands (prompt-only, do NOT modify todo.org):
   - `specflow-refine-task` — generate refinement prompt for Claude, copy to kill-ring

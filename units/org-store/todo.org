@@ -269,6 +269,30 @@ Derived from =units/org-store/spec.org=.
    - Both commands display "Task prompt copied to kill-ring"
    - 76 ERT tests passing
 
+* Phase-Shift Enhancement
+
+** TODO Enhance: specflow-phase-shift to also set active unit
+   Given the current phase and active unit from control plane,
+   when =specflow-phase-shift= is called interactively,
+   then it prompts for phase and unit, and updates both in control plane.
+
+   Outcomes:
+   - Read current phase and unit via =specflow-org-store-read-project-state=
+   - Prompt for phase with =completing-read= (current as default)
+   - Prompt for unit with =completing-read= from registry (current as default)
+   - Validate phase is in allowed list
+   - Validate unit exists in registry
+   - Write both properties to control plane
+   - Display "Phase: <PHASE>, Unit: <UNIT>"
+
+** TODO ERT: Update specflow-phase-shift tests
+   - Test changing both phase and unit
+   - Test changing only phase (keep unit via RET)
+   - Test changing only unit (keep phase via RET)
+   - Test keeping both (RET, RET)
+   - Test invalid phase rejected
+   - Test invalid unit rejected (not in registry)
+
 * Validate
 
 ** DONE Run full ERT suite
