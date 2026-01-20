@@ -148,10 +148,16 @@ Derived from =units/org-store/spec.org=.
    - Determinism test
    7 tests, all passing.
 
-** TODO ERT: Determinism tests
-   - Read same file twice → identical output
-   - Write same value twice → no file change on second write
-   - Write then read → value matches
+** DONE ERT: Determinism tests
+   CLOSED: [2026-01-20]
+   Covered by existing tests:
+   - specflow-test-find-control-plane-deterministic
+   - specflow-test-read-project-state-deterministic
+   - specflow-test-read-unit-deterministic
+   - specflow-test-read-unit-registry-deterministic
+   - specflow-test-write-property-idempotent
+   - specflow-test-validate-parent-chain-deterministic
+   - specflow-test-write-then-read-property
 
 * Workflow Commands
 
@@ -271,7 +277,8 @@ Derived from =units/org-store/spec.org=.
 
 * Phase-Shift Enhancement
 
-** TODO Enhance: specflow-phase-shift to also set active unit
+** DONE Enhance: specflow-phase-shift to also set active unit
+   CLOSED: [2026-01-20]
    Given the current phase and active unit from control plane,
    when =specflow-phase-shift= is called interactively,
    then it prompts for phase and unit, and updates both in control plane.
@@ -285,7 +292,9 @@ Derived from =units/org-store/spec.org=.
    - Write both properties to control plane
    - Display "Phase: <PHASE>, Unit: <UNIT>"
 
-** TODO ERT: Update specflow-phase-shift tests
+** DONE ERT: Update specflow-phase-shift tests
+   CLOSED: [2026-01-20]
+   8 tests, all passing.
    - Test changing both phase and unit
    - Test changing only phase (keep unit via RET)
    - Test changing only unit (keep phase via RET)
@@ -297,7 +306,7 @@ Derived from =units/org-store/spec.org=.
 
 ** DONE Run full ERT suite
    CLOSED: [2026-01-20]
-   76 tests, all passing.
+   79 tests, all passing.
 
 ** DONE Manual smoke test
    CLOSED: [2026-01-20]

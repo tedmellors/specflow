@@ -146,6 +146,8 @@ Some content here.
 ** org-store
    :PROPERTIES:
    :SPEC: units/org-store/spec.org
+   :TODO: units/org-store/todo.org
+   :RULES: units/org-store/CLAUDE.md
    :END:
 "
   "Valid control plane content for testing.")
@@ -439,6 +441,33 @@ Some content here.
 
 "
   "Control plane with empty unit registry.")
+
+(defconst specflow-test-control-plane-multi-unit
+  "#+TITLE: Test Control Plane
+
+* Project
+  :PROPERTIES:
+  :SPEC_FLOW_PHASE: Implement
+  :SPEC_FLOW_ACTIVE_UNIT: org-store
+  :END:
+
+* Units
+
+** org-store
+   :PROPERTIES:
+   :SPEC: units/org-store/spec.org
+   :TODO: units/org-store/todo.org
+   :RULES: units/org-store/CLAUDE.md
+   :END:
+
+** bundle
+   :PROPERTIES:
+   :SPEC: units/bundle/spec.org
+   :TODO: units/bundle/todo.org
+   :RULES: units/bundle/CLAUDE.md
+   :END:
+"
+  "Control plane with multiple units for phase-shift tests.")
 
 (ert-deftest specflow-test-read-unit-registry-multiple-units ()
   "Test reading registry with multiple units in document order."
@@ -941,18 +970,47 @@ Content under org-store.
 
 ;;;; Workflow Command Tests - specflow-phase-shift
 
-(ert-deftest specflow-test-phase-shift-changes-phase ()
-  "Test that phase-shift successfully changes the phase."
+(ert-deftest specflow-test-phase-shift-changes-both ()
+  "Test that phase-shift successfully changes both phase and unit."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      (write-region specflow-test-control-plane-multi-unit nil cp-path)
+      (let ((default-directory project-root))
+        ;; Change both phase and unit
+        (should (specflow-phase-shift "Validate" "bundle"))
+        ;; Verify both changed
+        (let ((state (specflow-org-store-read-project-state cp-path)))
+          (should (equal (plist-get state :phase) "Validate"))
+          (should (equal (plist-get state :active-unit) "bundle")))))))
+
+(ert-deftest specflow-test-phase-shift-changes-phase-only ()
+  "Test that phase-shift can change only phase (keep unit)."
   (specflow-test-with-temp-project
       '(".git/" "docs/")
     (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (let ((default-directory project-root))
-        ;; Change phase
-        (should (specflow-phase-shift "Validate"))
-        ;; Verify phase changed
+        ;; Change phase, keep unit
+        (should (specflow-phase-shift "Validate" "org-store"))
+        ;; Verify phase changed, unit unchanged
         (let ((state (specflow-org-store-read-project-state cp-path)))
-          (should (equal (plist-get state :phase) "Validate")))))))
+          (should (equal (plist-get state :phase) "Validate"))
+          (should (equal (plist-get state :active-unit) "org-store")))))))
+
+(ert-deftest specflow-test-phase-shift-changes-unit-only ()
+  "Test that phase-shift can change only unit (keep phase)."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      (write-region specflow-test-control-plane-multi-unit nil cp-path)
+      (let ((default-directory project-root))
+        ;; Change unit, keep phase (Implement)
+        (should (specflow-phase-shift "Implement" "bundle"))
+        ;; Verify unit changed, phase unchanged
+        (let ((state (specflow-org-store-read-project-state cp-path)))
+          (should (equal (plist-get state :phase) "Implement"))
+          (should (equal (plist-get state :active-unit) "bundle")))))))
 
 (ert-deftest specflow-test-phase-shift-all-valid-phases ()
   "Test that all valid phases can be set."
@@ -962,7 +1020,7 @@ Content under org-store.
       (write-region specflow-test-valid-control-plane nil cp-path)
       (let ((default-directory project-root))
         (dolist (phase specflow-valid-phases)
-          (specflow-phase-shift phase)
+          (specflow-phase-shift phase "org-store")
           (let ((state (specflow-org-store-read-project-state cp-path)))
             (should (equal (plist-get state :phase) phase))))))))
 
@@ -973,11 +1031,21 @@ Content under org-store.
     (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (let ((default-directory project-root))
-        (should-error (specflow-phase-shift "InvalidPhase")
+        (should-error (specflow-phase-shift "InvalidPhase" "org-store")
+                      :type 'user-error)))))
+
+(ert-deftest specflow-test-phase-shift-rejects-invalid-unit ()
+  "Test that invalid unit is rejected with user-error."
+  (specflow-test-with-temp-project
+      '(".git/" "docs/")
+    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      (write-region specflow-test-valid-control-plane nil cp-path)
+      (let ((default-directory project-root))
+        (should-error (specflow-phase-shift "Implement" "nonexistent-unit")
                       :type 'user-error)))))
 
 (ert-deftest specflow-test-phase-shift-displays-message ()
-  "Test that phase-shift displays confirmation message."
+  "Test that phase-shift displays confirmation message with both values."
   (specflow-test-with-temp-project
       '(".git/" "docs/")
     (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
@@ -988,26 +1056,26 @@ Content under org-store.
         (cl-letf (((symbol-function 'message)
                    (lambda (fmt &rest args)
                      (push (apply #'format fmt args) messages))))
-          (specflow-phase-shift "Document"))
-        ;; Check message
-        (should (member "Phase changed to Document" messages))))))
+          (specflow-phase-shift "Document" "org-store"))
+        ;; Check message includes both phase and unit
+        (should (member "Phase: Document, Unit: org-store" messages))))))
 
-(ert-deftest specflow-test-phase-shift-uses-write-property ()
-  "Test that phase-shift uses existing write infrastructure."
+(ert-deftest specflow-test-phase-shift-writes-both-properties ()
+  "Test that phase-shift writes both properties to control plane."
   (specflow-test-with-temp-project
       '(".git/" "docs/")
     (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
-      (write-region specflow-test-valid-control-plane nil cp-path)
+      (write-region specflow-test-control-plane-multi-unit nil cp-path)
       (let ((default-directory project-root))
-        (specflow-phase-shift "Scaffold")
-        ;; Verify file was updated correctly (minimal diff behavior)
+        (specflow-phase-shift "Scaffold" "bundle")
+        ;; Verify file was updated correctly
         (with-temp-buffer
           (insert-file-contents cp-path)
           ;; Should have new phase
           (should (search-forward "SPEC_FLOW_PHASE: Scaffold" nil t))
-          ;; Other content should be unchanged
+          ;; Should have new unit
           (goto-char (point-min))
-          (should (search-forward "SPEC_FLOW_ACTIVE_UNIT: org-store" nil t)))))))
+          (should (search-forward "SPEC_FLOW_ACTIVE_UNIT: bundle" nil t)))))))
 
 ;;;; Workflow Command Tests - specflow-add-root-task
 

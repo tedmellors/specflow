@@ -614,25 +614,47 @@ Returns a list of path strings, or nil if VALUE is nil or empty."
   '("Plan" "Specify" "Scaffold" "Implement" "Validate" "Document")
   "List of valid SpecFlow phase names.")
 
-(defun specflow-phase-shift (phase)
-  "Change the current SpecFlow phase to PHASE.
+(defun specflow-phase-shift (phase unit)
+  "Change the current SpecFlow phase to PHASE and active unit to UNIT.
 
 PHASE must be one of: Plan, Specify, Scaffold, Implement, Validate, Document.
+UNIT must be a unit name from the control plane registry.
 
-Interactively, prompts with `completing-read' from valid phase list.
+Interactively, prompts with `completing-read' for both values, with current
+values as defaults.
 
-Updates the SPEC_FLOW_PHASE property in the control plane's Project heading.
+Updates both SPEC_FLOW_PHASE and SPEC_FLOW_ACTIVE_UNIT properties in the
+control plane's Project heading.
 Returns t on success."
   (interactive
-   (list (completing-read "Phase: " specflow-valid-phases nil t)))
+   (let* ((cp-path (specflow-org-store-find-control-plane))
+          (state (specflow-org-store-read-project-state cp-path))
+          (current-phase (plist-get state :phase))
+          (current-unit (plist-get state :active-unit))
+          (registry (specflow-org-store-read-unit-registry cp-path))
+          (unit-names (mapcar (lambda (u) (plist-get u :name)) registry))
+          (selected-phase (completing-read
+                           (format "Phase [%s]: " current-phase)
+                           specflow-valid-phases nil t nil nil current-phase))
+          (selected-unit (completing-read
+                          (format "Unit [%s]: " current-unit)
+                          unit-names nil t nil nil current-unit)))
+     (list selected-phase selected-unit)))
   ;; Validate phase
   (unless (member phase specflow-valid-phases)
     (user-error "Invalid phase: %s. Must be one of: %s"
                 phase (mapconcat #'identity specflow-valid-phases ", ")))
-  ;; Find control plane and write property
-  (let ((cp-path (specflow-org-store-find-control-plane)))
+  ;; Validate unit
+  (let* ((cp-path (specflow-org-store-find-control-plane))
+         (registry (specflow-org-store-read-unit-registry cp-path))
+         (unit-names (mapcar (lambda (u) (plist-get u :name)) registry)))
+    (unless (member unit unit-names)
+      (user-error "Invalid unit: %s. Must be one of: %s"
+                  unit (mapconcat #'identity unit-names ", ")))
+    ;; Write both properties
     (specflow-org-store-write-property cp-path '("Project") "SPEC_FLOW_PHASE" phase)
-    (message "Phase changed to %s" phase)
+    (specflow-org-store-write-property cp-path '("Project") "SPEC_FLOW_ACTIVE_UNIT" unit)
+    (message "Phase: %s, Unit: %s" phase unit)
     t))
 
 (defun specflow-add-root-task (headline)
