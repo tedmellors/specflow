@@ -10,6 +10,18 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
+** NEXT rules: Plan phase - Design operational rules system
+   Given the monolithic root CLAUDE.md with SpecFlow operational rules,
+   when Claude needs context-specific rules during a session,
+   then a rules unit provides structured, queryable rule loading.
+
+   Outcomes:
+   - Define org-based rules format (tagged/propertied for filtering by phase, topic)
+   - Design query API: =specflow-rules-for-phase=, =specflow-rules-for-topic=
+   - Plan integration with bundle/hydrate (relevant rules in context)
+   - Migrate root CLAUDE.md operational rules to structured format
+   - Register rules unit in control plane
+
 * Backlog (future enhancements)
 ** TODO lock down standard workflow for commiting and pushing
 - Plan → Specify → Scaffold - [COMMIT AND PUSH]
@@ -19,7 +31,6 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
 - this should be added as a reference doc on the NEXT actionable task.
 - post compaction we should hydrate.
 - we need rules to spend remaining context on saving where we are and documenting rather than trying to sqeeze out more work. 
-** TODO need to figure out better system to manage rules rather than dumping everythign into claude.md
 ** TODO need to have better phase change enforcement
 ** TODO lock down modular unit structure with src/ and tests/
 ** TODO Lock down expected todo.org structure/formatting
