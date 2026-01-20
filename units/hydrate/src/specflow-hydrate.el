@@ -360,6 +360,9 @@ Returns list of (line-num . matched-text) pairs."
 (defconst specflow-hydrate--rules-path "units/rules/src/rules.org"
   "Path to rules.org relative to specflow root.")
 
+(defvar specflow-hydrate--install-root nil
+  "Cached specflow installation root, set at load time.")
+
 (defun specflow-hydrate--format-rule-as-markdown (rule)
   "Format a single RULE plist as markdown.
 Returns a string with ## heading and content."
@@ -383,21 +386,24 @@ Returns a complete markdown string with header and all rules."
 
 (defun specflow-hydrate--find-specflow-root ()
   "Find the specflow installation root directory.
-Searches for units/rules/src/rules.org starting from `load-file-name'
+Returns cached value if available, otherwise searches for
+units/rules/src/rules.org starting from `load-file-name'
 or the current file's directory."
-  (let ((start-dir (or (and load-file-name (file-name-directory load-file-name))
-                       (and buffer-file-name (file-name-directory buffer-file-name))
-                       default-directory)))
-    ;; Walk up looking for the rules.org file
-    (let ((dir start-dir)
-          (found nil))
-      (while (and (not found)
-                  (not (string= dir (file-name-directory (directory-file-name dir)))))
-        (let ((candidate (expand-file-name specflow-hydrate--rules-path dir)))
-          (if (file-exists-p candidate)
-              (setq found dir)
-            (setq dir (file-name-directory (directory-file-name dir))))))
-      found)))
+  ;; Return cached value if we have it
+  (or specflow-hydrate--install-root
+      (let ((start-dir (or (and load-file-name (file-name-directory load-file-name))
+                           (and buffer-file-name (file-name-directory buffer-file-name))
+                           default-directory)))
+        ;; Walk up looking for the rules.org file
+        (let ((dir start-dir)
+              (found nil))
+          (while (and (not found)
+                      (not (string= dir (file-name-directory (directory-file-name dir)))))
+            (let ((candidate (expand-file-name specflow-hydrate--rules-path dir)))
+              (if (file-exists-p candidate)
+                  (setq found dir)
+                (setq dir (file-name-directory (directory-file-name dir))))))
+          found))))
 
 (defun specflow-hydrate-rules (&optional target-dir specflow-root)
   "Generate CLAUDE.md from rules.org.
@@ -425,6 +431,19 @@ and writes to CLAUDE.md in the target directory."
     (with-temp-file output-path
       (insert markdown))
     (message "CLAUDE.md regenerated (%d rules)" (length rules))))
+
+;;;; Initialization
+
+;; Cache the specflow root at load time when load-file-name is available
+(when load-file-name
+  (let ((dir (file-name-directory load-file-name)))
+    ;; Walk up to find specflow root
+    (while (and (not specflow-hydrate--install-root)
+                (not (string= dir (file-name-directory (directory-file-name dir)))))
+      (let ((candidate (expand-file-name specflow-hydrate--rules-path dir)))
+        (if (file-exists-p candidate)
+            (setq specflow-hydrate--install-root dir)
+          (setq dir (file-name-directory (directory-file-name dir))))))))
 
 (provide 'specflow-hydrate)
 ;;; specflow-hydrate.el ends here
