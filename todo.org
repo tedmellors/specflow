@@ -14,21 +14,21 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
 (No active task - select from backlog)
 
 * Backlog (future enhancements)
-** TODO lock down standard workflow for commiting and pushing
+** TODO rules: lock down standard workflow for commiting and pushing
 - Plan → Specify → Scaffold - [COMMIT AND PUSH]
 - Implement → Validate → Document [COMMIT AND PUSH]
-** TODO seems to move automatically from implementatin-validate-document. need rule to stop and confirm at every phase shift
-** TODO add rule to auto-save working plan at 10% until compaction as a 'temp-plan-artifact.org'
+** TODO rules: seems to move automatically from implementatin-validate-document. need rule to stop and confirm at every phase shift
+** TODO rules: add rule to auto-save working plan at 10% until compaction as a 'temp-plan-artifact.org'
 - this should be added as a reference doc on the NEXT actionable task.
 - post compaction we should hydrate.
 - we need rules to spend remaining context on saving where we are and documenting rather than trying to sqeeze out more work. 
-** TODO need to have better phase change enforcement
-** TODO lock down modular unit structure with src/ and tests/
-** TODO Lock down expected todo.org structure/formatting
+** TODO rules: need to have better phase change enforcement
+** TODO rules: lock down modular unit structure with src/ and tests/
+** TODO rules: Lock down expected todo.org structure/formatting
 - requirements for NEXT
 - requirements for TODO
 - requirements for DONE
-** TODO lock down phase workflow always: Plan → Specify → Scaffold → Implement → Validate → Document
+** TODO rules: lock down phase workflow always: Plan → Specify → Scaffold → Implement → Validate → Document
 ** someday:
 *** TODO gptel integration for hydrate
 *** TODO Transient menus for command discovery
