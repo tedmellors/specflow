@@ -10,7 +10,7 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** TODO org-store: Enhance specflow-phase-shift to also set active unit
+** NEXT org-store: Enhance specflow-phase-shift to also set active unit
    Given the current phase and active unit from control plane,
    when =specflow-phase-shift= is called interactively,
    then it prompts for phase (pre-selected to current) and unit (pre-selected to current),
