@@ -23,6 +23,7 @@ It is designed to work with any AI chat surface (Claude Code IDE, gptel, clipboa
 - Include parent-chain context pointers (authoritative constraints)
 - Provide optional "phase violation" warnings on AI output (heuristic; no enforcement)
 - Provide small navigation helpers (jump to control plane, root todo, unit spec)
+- Generate root CLAUDE.md from rules.org (operational rules hydration)
 
 **Out of scope**
 - Managing windows/buffers/layouts
@@ -73,6 +74,7 @@ These decisions shape the MVP implementation:
 | =specflow-hydrate-open-active-unit-rules= | Open active unit's CLAUDE.md |
 | =specflow-hydrate-scan-buffer= | Scan buffer for phase violations |
 | =specflow-hydrate-scan-region= | Scan region for phase violations |
+| =specflow-hydrate-rules= | Generate CLAUDE.md from rules.org |
 
 * Header Format
 
@@ -146,9 +148,58 @@ Insert commands skip confirmation prompts for "safe" buffers:
 
 All other buffers prompt for confirmation before insertion.
 
+* CLAUDE.md Generation
+
+=specflow-hydrate-rules= generates a root CLAUDE.md from rules.org.
+
+** Behavior
+
+1. Load all rules from =units/rules/src/rules.org= via =specflow-rules-load=
+2. Format each rule as markdown (title as =##= heading, content as body)
+3. Prepend generation header with timestamp and regeneration instructions
+4. Write to =CLAUDE.md= in target directory (default: project root)
+5. Display message: "CLAUDE.md regenerated (N rules)"
+
+** Output Format
+
+#+begin_example
+# SpecFlow – AI Assistant Rules
+
+<!-- AUTO-GENERATED from rules.org – DO NOT EDIT DIRECTLY -->
+<!-- Regenerate with: M-x specflow-hydrate-rules -->
+<!-- Generated: YYYY-MM-DD -->
+
+---
+
+## Scope
+
+<rule content>
+
+---
+
+## Control Plane Authority
+
+<rule content>
+
+---
+#+end_example
+
+** Parameters
+
+| Parameter | Default | Description |
+|-----------+--------------------------------------+--------------------------------|
+| target-dir | Project root (from control plane) | Directory to write CLAUDE.md |
+
+** Notes
+
+- Overwrites existing CLAUDE.md without warning
+- Rules appear in document order from rules.org
+- Headings are clean (no priority/phase markers)
+
 * Dependencies
 
 - *org-store*: Control plane discovery and reading
+- *rules*: Loading and formatting operational rules
 - *bundle*: None (MVP uses independent NEXT extraction)
 
 hydrate does NOT depend on core or bundle.
@@ -162,6 +213,8 @@ hydrate does NOT depend on core or bundle.
 | Unit not found | Signal =specflow-unit-not-found= |
 | No NEXT task found | Return placeholder text |
 | No todo.org found | Return placeholder text |
+| rules.org not found | Signal =specflow-rules-file-not-found= |
+| rules.org malformed | Signal =specflow-rules-malformed= |
 
 * Non-Functional Requirements
 

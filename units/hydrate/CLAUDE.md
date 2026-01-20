@@ -11,6 +11,7 @@ The hydrate unit provides *AI conversation framing*.
 - Phase-specific allowed actions templates
 - Navigation helpers (open control plane, unit files)
 - Phase violation scanning commands
+- CLAUDE.md generation from rules.org
 
 ### Does NOT Own
 
@@ -22,9 +23,9 @@ The hydrate unit provides *AI conversation framing*.
 
 ## Constraints
 
-1. **Depends on org-store only** — No bundle dependency for MVP
+1. **Depends on org-store and rules** — No bundle dependency
 2. **No continuous hooks** — Explicit scan commands only
-3. **Deterministic output** — Same inputs produce same header
+3. **Deterministic output** — Same inputs produce same header (modulo timestamps)
 4. **Safe defaults** — Copy/preview safe; insert prompts for unknown buffers
 5. **Text templates** — Phase actions are text, not Elisp constants
 
@@ -51,15 +52,17 @@ STOP and ask for confirmation if:
 
 Hydrate requires:
 - `specflow-org-store` — control plane discovery and reading
+- `specflow-rules` — loading and formatting operational rules
 
 Hydrate does NOT depend on bundle (per spec). Uses local `specflow-hydrate--split-paths` helper.
 
 ### Commands
 
-11 interactive commands:
+12 interactive commands:
 - 4 header commands (copy, preview, insert-header, insert-next)
 - 5 navigation helpers (open control-plane, root-todo, unit-spec, unit-todo, unit-rules)
 - 2 scan commands (scan-buffer, scan-region)
+- 1 generation command (hydrate-rules)
 
 ## Phase
 

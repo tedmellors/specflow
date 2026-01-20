@@ -9,7 +9,23 @@ See =spec.org= for requirements, =CLAUDE.md= for constraints.
 
 * Active
 
-(No active tasks)
+** TODO Implement: specflow-hydrate-rules command
+   Given rules.org as source of truth for operational rules,
+   when =specflow-hydrate-rules= is called,
+   then CLAUDE.md is regenerated from rules.org.
+
+   Outcomes:
+   - Load all rules from =units/rules/src/rules.org=
+   - Format as markdown with clean headings (no priority/phase markers)
+   - Prepend generation header with timestamp
+   - Write to CLAUDE.md in target directory
+   - Display message: "CLAUDE.md regenerated (N rules)"
+
+** TODO Test: ERT tests for hydrate-rules
+   - Test formatting produces valid markdown
+   - Test generation header is present
+   - Test all rules are included
+   - Test message is displayed
 
 * Completed
 
