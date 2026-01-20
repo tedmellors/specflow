@@ -133,6 +133,22 @@ Follow the phase rules. When ready to advance, update the control plane manually
 | `specflow-org-store-validate-unit-pointers` | Validate file pointers |
 | `specflow-org-store-validate-parent-chain` | Validate parent chain |
 
+### compose – Prompt Generation
+
+| Command | Description |
+|---------|-------------|
+| `specflow-compose` | Show menu of available compose actions |
+| `specflow-compose-new-unit` | Create prompt for new unit |
+| `specflow-compose-edit-spec` | Create prompt for editing spec |
+| `specflow-compose-new-feature` | Create prompt for new feature |
+| `specflow-compose-refactor` | Create prompt for refactoring |
+
+### initiate – Project Bootstrapping
+
+| Command | Description |
+|---------|-------------|
+| `specflow-initiate` | Bootstrap new SpecFlow project in current directory |
+
 ## Module Documentation
 
 For detailed documentation on each module:
