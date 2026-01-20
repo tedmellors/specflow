@@ -10,17 +10,16 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** NEXT rules: Plan phase - Design operational rules system
-   Given the monolithic root CLAUDE.md with SpecFlow operational rules,
-   when Claude needs context-specific rules during a session,
-   then a rules unit provides structured, queryable rule loading.
+** NEXT hydrate: Add specflow-hydrate-rules command
+   Given rules.org as source of truth for operational rules,
+   when user runs M-x specflow-hydrate-rules,
+   then root CLAUDE.md is regenerated from rules.org.
 
    Outcomes:
-   - Define org-based rules format (tagged/propertied for filtering by phase, topic)
-   - Design query API: =specflow-rules-for-phase=, =specflow-rules-for-topic=
-   - Plan integration with bundle/hydrate (relevant rules in context)
-   - Migrate root CLAUDE.md operational rules to structured format
-   - Register rules unit in control plane
+   - Load rules from units/rules/src/rules.org
+   - Format as markdown with generation header
+   - Write to project root CLAUDE.md
+   - Support target directory parameter for other projects
 
 * Backlog (future enhancements)
 ** TODO lock down standard workflow for commiting and pushing
@@ -151,6 +150,15 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    - Unit validated against control plane registry
    - Writes both SPEC_FLOW_PHASE and SPEC_FLOW_ACTIVE_UNIT
    79 ERT tests passing. README.md updated.
+
+** DONE rules: Plan → Specify → Scaffold → Implement → Validate → Document
+   CLOSED: [2026-01-20]
+   Operational rules management. 25 ERT tests passing.
+   - rules.org format with RULE_ID, PRIORITY, PHASE, TAGS properties
+   - Query API: specflow-rules-load, for-phase, mandatory, by-tag
+   - specflow-rules-format-for-context for AI output
+   - Migrated 18 rules from root CLAUDE.md to units/rules/src/rules.org
+   README.md written.
 
 
 
