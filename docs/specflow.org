@@ -5,7 +5,7 @@
 * Project
   :PROPERTIES:
   :SPEC_FLOW_PHASE: Plan
-  :SPEC_FLOW_ACTIVE_UNIT: bundle
+  :SPEC_FLOW_ACTIVE_UNIT: hydrate
   :END:
 
 This file is the **SpecFlow control plane**.
@@ -51,8 +51,8 @@ Tools and AI assistants may use hierarchy to:
 ** core
    :PROPERTIES:
    :DIR: src/
-   :SPEC: units/core/architecture.org
-   :TODO: units/core/overview.org
+   :SPEC: units/core/architecture.org units/core/overview.org
+   :TODO: units/core/todo.org
    :RULES: units/core/CLAUDE.md
    :CHILDREN: org-store bundle hydrate docs
    :END:

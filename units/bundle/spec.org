@@ -1,0 +1,215 @@
+#+TITLE: bundle – Specification
+#+STARTUP: overview
+
+* Purpose
+
+bundle is the SpecFlow module responsible for assembling context bundles
+for AI assistants. When a developer needs to provide context to an AI
+(e.g., Claude, GPT), bundle gathers all relevant project files into a
+single, deterministic output.
+
+All context reading is done via the org-store API.
+
+* Scope
+
+** Owns
+- Assembling context from control plane, root todo, and unit files
+- Resolving parent chain and including ancestor content
+- Splitting space-separated property values (SPEC, TODO, RULES)
+- Formatting output with section delimiters
+- Interactive command for bundling (M-x specflow-bundle)
+- Output to kill-ring and buffer
+
+** Does Not Own
+- Control plane discovery or parsing (org-store)
+- Property writing (org-store)
+- LLM compression (deferred)
+- CONTEXT_REFS resolution (deferred)
+- UI/workspace management (hydrate)
+
+* Bundle Contents
+
+The context bundle includes (in order):
+
+| Content | Source | Notes |
+|-----------------+--------------------------------+-------------------------------|
+| Project state | Control plane | Phase, active unit |
+| NEXT task | Root todo.org | First NEXT heading + bullets |
+| Parent chain | Each ancestor (root-to-leaf) | SPEC, TODO, RULES files |
+| Active unit | Current unit | SPEC, TODO, RULES files |
+
+** Parent Chain Order
+
+Parent chain is presented root-to-leaf (most general first, most specific last).
+For example, if bundle's parent is core, the output shows core's files first,
+then bundle's files.
+
+** Property Splitting
+
+SPEC, TODO, and RULES properties may contain space-separated paths:
+
+#+begin_example
+:SPEC: units/core/architecture.org units/core/overview.org
+#+end_example
+
+Bundle splits these into a list and reads each file.
+
+* Output Format
+
+Output is plain text with clear section delimiters:
+
+#+begin_example
+# SpecFlow Context Bundle
+# Generated: 2025-01-19T15:30:00
+
+## Project State
+Phase: Plan
+Active Unit: bundle
+
+## NEXT Task
+<content of first NEXT heading from root todo.org>
+
+## Parent: core
+
+### SPEC: units/core/architecture.org
+<file content>
+
+### SPEC: units/core/overview.org
+<file content>
+
+### RULES: units/core/CLAUDE.md
+<file content>
+
+## Unit: bundle
+
+### SPEC: units/bundle/spec.org
+<file content>
+
+### TODO: units/bundle/todo.org
+<file content>
+
+### RULES: units/bundle/CLAUDE.md
+<file content>
+#+end_example
+
+** Missing Files
+
+If a referenced file does not exist:
+- Log a warning (message)
+- Include placeholder in output: =<file not found: path/to/file>=
+- Do NOT signal an error (bundle should be resilient)
+
+* Public API
+
+** specflow-bundle-context
+
+#+begin_example
+(specflow-bundle-context &optional UNIT-NAME)
+#+end_example
+
+- Input: UNIT-NAME (optional, defaults to active unit from control plane)
+- Output: String containing the formatted context bundle
+- Errors:
+  - =specflow-control-plane-not-found= if control plane missing
+  - =specflow-unit-not-found= if specified unit not in registry
+
+** specflow-bundle (Interactive Command)
+
+#+begin_example
+M-x specflow-bundle
+#+end_example
+
+Interactive command that:
+1. Calls =specflow-bundle-context= for the active unit
+2. Copies result to kill-ring
+3. Opens result in a new buffer named =*SpecFlow Bundle*=
+4. Displays message confirming bundle is ready
+
+The buffer allows review before pasting to an AI assistant.
+
+* NEXT Task Extraction
+
+The NEXT task is extracted from the root =todo.org= file:
+
+1. Find the first heading marked =NEXT= (any level)
+2. Extract the heading title and all content until the next heading
+3. Include sub-items, bullets, and body text
+4. Stop at the next same-level or higher-level heading
+
+If no NEXT task is found:
+- Include placeholder: =<no NEXT task found>=
+- Do NOT signal an error
+
+* Determinism
+
+Running =specflow-bundle-context= twice without repo changes MUST produce
+identical output, EXCEPT for the timestamp in the header.
+
+For testing purposes, a =specflow-bundle-context-no-timestamp= variant
+may be provided that omits the timestamp for determinism tests.
+
+* Error Handling
+
+** Hard Failures (signal error)
+
+| Error Symbol | Condition |
+|----------------------------------+--------------------------------------|
+| =specflow-control-plane-not-found= | Control plane discovery failed |
+| =specflow-unit-not-found= | Specified unit not in registry |
+
+** Soft Failures (warning, continue)
+
+| Condition | Behavior |
+|-------------------------+----------------------------------------|
+| File in SPEC/TODO/RULES | Placeholder in output, log warning |
+| not found | |
+| No NEXT task found | Placeholder in output |
+| Empty file | Include empty section |
+
+* Dependencies
+
+- org-store: =specflow-org-store-find-control-plane=
+- org-store: =specflow-org-store-read-project-state=
+- org-store: =specflow-org-store-read-unit=
+- org-store: =specflow-org-store-validate-parent-chain=
+
+Does NOT depend on:
+- core (no shared constants needed in MVP)
+- hydrate
+- LLM integration
+
+* Testing Requirements
+
+** ERT Test Coverage
+
+- Bundle with single-file SPEC/TODO/RULES
+- Bundle with space-separated multi-file SPEC
+- Bundle with parent chain (single parent)
+- Bundle with missing file (soft failure)
+- Bundle with no NEXT task (soft failure)
+- Determinism: bundle twice, compare output (excluding timestamp)
+- Interactive command places content in kill-ring and buffer
+
+** Manual Smoke Test
+
+- M-x specflow-bundle in a SpecFlow project
+- Verify output includes all expected sections
+- Verify kill-ring contains the bundle
+- Verify buffer displays correctly
+
+* Non-Goals (MVP)
+
+- LLM compression
+- CONTEXT_REFS resolution
+- Custom output formats (Markdown, JSON)
+- Selective bundling (flags to include/exclude sections)
+- Caching
+
+* Plan Notes
+
+Decisions confirmed [2025-01-19]:
+1. Output format: plain text with markdown-style headers
+2. Parent chain: full content (SPEC, TODO, RULES), not just rules
+3. Space-separated property values for multi-file support
+4. Soft failures for missing files (resilient bundling)
+5. Interactive command outputs to both kill-ring and buffer

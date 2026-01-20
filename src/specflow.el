@@ -603,5 +603,196 @@ Signals `specflow-unit-not-found' if UNIT-NAME itself does not exist."
     ;; Return ancestors in order (immediate parent first)
     (nreverse ancestors)))
 
+;;;; bundle: Helper Functions
+
+(defun specflow-bundle--split-paths (value)
+  "Split VALUE into a list of paths.
+VALUE may be a single path or space-separated paths.
+Returns a list of path strings, or nil if VALUE is nil or empty."
+  (when (and value (not (string-empty-p (string-trim value))))
+    (split-string value "[ \t]+" t)))
+
+(defun specflow-bundle--read-file-content (file-path &optional project-root)
+  "Read content of FILE-PATH, returning string or placeholder if missing.
+FILE-PATH may be absolute or relative to PROJECT-ROOT.
+If PROJECT-ROOT is nil, it is discovered from the control plane.
+Returns file content as string, or placeholder if file not found."
+  (let* ((root (or project-root
+                   (specflow-org-store--project-root-from-control-plane)))
+         (abs-path (if (file-name-absolute-p file-path)
+                       file-path
+                     (expand-file-name file-path root))))
+    (if (file-exists-p abs-path)
+        (with-temp-buffer
+          (insert-file-contents abs-path)
+          (buffer-string))
+      (message "Warning: File not found: %s" abs-path)
+      (format "<file not found: %s>" file-path))))
+
+(defun specflow-bundle--extract-next-task (&optional todo-path project-root)
+  "Extract the first NEXT task from TODO-PATH.
+TODO-PATH defaults to 'todo.org' at PROJECT-ROOT.
+Returns the NEXT heading and its content as a string.
+Returns placeholder if no NEXT task found."
+  (let* ((root (or project-root
+                   (specflow-org-store--project-root-from-control-plane)))
+         (path (expand-file-name (or todo-path "todo.org") root)))
+    (if (not (file-exists-p path))
+        "<no root todo.org found>"
+      (with-temp-buffer
+        (insert-file-contents path)
+        (goto-char (point-min))
+        ;; Find first NEXT heading
+        (if (re-search-forward "^\\(\\*+\\)[ \t]+NEXT[ \t]+\\(.*\\)$" nil t)
+            (let* ((level (length (match-string 1)))
+                   (title (match-string 2))
+                   (start (line-beginning-position))
+                   (end nil))
+              ;; Find end: next heading of same or higher level, or EOF
+              (forward-line 1)
+              (if (re-search-forward (format "^\\*\\{1,%d\\}[ \t]" level) nil t)
+                  (setq end (line-beginning-position))
+                (setq end (point-max)))
+              ;; Extract content
+              (string-trim (buffer-substring-no-properties start end)))
+          "<no NEXT task found>")))))
+
+;;;; bundle: Formatting
+
+(defun specflow-bundle--format-section (header content)
+  "Format a section with HEADER and CONTENT."
+  (format "## %s\n%s\n" header content))
+
+(defun specflow-bundle--format-file-section (label path content)
+  "Format a file subsection with LABEL, PATH, and CONTENT."
+  (format "### %s: %s\n%s\n" label path content))
+
+(defun specflow-bundle--format-output (project-state next-task parent-chain-content unit-content &optional timestamp)
+  "Format the complete bundle output.
+PROJECT-STATE is a plist with :phase and :active-unit.
+NEXT-TASK is the extracted NEXT task string.
+PARENT-CHAIN-CONTENT is a list of (name . sections-alist) for each ancestor.
+UNIT-CONTENT is a (name . sections-alist) for the active unit.
+TIMESTAMP is optional; if nil, current time is used."
+  (let ((ts (or timestamp (format-time-string "%Y-%m-%dT%H:%M:%S"))))
+    (with-temp-buffer
+      ;; Header
+      (insert (format "# SpecFlow Context Bundle\n# Generated: %s\n\n" ts))
+      ;; Project State
+      (insert (specflow-bundle--format-section
+               "Project State"
+               (format "Phase: %s\nActive Unit: %s"
+                       (plist-get project-state :phase)
+                       (plist-get project-state :active-unit))))
+      ;; NEXT Task
+      (insert (specflow-bundle--format-section "NEXT Task" next-task))
+      ;; Parent chain (root-to-leaf order - list is already in this order)
+      (dolist (parent parent-chain-content)
+        (let ((name (car parent))
+              (sections (cdr parent)))
+          (insert (format "## Parent: %s\n\n" name))
+          (dolist (section sections)
+            (let ((label (car section))
+                  (path (cadr section))
+                  (content (caddr section)))
+              (insert (specflow-bundle--format-file-section label path content))))))
+      ;; Active unit
+      (let ((name (car unit-content))
+            (sections (cdr unit-content)))
+        (insert (format "## Unit: %s\n\n" name))
+        (dolist (section sections)
+          (let ((label (car section))
+                (path (cadr section))
+                (content (caddr section)))
+            (insert (specflow-bundle--format-file-section label path content)))))
+      (buffer-string))))
+
+;;;; bundle: Core Functions
+
+(defun specflow-bundle--gather-unit-content (unit-entry project-root)
+  "Gather content for UNIT-ENTRY, returning (name . sections-list).
+Each section is (LABEL PATH CONTENT)."
+  (let* ((name (plist-get unit-entry :name))
+         (spec-value (plist-get unit-entry :spec))
+         (todo-value (plist-get unit-entry :todo))
+         (rules-value (plist-get unit-entry :rules))
+         (sections nil))
+    ;; Gather SPEC files
+    (dolist (path (specflow-bundle--split-paths spec-value))
+      (push (list "SPEC" path (specflow-bundle--read-file-content path project-root))
+            sections))
+    ;; Gather TODO files
+    (dolist (path (specflow-bundle--split-paths todo-value))
+      (push (list "TODO" path (specflow-bundle--read-file-content path project-root))
+            sections))
+    ;; Gather RULES files
+    (dolist (path (specflow-bundle--split-paths rules-value))
+      (push (list "RULES" path (specflow-bundle--read-file-content path project-root))
+            sections))
+    (cons name (nreverse sections))))
+
+(defun specflow-bundle-context (&optional unit-name)
+  "Generate a context bundle for UNIT-NAME.
+If UNIT-NAME is nil, uses the active unit from the control plane.
+Returns a formatted string containing the complete context bundle."
+  (let* ((cp-path (specflow-org-store-find-control-plane))
+         (project-root (specflow-org-store--project-root-from-control-plane cp-path))
+         (project-state (specflow-org-store-read-project-state cp-path))
+         (active-unit (or unit-name (plist-get project-state :active-unit)))
+         (unit-entry (specflow-org-store-read-unit active-unit cp-path))
+         (parent-names (specflow-org-store-validate-parent-chain active-unit cp-path))
+         (next-task (specflow-bundle--extract-next-task nil project-root))
+         (parent-chain-content nil)
+         (unit-content nil))
+    ;; Gather parent chain content (in root-to-leaf order)
+    ;; parent-names is already in order from immediate parent to root
+    ;; We need to reverse it for root-to-leaf presentation
+    (dolist (parent-name (reverse parent-names))
+      (let ((parent-entry (specflow-org-store-read-unit parent-name cp-path)))
+        (push (specflow-bundle--gather-unit-content parent-entry project-root)
+              parent-chain-content)))
+    (setq parent-chain-content (nreverse parent-chain-content))
+    ;; Gather active unit content
+    (setq unit-content (specflow-bundle--gather-unit-content unit-entry project-root))
+    ;; Format and return
+    (specflow-bundle--format-output project-state next-task parent-chain-content unit-content)))
+
+(defun specflow-bundle-context-no-timestamp (&optional unit-name)
+  "Like `specflow-bundle-context' but with fixed timestamp for testing."
+  (let* ((cp-path (specflow-org-store-find-control-plane))
+         (project-root (specflow-org-store--project-root-from-control-plane cp-path))
+         (project-state (specflow-org-store-read-project-state cp-path))
+         (active-unit (or unit-name (plist-get project-state :active-unit)))
+         (unit-entry (specflow-org-store-read-unit active-unit cp-path))
+         (parent-names (specflow-org-store-validate-parent-chain active-unit cp-path))
+         (next-task (specflow-bundle--extract-next-task nil project-root))
+         (parent-chain-content nil)
+         (unit-content nil))
+    (dolist (parent-name (reverse parent-names))
+      (let ((parent-entry (specflow-org-store-read-unit parent-name cp-path)))
+        (push (specflow-bundle--gather-unit-content parent-entry project-root)
+              parent-chain-content)))
+    (setq parent-chain-content (nreverse parent-chain-content))
+    (setq unit-content (specflow-bundle--gather-unit-content unit-entry project-root))
+    (specflow-bundle--format-output project-state next-task parent-chain-content unit-content
+                                    "2025-01-01T00:00:00")))
+
+;;;; bundle: Interactive Command
+
+(defun specflow-bundle ()
+  "Generate and display a context bundle for the active unit.
+Copies the bundle to the kill-ring and displays it in a buffer."
+  (interactive)
+  (let ((bundle (specflow-bundle-context)))
+    ;; Copy to kill-ring
+    (kill-new bundle)
+    ;; Display in buffer
+    (with-current-buffer (get-buffer-create "*SpecFlow Bundle*")
+      (erase-buffer)
+      (insert bundle)
+      (goto-char (point-min))
+      (display-buffer (current-buffer)))
+    (message "SpecFlow bundle copied to kill-ring and displayed in *SpecFlow Bundle* buffer")))
+
 (provide 'specflow)
 ;;; specflow.el ends here

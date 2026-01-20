@@ -36,20 +36,21 @@ Implementation order: org-store → core → bundle → hydrate → docs
    All implementation tasks complete. 53 ERT tests passing.
    Manual smoke tests verified. README.md written.
 
+** DONE bundle: Plan → Specify → Scaffold → Implement → Validate → Document
+   CLOSED: [2025-01-19]
+   Context bundling for AI assistants. 25 ERT tests passing (78 total).
+   M-x specflow-bundle command working. README.md written.
+
 * Active
 
-** NEXT bundle: Plan phase
-   Given org-store is complete,
-   when bundle unit Plan phase is done,
-   then we have design clarity for context bundling and AI assistant integration.
+** NEXT hydrate: Plan phase
+   Given org-store and bundle are complete,
+   when hydrate unit Plan phase is done,
+   then we have design clarity for AI workspace commands.
 
-   See =units/bundle/= for unit artifacts.
+   See =units/hydrate/= for unit artifacts.
 
 * Backlog (dependency order)
-
-** TODO bundle: Plan → Specify → Scaffold → Implement → Validate → Document
-   Context bundling for AI assistants, optional LLM compression.
-   Depends on: org-store, core
 
 ** TODO hydrate: Plan → Specify → Scaffold → Implement → Validate → Document
    AI workspace commands (Claude, gptel), buffer/window management.
