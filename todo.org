@@ -7,7 +7,7 @@
 This is the canonical task driver for the SpecFlow project.
 Only ONE task is marked NEXT at a time.
 
-Implementation order: org-store → core → bundle → hydrate → docs → compose
+Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Completed
 
@@ -76,3 +76,9 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    Task-specific prompt generation. 33 ERT tests passing (148 total).
    5 interactive commands: specflow-compose, new-unit, edit-spec, new-feature, refactor.
    Template buffers with C-c C-c / C-c C-k keybindings. README.md written.
+
+** DONE initiate: Plan → Specify → Scaffold → Implement → Validate → Document
+   CLOSED: [2026-01-20]
+   Project bootstrapping. 21 ERT tests passing (169 total).
+   M-x specflow-initiate creates control plane, CLAUDE.md, todo.org, .specflow marker.
+   README.md written.

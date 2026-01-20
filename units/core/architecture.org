@@ -79,6 +79,14 @@ Initial modules are expected to include:
   - complements hydrate: hydrate = continue workflow, compose = start task
   - does NOT execute tasks; generates prompts for human review
 
+- initiate
+  - bootstraps new SpecFlow projects in empty directories
+  - creates minimal file structure (control plane, root CLAUDE.md, todo.org)
+  - provides starter templates with appropriate Org headers
+  - command: specflow-initiate
+  - does NOT define specifications or implementation details
+  - runs once per project to establish SpecFlow scaffolding
+
 * Implementation Order and Dependencies
 
 - org-store (foundational): control plane discovery + read/write + unit registry access
@@ -86,8 +94,9 @@ Initial modules are expected to include:
 - bundle: context bundling and optional LLM compression (uses org-store + core)
 - hydrate: conversation framing (uses org-store)
 - compose: task prompt generation (uses org-store, hydrate patterns)
+- initiate: project bootstrapping (uses org-store for writing)
 
-Dependency direction: org-store → core → bundle → hydrate → compose
+Dependency direction: org-store → core → bundle → hydrate → compose → initiate
 
 * Source Layout
 

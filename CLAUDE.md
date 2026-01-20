@@ -310,6 +310,40 @@ When working on a task:
 
 ---
 
+## Phase Transition Protocol (MANDATORY)
+
+When completing a phase within a unit:
+
+1. **Update root todo.org**:
+   - Mark current NEXT task as DONE with 1-2 line summary
+   - Create new NEXT task for the next phase (if not unit complete)
+
+2. **Update control plane** (docs/specflow.org):
+   - Change SPEC_FLOW_PHASE property to the next phase
+
+3. **Root todo.org entry format**:
+
+   ```org
+   ** DONE <unit>: <phase> phase
+      CLOSED: [YYYY-MM-DD]
+      <1-2 line summary: what was accomplished, key decisions>
+
+   ** NEXT <unit>: <next-phase> phase
+      <brief: what this phase will produce>
+   ```
+
+4. **Phase progression**:
+   - Plan → Specify
+   - Specify → Scaffold
+   - Scaffold → Implement
+   - Implement → Validate
+   - Validate → Document
+   - Document → unit complete (mark DONE, no new NEXT unless backlog)
+
+This creates an audit trail and allows resumption at exact phase.
+
+---
+
 ## Phase Enforcement (MANDATORY)
 
 Each unit progresses strictly through:

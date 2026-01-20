@@ -156,7 +156,30 @@ Save planning discussions and design decisions to:
   units/<unit>/temp-planning-artifacts.org
 
 This preserves context across sessions. Delete after official docs are finalized.
+
+### Phase Completion Checklist
+
+When this phase is complete:
+
+1. Update root todo.org:
+   - Mark current NEXT as DONE with summary
+   - Create new NEXT for next phase
+
+2. Update control plane:
+   - Change SPEC_FLOW_PHASE to next phase
+
+3. Commit: "<unit>: complete <phase> phase"
 #+end_example
+
+* Phase Completion Instructions
+
+All generated prompts MUST include phase completion instructions.
+
+The instructions are dynamic based on the current phase and unit name:
+- Unit name is interpolated into the todo.org entry format
+- Phase name is interpolated into the entry and commit message
+- Next phase is computed from current phase (Plan→Specify, etc.)
+- If current phase is Document, instructions note "unit complete"
 
 * Context File Selection
 

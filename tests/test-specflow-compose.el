@@ -428,5 +428,69 @@ Sets up control plane in Plan phase for compose commands."
   (should (eq (lookup-key specflow-compose-mode-map (kbd "C-c C-k"))
               'specflow-compose--cancel)))
 
+;;;; Phase Completion Tests
+
+(ert-deftest specflow-test-compose-next-phase-plan ()
+  "Test that Plan phase transitions to Specify."
+  (should (equal "Specify" (specflow-compose--next-phase "Plan")))
+  (should (equal "Specify" (specflow-compose--next-phase "plan"))))
+
+(ert-deftest specflow-test-compose-next-phase-specify ()
+  "Test that Specify phase transitions to Scaffold."
+  (should (equal "Scaffold" (specflow-compose--next-phase "Specify")))
+  (should (equal "Scaffold" (specflow-compose--next-phase "specify"))))
+
+(ert-deftest specflow-test-compose-next-phase-scaffold ()
+  "Test that Scaffold phase transitions to Implement."
+  (should (equal "Implement" (specflow-compose--next-phase "Scaffold")))
+  (should (equal "Implement" (specflow-compose--next-phase "scaffold"))))
+
+(ert-deftest specflow-test-compose-next-phase-implement ()
+  "Test that Implement phase transitions to Validate."
+  (should (equal "Validate" (specflow-compose--next-phase "Implement")))
+  (should (equal "Validate" (specflow-compose--next-phase "implement"))))
+
+(ert-deftest specflow-test-compose-next-phase-validate ()
+  "Test that Validate phase transitions to Document."
+  (should (equal "Document" (specflow-compose--next-phase "Validate")))
+  (should (equal "Document" (specflow-compose--next-phase "validate"))))
+
+(ert-deftest specflow-test-compose-next-phase-document ()
+  "Test that Document phase has no next phase."
+  (should-not (specflow-compose--next-phase "Document"))
+  (should-not (specflow-compose--next-phase "document")))
+
+(ert-deftest specflow-test-compose-phase-completion-section-has-checklist ()
+  "Test that phase completion section includes checklist items."
+  (let ((section (specflow-compose--phase-completion-section "Plan" "myunit")))
+    (should (string-match-p "### Phase Completion Checklist" section))
+    (should (string-match-p "Update root todo.org" section))
+    (should (string-match-p "Update control plane" section))
+    (should (string-match-p "Commit:" section))))
+
+(ert-deftest specflow-test-compose-phase-completion-section-uses-unit-name ()
+  "Test that phase completion section interpolates unit name."
+  (let ((section (specflow-compose--phase-completion-section "Plan" "myunit")))
+    (should (string-match-p "myunit: Plan phase" section))
+    (should (string-match-p "myunit: Specify phase" section))
+    (should (string-match-p "myunit: complete Plan phase" section))))
+
+(ert-deftest specflow-test-compose-phase-completion-section-document-complete ()
+  "Test that Document phase shows unit complete message."
+  (let ((section (specflow-compose--phase-completion-section "Document" "myunit")))
+    (should (string-match-p "(unit complete)" section))))
+
+(ert-deftest specflow-test-compose-prompt-includes-phase-completion ()
+  "Test that generated prompt includes phase completion checklist."
+  (specflow-test-with-compose-project
+    (let ((default-directory project-root))
+      (let ((prompt (specflow-compose--generate-prompt
+                     'new-unit
+                     '(("Unit Name" . "test-unit")))))
+        (should (string-match-p "### Phase Completion Checklist" prompt))
+        (should (string-match-p "Update root todo.org" prompt))
+        (should (string-match-p "Update control plane" prompt))
+        (should (string-match-p "test-unit: Plan phase" prompt))))))
+
 (provide 'test-specflow-compose)
 ;;; test-specflow-compose.el ends here
