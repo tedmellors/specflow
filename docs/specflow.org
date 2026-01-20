@@ -4,8 +4,8 @@
 
 * Project
   :PROPERTIES:
-  :SPEC_FLOW_PHASE: Document
-  :SPEC_FLOW_ACTIVE_UNIT: org-store
+  :SPEC_FLOW_PHASE: Plan
+  :SPEC_FLOW_ACTIVE_UNIT: rules
   :END:
 
 This file is the **SpecFlow control plane**.
@@ -54,7 +54,7 @@ Tools and AI assistants may use hierarchy to:
    :SPEC: units/core/architecture.org units/core/overview.org
    :TODO: units/core/todo.org
    :RULES: units/core/CLAUDE.md
-   :CHILDREN: org-store bundle hydrate docs compose initiate
+   :CHILDREN: org-store bundle hydrate docs compose initiate rules
    :END:
 
 The core unit is the **development controller** for this repository.
@@ -112,4 +112,13 @@ It owns architecture, cross-cutting constraints, and project-level coordination.
    :SPEC: units/initiate/spec.org
    :TODO: units/initiate/todo.org
    :RULES: units/initiate/CLAUDE.md
+   :END:
+
+** rules
+   :PROPERTIES:
+   :PARENT: core
+   :DIR: src/
+   :SPEC: units/rules/spec.org
+   :TODO: units/rules/todo.org
+   :RULES: units/rules/CLAUDE.md
    :END:

@@ -53,7 +53,7 @@ Initial modules are expected to include:
   - discovers units and metadata
   - enforces minimal-diff writes
   - workflow commands:
-    - specflow-phase-shift: change current phase in control plane
+    - specflow-phase-shift: change current phase AND active unit in control plane
     - specflow-add-root-task: append task to root todo.org Backlog section
   - task management commands (prompt-only, do not modify todo.org):
     - specflow-refine-task: generate Claude prompt for task refinement
@@ -93,6 +93,14 @@ Initial modules are expected to include:
   - does NOT define specifications or implementation details
   - runs once per project to establish SpecFlow scaffolding
 
+- rules
+  - manages SpecFlow operational rules (from root CLAUDE.md)
+  - provides structured, queryable rule format (org-based with tags/properties)
+  - query API: specflow-rules-for-phase, specflow-rules-for-topic
+  - integrates with bundle/hydrate for context-aware rule loading
+  - replaces monolithic root CLAUDE.md with organized rule sets
+  - does NOT manage unit-level CLAUDE.md files (those remain development rules)
+
 * Implementation Order and Dependencies
 
 - org-store (foundational): control plane discovery + read/write + unit registry access
@@ -101,8 +109,9 @@ Initial modules are expected to include:
 - hydrate: conversation framing (uses org-store)
 - compose: task prompt generation (uses org-store, hydrate patterns)
 - initiate: project bootstrapping (uses org-store for writing)
+- rules: operational rules management (uses org-store, integrates with bundle/hydrate)
 
-Dependency direction: org-store → core → bundle → hydrate → compose → initiate
+Dependency direction: org-store → core → bundle → hydrate → compose → initiate → rules
 
 * Source Layout
 
@@ -115,6 +124,7 @@ Unit module files:
 - =units/hydrate/src/specflow-hydrate.el=
 - =units/compose/src/specflow-compose.el=
 - =units/initiate/src/specflow-initiate.el=
+- =units/rules/src/specflow-rules.el= (planned)
 
 The =core= and =docs= units have no implementation code (documentation only).
 
@@ -282,5 +292,9 @@ Future enhancements may include:
 - How strict should enforcement be by default?
 - Should SpecFlow support multiple control planes per repo?
 - How should context bundling scale for very large projects?
+
+*Resolved:*
 - When should the single =specflow.el= be split into separate module files?
+  → Resolved: Each unit now has its own module in =units/<unit>/src/=.
+    The root =src/specflow.el= is a minimal facade that loads all modules.
 
