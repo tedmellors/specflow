@@ -1,0 +1,111 @@
+#+TITLE: hydrate – Unit TODO
+#+STARTUP: overview
+#+SEQ_TODO: TODO NEXT WAITING | DONE
+
+* About
+
+This file tracks outcome-based tasks for the hydrate unit.
+See =spec.org= for requirements, =CLAUDE.md= for constraints.
+
+* Completed
+
+** DONE Plan phase: Design conversation header format
+   CLOSED: [2025-01-20]
+   Given bundle and org-store are complete,
+   when Plan phase is done,
+   then we have design clarity for hydrate commands.
+
+   Decisions made:
+   - Header excludes bundle output (two-step workflow)
+   - No hydrate→bundle dependency
+   - Header = behavioral contract
+   - Phase definitions as text templates
+   - Insert safety with prompts
+   - No gptel integration for MVP
+   - Guard mode: explicit scans only
+
+** DONE Specify phase: Write spec.org
+   CLOSED: [2025-01-20]
+   Given Plan phase complete,
+   when Specify phase is done,
+   then spec.org defines all public commands and header format.
+
+** DONE Scaffold phase: Write CLAUDE.md and todo.org
+   CLOSED: [2025-01-20]
+   Given spec.org complete,
+   when Scaffold phase is done,
+   then unit rules and outcome-based tasks are defined.
+
+** DONE Implement: Phase actions function
+   CLOSED: [2025-01-20]
+   Given phase name,
+   when =specflow-hydrate--phase-actions= is called,
+   then it returns allowed actions text for that phase.
+
+** DONE Implement: NEXT task extraction
+   CLOSED: [2025-01-20]
+   Given root todo.org exists,
+   when =specflow-hydrate--extract-next-task= is called,
+   then it returns the heading and body of the first NEXT task.
+
+   Edge cases:
+   - No NEXT task found → placeholder text
+   - No todo.org found → placeholder text
+
+** DONE Implement: Header generation
+   CLOSED: [2025-01-20]
+   Given control plane and active unit,
+   when =specflow-hydrate--generate-header= is called,
+   then it returns a multi-line header string including:
+   - Active unit name
+   - Current phase
+   - Parent chain
+   - File pointers
+   - Phase-specific allowed actions
+   - STOP conditions
+   - Canonical NEXT task
+
+** DONE Implement: Copy/preview/insert commands
+   CLOSED: [2025-01-20]
+   - =specflow-hydrate-copy-header= copies to kill-ring
+   - =specflow-hydrate-preview-header= displays in read-only buffer
+   - =specflow-hydrate-insert-header= inserts at point (with safety prompt)
+   - =specflow-hydrate-insert-next= inserts NEXT task only
+
+** DONE Implement: Navigation helpers
+   CLOSED: [2025-01-20]
+   - =specflow-hydrate-open-control-plane= opens control plane
+   - =specflow-hydrate-open-root-todo= opens root todo.org
+   - =specflow-hydrate-open-active-unit-spec= opens unit spec
+   - =specflow-hydrate-open-active-unit-todo= opens unit todo
+   - =specflow-hydrate-open-active-unit-rules= opens unit rules
+
+** DONE Implement: Scan commands
+   CLOSED: [2025-01-20]
+   - =specflow-hydrate-scan-buffer= scans buffer for phase violations
+   - =specflow-hydrate-scan-region= scans region for phase violations
+
+   Phase violation patterns vary by phase (Plan detects code, etc.)
+
+** DONE Validate phase: Run all tests
+   CLOSED: [2025-01-20]
+   Given implementation complete,
+   when ERT tests are run,
+   then all 115 tests pass (25 hydrate + 37 bundle + 53 org-store).
+
+** DONE Document phase: Write README.md
+   CLOSED: [2025-01-20]
+   Given Validate phase complete,
+   when README is written,
+   then users can understand and use hydrate commands.
+
+* Backlog (Post-MVP)
+
+** TODO Enhancement: gptel integration
+   Add hooks for automatic header insertion in gptel buffers.
+
+** TODO Enhancement: Transient menu
+   Create a transient menu for command discovery.
+
+** TODO Enhancement: Continuous guard mode
+   Add optional hook-based monitoring for phase violations.

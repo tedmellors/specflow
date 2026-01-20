@@ -63,10 +63,13 @@ Initial modules are expected to include:
   - resolves parent chains and context references
   - optional context compression via LLM (explicitly invoked, not automatic)
 
-- hydrate (name TBD)
-  - opens AI workspaces (Claude, gptel)
-  - inserts generated prompts
-  - manages buffers/windows
+- hydrate
+  - generates conversation headers for AI sessions
+  - includes phase-specific behavioral contracts and STOP conditions
+  - extracts canonical NEXT task from root todo.org
+  - provides navigation helpers (open control plane, unit files)
+  - optional phase violation scanning (heuristic, non-blocking)
+  - does NOT manage windows, buffers, or workspaces
 
 * Implementation Order and Dependencies
 

@@ -50,18 +50,22 @@ Implementation order: org-store → core → bundle → hydrate → docs
 
 * Active
 
-** NEXT hydrate: Plan phase
-   Given org-store and bundle are complete,
-   when hydrate unit Plan phase is done,
-   then we have design clarity for AI workspace commands.
+** NEXT docs: Plan phase
+   Given hydrate is complete,
+   when docs unit Plan phase is done,
+   then we have design clarity for user-facing documentation.
 
-   See =units/hydrate/= for unit artifacts.
+   See =units/docs/= for unit artifacts (to be created).
 
 * Backlog (dependency order)
 
-** TODO hydrate: Plan → Specify → Scaffold → Implement → Validate → Document
-   AI workspace commands (Claude, gptel), buffer/window management.
-   Depends on: org-store, core, bundle
-
 ** TODO docs: Plan → Specify → Scaffold → Implement → Validate → Document
    User-facing documentation and README. Written last.
+
+* Completed (moved from Active)
+
+** DONE hydrate: Plan → Specify → Scaffold → Implement → Validate → Document
+   CLOSED: [2025-01-20]
+   AI conversation framing. 25 ERT tests passing (115 total).
+   M-x specflow-hydrate-copy-header and 10 other commands working.
+   README.md written.
