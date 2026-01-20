@@ -234,6 +234,81 @@ Prompts for a task headline. Inserts `** TODO <headline>` at the end of the Acti
 - `specflow-heading-not-found` - No "Active" heading in todo.org
 - `specflow-file-not-writable` - Cannot save todo.org
 
+### specflow-refine-task
+
+Generate a Claude prompt to refine a backlog task.
+
+```
+M-x specflow-refine-task RET
+```
+
+1. Prompts to select a task from the Backlog section of root `todo.org`
+2. Prompts for an optional unit hint (free text, can be empty)
+3. Prompts for additional context for Claude
+4. Generates a formatted prompt and copies it to the kill-ring
+
+**Prompt format:**
+
+```
+## Task to Refine
+
+<task headline and body>
+
+## Context
+
+Related unit: <unit hint or "Not specified">
+Notes: <user's additional context>
+
+## Guidelines
+
+Rewrite this task to be actionable and outcome-based...
+```
+
+```elisp
+;; Programmatic use (with cl-letf to mock interactive input)
+(cl-letf (((symbol-function 'completing-read)
+           (lambda (&rest _) "Add authentication"))
+          ((symbol-function 'read-string)
+           (lambda (prompt &rest _)
+             (if (string-match "unit" prompt) "auth" "Need OAuth"))))
+  (specflow-refine-task))
+;; => "<formatted prompt>" (also in kill-ring)
+```
+
+**Errors:**
+- `specflow-heading-not-found` - No "Backlog" heading in todo.org
+
+### specflow-activate-task
+
+Generate a Claude prompt AND promote a backlog task to NEXT.
+
+```
+M-x specflow-activate-task RET
+```
+
+Performs all actions of `specflow-refine-task`, plus:
+1. Demotes any current NEXT task in Active section to TODO (keeps it in Active)
+2. Moves the selected task from Backlog to Active section
+3. Promotes the task to NEXT status
+
+```elisp
+;; Before:
+;; * Active
+;; ** NEXT Current work
+;; * Backlog
+;; ** TODO New feature
+
+;; After M-x specflow-activate-task (selecting "New feature"):
+;; * Active
+;; ** TODO Current work
+;; ** NEXT New feature
+;; * Backlog
+```
+
+**Errors:**
+- `specflow-heading-not-found` - No "Active" or "Backlog" heading in todo.org
+- `specflow-file-not-writable` - Cannot save todo.org
+
 ## Error Handling
 
 All errors inherit from `specflow-error`. Use `condition-case` to handle:
@@ -269,4 +344,4 @@ emacs --batch -L units/org-store/src -l units/org-store/tests/test-specflow-org-
   -f ert-run-tests-batch-and-exit
 ```
 
-65 tests covering all public functions, interactive commands, error conditions, and determinism.
+76 tests covering all public functions, interactive commands, error conditions, and determinism.
