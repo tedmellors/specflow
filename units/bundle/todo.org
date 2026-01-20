@@ -257,14 +257,16 @@ Derived from =units/bundle/spec.org=.
    CLOSED: [2025-01-20]
    90 tests (53 org-store + 37 bundle), all passing.
 
-** TODO Manual smoke test: Paths mode
+** DONE Manual smoke test: Paths mode
+   CLOSED: [2025-01-20]
    - Run =M-x specflow-bundle=
    - Verify output is compact (~20 lines)
    - Verify file paths are listed correctly
    - Verify NEXT task content is included
    - Verify kill-ring contains paths-mode bundle
 
-** TODO Manual smoke test: Text mode
+** DONE Manual smoke test: Text mode
+   CLOSED: [2025-01-20]
    - Run =M-x specflow-bundle-text=
    - Verify output includes full file contents
    - Verify output is comprehensive (~600 lines)
@@ -272,7 +274,8 @@ Derived from =units/bundle/spec.org=.
 
 * Document (Enhancement: Dual Output Modes)
 
-** TODO Update units/bundle/README.md
+** DONE Update units/bundle/README.md
+   CLOSED: [2025-01-20]
    - Document both output modes
    - Update API section with new functions
    - Add usage examples for both modes
