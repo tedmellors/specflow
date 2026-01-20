@@ -1,0 +1,78 @@
+#+TITLE: org-store – Refactor refine-task/activate-task Plan Artifact
+#+DATE: 2026-01-20
+
+* Active Task
+
+** NEXT org-store: Refactor specflow-refine-task and specflow-activate-task behavior
+   Given a backlog task selected by the user,
+   when either command is called,
+   then a prompt is generated and copied to kill-ring (Claude handles file changes).
+
+   REVISED APPROACH (user feedback):
+   - Emacs does NOT modify todo.org
+   - Commands only gather information and generate prompts
+   - Claude (AI assistant) handles all file modifications based on prompt instructions
+
+   Prompt changes:
+   - Include full task body (headline + all content/notes beneath it)
+   - Replace "Return only the revised task text" with instruction to edit todo.org
+   - =specflow-refine-task= prompt ending: "Refine this task and update it in the root todo.org file."
+   - =specflow-activate-task= prompt ending: adds "move to Active as NEXT, demote existing NEXT"
+
+* Phase Progress
+
+| Phase | Status |
+|-------|--------|
+| Plan | DONE |
+| Specify | REVISED |
+| Scaffold | DONE |
+| Implement | IN PROGRESS |
+| Validate | pending |
+| Document | pending |
+
+* Implementation Tasks
+
+** DONE Update prompt ending in format-refine-prompt
+   Changed "Return only the revised task text" to
+   "Refine this task and update it in the root todo.org file."
+
+** TODO Revert specflow-refine-task to simple prompt-only behavior
+   - Remove all todo.org modification code
+   - Keep prompt generation and kill-ring copy
+   - Message: "Task prompt copied to kill-ring"
+
+** TODO Update specflow-activate-task prompt format
+   - Add additional instruction about moving to Active as NEXT
+   - Remove all todo.org modification code (if any remains)
+   - Message: "Task prompt copied to kill-ring"
+
+** TODO ERT: Update/revert tests
+   - Remove tests for file modification behavior
+   - Keep tests for prompt generation and kill-ring
+   - Update prompt ending tests
+
+* Key Distinction
+
+Both commands: generate prompt, copy to kill-ring, display message.
+Neither command modifies todo.org. The prompt instructs Claude what to do.
+
+| Command | Prompt Instruction |
+|---------|--------------------|
+| specflow-refine-task | "Refine and update in todo.org" |
+| specflow-activate-task | "Refine, move to Active as NEXT, demote existing NEXT" |
+
+* Files to Update
+
+1. units/org-store/src/specflow-org-store.el - Revert/simplify implementation
+2. units/org-store/tests/test-specflow-org-store.el - Revert/simplify tests
+3. units/org-store/spec.org - Already updated
+4. units/org-store/README.md - Documentation (Document phase)
+
+* Commits Made
+
+- 88124e0: Specify and scaffold refine-task/activate-task behavior changes
+
+* Revision History
+
+- 2026-01-20: Initial plan with Emacs modifying todo.org
+- 2026-01-20: REVISED - Emacs only generates prompts, Claude handles file changes

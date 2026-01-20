@@ -753,7 +753,7 @@ USER-CONTEXT is the user's additional context."
    "- Be specific about expected outcomes\n"
    "- If unit placement is unclear, recommend where it should live\n"
    "- Keep it concise (3-5 bullets max)\n\n"
-   "Return only the revised task text.\n"))
+   "Refine this task and update it in the root todo.org file.\n"))
 
 (defun specflow-refine-task ()
   "Generate a prompt for Claude to improve a backlog task.
@@ -764,6 +764,7 @@ Interactively:
 3. Add additional context for Claude
 
 The generated prompt is copied to the kill-ring.
+This command does NOT modify todo.org - the prompt instructs Claude to make changes.
 
 Signals `specflow-heading-not-found' if Backlog section not found."
   (interactive)
@@ -772,7 +773,7 @@ Signals `specflow-heading-not-found' if Backlog section not found."
          (todo-file (expand-file-name "todo.org" project-root))
          (tasks (specflow-org-store--parse-backlog-tasks todo-file))
          (headlines (mapcar #'car tasks))
-         (selected-headline (completing-read "Select task: " headlines nil t))
+         (selected-headline (completing-read "Select task to refine: " headlines nil t))
          (selected-task (assoc selected-headline tasks))
          (body (cdr selected-task))
          (unit-hint (read-string "Related unit (optional, RET to skip): "))
@@ -784,22 +785,20 @@ Signals `specflow-heading-not-found' if Backlog section not found."
     prompt))
 
 (defun specflow-activate-task ()
-  "Generate a prompt for Claude AND promote a backlog task to NEXT.
+  "Generate a prompt for Claude to refine and activate a backlog task.
 
 Interactively:
 1. Select a task from the Backlog section
 2. Optionally specify a related unit
 3. Add additional context for Claude
 
-Then:
-- Demotes current NEXT task to TODO (keeps in Active section)
-- Moves selected task from Backlog to Active section
-- Promotes selected task to NEXT
-
 The generated prompt is copied to the kill-ring.
+This command does NOT modify todo.org - the prompt instructs Claude to:
+- Refine the task
+- Move it from Backlog to Active section as NEXT
+- Demote any existing NEXT task to TODO
 
-Signals `specflow-heading-not-found' if Backlog or Active section not found.
-Signals `specflow-file-not-writable' if todo.org cannot be saved."
+Signals `specflow-heading-not-found' if Backlog section not found."
   (interactive)
   (let* ((cp-path (specflow-org-store-find-control-plane))
          (project-root (specflow-org-store--project-root-from-control-plane cp-path))
@@ -811,88 +810,14 @@ Signals `specflow-file-not-writable' if todo.org cannot be saved."
          (body (cdr selected-task))
          (unit-hint (read-string "Related unit (optional, RET to skip): "))
          (user-context (read-string "Additional context for Claude: "))
-         (prompt (specflow-org-store--format-refine-prompt
-                  selected-headline body unit-hint user-context))
-         (buf (generate-new-buffer " *specflow-activate-task*")))
-    ;; Copy prompt to kill-ring first
+         (base-prompt (specflow-org-store--format-refine-prompt
+                       selected-headline body unit-hint user-context))
+         ;; Append activation instructions
+         (prompt (concat base-prompt
+                         "\nAfter refining, move this task from Backlog to Active section as NEXT.\n"
+                         "If there is an existing NEXT task in Active, demote it to TODO.\n")))
     (kill-new prompt)
-    ;; Now modify the todo.org file
-    (unwind-protect
-        (with-current-buffer buf
-          (let ((task-text nil))  ;; Outer binding for task-text
-            (insert-file-contents todo-file)
-            ;; 1. Demote current NEXT to TODO in Active section
-            (goto-char (point-min))
-            (when (re-search-forward "^\\*[ \t]+Active\\b" nil t)
-              (let ((active-end nil))
-                (save-excursion
-                  (if (re-search-forward "^\\*[ \t]" nil t)
-                      (setq active-end (match-beginning 0))
-                    (setq active-end (point-max))))
-                ;; Find and demote NEXT to TODO
-                (while (re-search-forward "^\\(\\*\\*[ \t]+\\)NEXT\\([ \t]+\\)" active-end t)
-                  (replace-match "\\1TODO\\2"))))
-            ;; 2. Find and remove the task from Backlog
-            (goto-char (point-min))
-            (unless (re-search-forward "^\\*[ \t]+Backlog\\b" nil t)
-              (signal 'specflow-heading-not-found
-                      (list (format "Heading 'Backlog' not found in %s" todo-file))))
-            (let ((backlog-start (point))
-                  (backlog-end nil)
-                  (task-start nil)
-                  (task-end nil))
-              (save-excursion
-                (if (re-search-forward "^\\*[ \t]" nil t)
-                    (setq backlog-end (match-beginning 0))
-                  (setq backlog-end (point-max))))
-              ;; Find the specific task
-              (let ((task-re (format "^\\*\\*[ \t]+\\(TODO\\|NEXT\\|WAITING\\)?[ \t]*%s[ \t]*$"
-                                     (regexp-quote selected-headline))))
-                (unless (re-search-forward task-re backlog-end t)
-                  (signal 'specflow-heading-not-found
-                          (list (format "Task '%s' not found in Backlog" selected-headline))))
-                (setq task-start (line-beginning-position))
-                ;; Find task end
-                (forward-line 1)
-                (if (re-search-forward "^\\*\\*[ \t]" backlog-end t)
-                    (setq task-end (match-beginning 0))
-                  (setq task-end backlog-end))
-                ;; Extract task text (we'll rewrite it as NEXT)
-                (setq task-text (buffer-substring-no-properties task-start task-end))
-                ;; Delete the task from Backlog
-                (delete-region task-start task-end)))
-            ;; 3. Insert task at end of Active section as NEXT
-            (goto-char (point-min))
-            (unless (re-search-forward "^\\*[ \t]+Active\\b" nil t)
-              (signal 'specflow-heading-not-found
-                      (list (format "Heading 'Active' not found in %s" todo-file))))
-            (let ((active-end nil))
-              (save-excursion
-                (if (re-search-forward "^\\*[ \t]" nil t)
-                    (setq active-end (match-beginning 0))
-                  (setq active-end (point-max))))
-              (goto-char active-end)
-              ;; Ensure we're on a new line
-              (unless (bolp)
-                (insert "\n"))
-              ;; Insert task, changing TODO to NEXT
-              (let ((new-task (replace-regexp-in-string
-                               "^\\(\\*\\*[ \t]+\\)\\(TODO\\|WAITING\\)?[ \t]*"
-                               "\\1NEXT "
-                               task-text)))
-                (insert new-task)
-                ;; Ensure trailing newline
-                (unless (string-suffix-p "\n" new-task)
-                  (insert "\n"))))
-            ;; Write buffer to file
-            (condition-case err
-                (write-region (point-min) (point-max) todo-file nil 'quiet)
-              (error
-               (signal 'specflow-file-not-writable
-                       (list (format "Cannot write to %s: %s"
-                                     todo-file (error-message-string err))))))))
-      (kill-buffer buf))
-    (message "Task activated: %s" selected-headline)
+    (message "Task prompt copied to kill-ring")
     prompt))
 
 (provide 'specflow-org-store)

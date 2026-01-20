@@ -10,10 +10,10 @@ This unit owns:
 - Validation (`specflow-org-store-validate-unit-pointers`, `specflow-org-store-validate-parent-chain`)
 - Workflow commands:
   - `specflow-phase-shift` — change SPEC_FLOW_PHASE in control plane
-  - `specflow-add-root-task` — append TODO to root todo.org Active section
-- Task management commands:
-  - `specflow-refine-task` — move task from Backlog → Active (as TODO), generate prompt for Claude
-  - `specflow-activate-task` — move task from Backlog → Active (as NEXT), demote existing NEXT, generate prompt
+  - `specflow-add-root-task` — append TODO to root todo.org Backlog section
+- Task management commands (prompt-only, do NOT modify todo.org):
+  - `specflow-refine-task` — generate refinement prompt for Claude, copy to kill-ring
+  - `specflow-activate-task` — generate refinement + activation prompt for Claude, copy to kill-ring
 
 This unit does NOT own:
 - Phase semantics or transitions (core)

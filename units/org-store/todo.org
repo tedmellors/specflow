@@ -172,16 +172,16 @@ Derived from =units/org-store/spec.org=.
    CLOSED: [2026-01-20]
    Given a task headline,
    when =specflow-add-root-task= is called interactively,
-   then it appends a TODO entry to root todo.org under Active section.
+   then it appends a TODO entry to root todo.org under Backlog section.
 
    Outcomes:
    - Prompts for headline string
    - Finds project root from control plane path
    - Opens =todo.org= at project root
-   - Finds =Active= heading (level 1)
-   - Inserts =** TODO <HEADLINE>= at end of Active section
+   - Finds =Backlog= heading (level 1)
+   - Inserts =** TODO <HEADLINE>= at end of Backlog section
    - Saves file with minimal diff
-   - Signals =specflow-heading-not-found= if Active heading missing
+   - Signals =specflow-heading-not-found= if Backlog heading missing
    - Displays "Task added: <HEADLINE>" on success
 
 ** DONE ERT: specflow-phase-shift tests
@@ -195,9 +195,9 @@ Derived from =units/org-store/spec.org=.
 ** DONE ERT: specflow-add-root-task tests
    CLOSED: [2026-01-20]
    7 tests passing.
-   - Adds task to Active section
+   - Adds task to Backlog section
    - Creates TODO (not NEXT)
-   - Handles missing Active section gracefully
+   - Handles missing Backlog section gracefully
    - Displays confirmation message
    - Minimal-diff write (no other content modified)
 
@@ -254,32 +254,20 @@ Derived from =units/org-store/spec.org=.
    - Handles case with no existing NEXT
    - Handles missing sections gracefully
 
-** TODO Refactor: specflow-refine-task to move task
+** DONE Simplify: specflow-refine-task and specflow-activate-task
+   CLOSED: [2026-01-20]
+   REVISED: Original plan to have Emacs move tasks was replaced with prompt-only approach.
+
    Given a backlog task,
-   when =specflow-refine-task= is called,
-   then the task is moved from Backlog → Active (as TODO) in addition to generating prompt.
+   when either command is called,
+   then a prompt is generated and copied to kill-ring (Claude handles file changes).
 
-   Outcomes:
-   - Move task from Backlog to Active section (keep as TODO)
-   - Save file with minimal diff
-   - Change message to "Task refined: <HEADLINE>"
-   - Update prompt ending to "Refine this task and update it in the root todo.org file."
-
-** TODO Refactor: specflow-activate-task prompt format
-   Update prompt ending to match refine-task.
-
-   Outcomes:
-   - Change prompt ending from "Return only the revised task text." to
-     "Refine this task and update it in the root todo.org file."
-
-** TODO ERT: Update refine-task tests
-   - Test that task moves from Backlog to Active
-   - Test that task remains as TODO (not NEXT)
-   - Test new message "Task refined: ..."
-   - Test prompt ends with edit instruction
-
-** TODO ERT: Update activate-task tests
-   - Test prompt ends with edit instruction
+   Completed:
+   - Both commands only generate prompts (no file modifications)
+   - Updated prompt ending to "Refine this task and update it in the root todo.org file."
+   - specflow-activate-task adds extra instructions for moving to Active as NEXT
+   - Both commands display "Task prompt copied to kill-ring"
+   - 76 ERT tests passing
 
 * Validate
 
