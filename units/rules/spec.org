@@ -1,0 +1,231 @@
+#+TITLE: rules – Specification
+#+STARTUP: overview
+
+* Overview
+
+The rules unit manages SpecFlow operational rules — the behavioral directives
+that govern how Claude interacts with SpecFlow projects at runtime.
+
+It replaces the monolithic root =CLAUDE.md= with a structured, queryable
+=rules.org= file that enables filtering by phase, priority, and topic.
+
+* Goals
+
+- Structured rule format with queryable properties
+- Phase-aware rule filtering
+- Automatic integration with bundle (rules auto-included in context)
+- Maintainable: edit individual rules without affecting others
+
+* Non-Goals (MVP)
+
+- Project-specific rule overrides
+- Rule inheritance or cascading
+- LLM-based rule summarization
+- Runtime rule modification
+
+* Rule File Format
+
+Rules are stored in =rules.org= at the project root (alongside =CLAUDE.md=).
+
+** File Structure
+
+#+begin_example
+#+TITLE: SpecFlow – Operational Rules
+#+STARTUP: overview
+
+* Rule Category Name
+  :PROPERTIES:
+  :RULE_ID: unique-identifier
+  :PRIORITY: mandatory | recommended | optional
+  :PHASE: all | plan | specify | scaffold | implement | validate | document
+  :TAGS: tag1 tag2 tag3
+  :END:
+
+  Rule content in plain text or Org markup.
+  Can include examples, lists, code blocks.
+#+end_example
+
+** Required Properties
+
+| Property | Values | Description |
+|----------|--------|-------------|
+| =RULE_ID= | string | Unique identifier (kebab-case) |
+| =PRIORITY= | mandatory, recommended, optional | Enforcement level |
+| =PHASE= | all, plan, specify, scaffold, implement, validate, document | When rule applies |
+
+** Optional Properties
+
+| Property | Values | Description |
+|----------|--------|-------------|
+| =TAGS= | space-separated strings | Topic tags for filtering |
+
+** Rule Content
+
+The body of each rule heading contains the directive text. This may include:
+- Plain paragraphs
+- Bulleted lists
+- Numbered steps
+- Code examples (in =#+begin_example= blocks)
+- Sub-headings for organization (level 2+)
+
+* Public API
+
+** specflow-rules-load
+
+#+begin_example
+(specflow-rules-load &optional RULES-PATH)
+#+end_example
+
+- Input: Optional path to rules.org (defaults to project root)
+- Output: List of rule plists, each with =:id=, =:title=, =:priority=, =:phase=, =:tags=, =:content=
+- Errors:
+  - =specflow-rules-file-not-found= if rules.org missing
+  - =specflow-rules-malformed= if required properties missing
+
+** specflow-rules-for-phase
+
+#+begin_example
+(specflow-rules-for-phase PHASE &optional RULES-PATH)
+#+end_example
+
+- Input:
+  - =PHASE= (string): one of "plan", "specify", "scaffold", "implement", "validate", "document"
+  - Optional =RULES-PATH=
+- Output: List of rule plists where =:phase= matches PHASE or is "all"
+- Behavior: Case-insensitive phase matching
+
+** specflow-rules-mandatory
+
+#+begin_example
+(specflow-rules-mandatory &optional RULES-PATH)
+#+end_example
+
+- Input: Optional =RULES-PATH=
+- Output: List of rule plists where =:priority= is "mandatory"
+
+** specflow-rules-all
+
+#+begin_example
+(specflow-rules-all &optional RULES-PATH)
+#+end_example
+
+- Input: Optional =RULES-PATH=
+- Output: All rule plists in document order
+
+** specflow-rules-by-tag
+
+#+begin_example
+(specflow-rules-by-tag TAG &optional RULES-PATH)
+#+end_example
+
+- Input:
+  - =TAG= (string): tag to search for
+  - Optional =RULES-PATH=
+- Output: List of rule plists where =:tags= contains TAG
+- Behavior: Case-insensitive tag matching
+
+** specflow-rules-format-for-context
+
+#+begin_example
+(specflow-rules-format-for-context RULES)
+#+end_example
+
+- Input: List of rule plists
+- Output: Formatted string suitable for AI context (Markdown-style)
+- Format:
+  #+begin_example
+  ## Rule Title [priority] [phase]
+
+  Rule content...
+
+  ---
+  #+end_example
+
+* Bundle Integration
+
+The bundle unit will be updated to auto-include rules in context bundles.
+
+** Behavior
+
+When =specflow-bundle= is called:
+1. Determine current phase from control plane
+2. Call =specflow-rules-for-phase= with current phase
+3. Format rules via =specflow-rules-format-for-context=
+4. Include formatted rules in bundle output (after control plane, before unit files)
+
+** Bundle Output Order
+
+1. Control plane summary
+2. **Operational rules for current phase** (new)
+3. NEXT task
+4. Unit spec/todo/rules
+5. Parent chain specs
+
+* Discovery
+
+** specflow-rules-find-file
+
+#+begin_example
+(specflow-rules-find-file &optional START-DIR)
+#+end_example
+
+- Input: Optional starting directory (defaults to =default-directory=)
+- Output: Absolute path to =rules.org=
+- Behavior:
+  1. Search upward from START-DIR for =rules.org=
+  2. Stop at project root (=.git=, =.projectile=, =.specflow-root=)
+  3. Signal =specflow-rules-file-not-found= if not found
+
+* Migration from CLAUDE.md
+
+The existing root =CLAUDE.md= (~425 lines, 18 sections) will be migrated to =rules.org=.
+
+** Mapping
+
+| CLAUDE.md Section | RULE_ID | PRIORITY | PHASE |
+|-------------------|---------|----------|-------|
+| Control Plane Authority | control-plane-authority | mandatory | all |
+| Task Discovery | task-discovery | mandatory | all |
+| Parent Context | parent-context | mandatory | all |
+| Response Header | response-header | mandatory | all |
+| Phase Enforcement | phase-enforcement | mandatory | all |
+| Operating Procedure | operating-procedure | mandatory | all |
+| Phase Transition Protocol | phase-transition | mandatory | all |
+| Master TODO → Unit Handoff | unit-handoff | mandatory | all |
+| Plan Phase Rules | plan-phase | mandatory | plan |
+| Specify Phase Rules | specify-phase | mandatory | specify |
+| Scaffold Phase Rules | scaffold-phase | mandatory | scaffold |
+| Implement Phase Rules | implement-phase | mandatory | implement |
+| Validate/Document Rules | validate-document-phase | mandatory | validate |
+| Bug/Runtime Issue Protocol | bug-protocol | recommended | implement |
+| Global Rules | global-rules | mandatory | all |
+| Documentation Pipeline | documentation-pipeline | recommended | all |
+| Bootstrapping Master TODO | bootstrap-todo | optional | plan |
+| Context References | context-refs | optional | all |
+| Scope/Overview | scope-overview | optional | all |
+
+** Post-Migration
+
+After migration:
+- =rules.org= becomes the authoritative source
+- Root =CLAUDE.md= is either:
+  - Removed entirely, OR
+  - Reduced to a one-liner pointing to =rules.org=
+
+* Error Handling
+
+| Error | Condition |
+|-------|-----------|
+| =specflow-rules-file-not-found= | rules.org not found in project |
+| =specflow-rules-malformed= | Rule missing RULE_ID, PRIORITY, or PHASE |
+
+* Testing Requirements
+
+- Load valid rules.org → returns correct plists
+- Filter by phase → returns matching rules only
+- Filter by priority → returns mandatory only
+- Filter by tag → case-insensitive match
+- Format for context → produces readable output
+- Missing file → signals error
+- Malformed rule → signals error with rule title
+- Determinism: load twice → identical output
