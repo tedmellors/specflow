@@ -3,8 +3,9 @@
 ## Scope
 
 This unit owns:
-- Context assembly (`specflow-bundle-context`)
-- Interactive bundling command (`specflow-bundle`)
+- Context assembly (`specflow-bundle-context`, `specflow-bundle-context-text`)
+- Interactive bundling commands (`specflow-bundle`, `specflow-bundle-text`)
+- Dual output modes: paths (compact, for Claude Code) and text (full content)
 - Parent chain resolution and content inclusion
 - Space-separated property splitting (SPEC, TODO, RULES)
 - Output formatting with section delimiters
@@ -44,7 +45,8 @@ STOP and request approval if:
 ### Validate Phase
 - Run all ERT tests
 - Verify determinism tests pass
-- Manual smoke test with M-x specflow-bundle
+- Manual smoke test with M-x specflow-bundle (paths mode)
+- Manual smoke test with M-x specflow-bundle-text (text mode)
 - Do NOT change behavior
 
 ### Document Phase
@@ -59,6 +61,12 @@ All public functions must have ERT tests covering:
 - Soft failures (missing files, no NEXT task)
 - Determinism (bundle twice → same output)
 
+Output mode tests:
+- Paths mode returns compact output with file paths
+- Text mode returns full file contents
+- Both modes include NEXT task content
+
 Interactive command tests:
 - Kill-ring contains bundle content
 - Buffer created with correct name
+- Both `specflow-bundle` and `specflow-bundle-text` work correctly

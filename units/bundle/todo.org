@@ -96,6 +96,71 @@ Derived from =units/bundle/spec.org=.
    - Displays buffer
    - Shows confirmation message
 
+* Implement (Enhancement: Dual Output Modes)
+
+** DONE Refactor: specflow-bundle--format-output-paths
+   CLOSED: [2025-01-20]
+   Given project state, NEXT task, parent chain, and unit content,
+   when =specflow-bundle--format-output-paths= is called,
+   then it returns compact output with file paths only.
+
+   Outcomes:
+   - Header with timestamp and mode indicator "(Paths)"
+   - Project state section (phase, active unit)
+   - NEXT task content included in full (not just path)
+   - Parent chain: list file paths with type labels (SPEC, TODO, RULES)
+   - Unit: list file paths with type labels
+   - Footer: "Read the files above for full context."
+   - Output is ~20 lines (compact)
+
+** DONE Refactor: specflow-bundle--format-output-text
+   CLOSED: [2025-01-20]
+   Given project state, NEXT task, parent chain, and unit content,
+   when =specflow-bundle--format-output-text= is called,
+   then it returns full file contents (current behavior).
+
+   Outcomes:
+   - Header with timestamp and mode indicator "(Text)"
+   - Project state section
+   - NEXT task content
+   - Parent chain: full file contents with subsection headers
+   - Unit: full file contents with subsection headers
+   - Output is ~600 lines (comprehensive)
+
+** DONE Core: specflow-bundle-context (paths mode)
+   CLOSED: [2025-01-20]
+   Given a SpecFlow project,
+   when =specflow-bundle-context= is called,
+   then it returns paths-mode output (new default).
+
+   Outcomes:
+   - Uses =specflow-bundle--format-output-paths=
+   - Returns compact ~20-line output
+   - Maintains all existing core logic (state, parent chain, unit reading)
+
+** DONE Core: specflow-bundle-context-text
+   CLOSED: [2025-01-20]
+   Given a SpecFlow project,
+   when =specflow-bundle-context-text= is called,
+   then it returns text-mode output (full content).
+
+   Outcomes:
+   - Uses =specflow-bundle--format-output-text=
+   - Returns comprehensive ~600-line output
+   - Shares core logic with paths mode
+
+** DONE Interactive: specflow-bundle-text command
+   CLOSED: [2025-01-20]
+   Given Emacs with specflow loaded,
+   when user runs =M-x specflow-bundle-text=,
+   then text-mode bundle is copied to kill-ring and displayed.
+
+   Outcomes:
+   - Calls =specflow-bundle-context-text=
+   - Copies result to kill-ring
+   - Creates/reuses buffer =*SpecFlow Bundle*=
+   - Shows confirmation message
+
 * Test
 
 ** DONE ERT: Basic bundle tests
@@ -134,6 +199,36 @@ Derived from =units/bundle/spec.org=.
    - Buffer =*SpecFlow Bundle*= created
    - Buffer contains expected content
 
+* Test (Enhancement: Dual Output Modes)
+
+** DONE ERT: Paths mode tests
+   CLOSED: [2025-01-20]
+   - =specflow-bundle-context= returns file paths, not full content
+   - Paths mode output is compact (~20 lines)
+   - NEXT task content is included (not just path)
+   - Parent chain paths listed correctly with type labels
+   - Unit paths listed correctly with type labels
+   - Footer message included
+
+** DONE ERT: Text mode tests
+   CLOSED: [2025-01-20]
+   - =specflow-bundle-context-text= returns full file contents
+   - Text mode output includes all file content (~600 lines)
+   - Mode indicator shows "(Text)" in header
+
+** DONE ERT: Shared logic tests
+   CLOSED: [2025-01-20]
+   - Both modes handle missing files with placeholders
+   - Both modes handle no NEXT task gracefully
+   - Determinism: paths mode bundles twice → identical output
+   - Determinism: text mode bundles twice → identical output
+
+** DONE ERT: Interactive command tests (enhancement)
+   CLOSED: [2025-01-20]
+   - =specflow-bundle= outputs paths mode
+   - =specflow-bundle-text= outputs text mode
+   - Both commands populate kill-ring and buffer
+
 * Validate
 
 ** DONE Run full ERT suite
@@ -155,6 +250,33 @@ Derived from =units/bundle/spec.org=.
    CLOSED: [2025-01-19]
    Usage examples for =specflow-bundle= command.
    Includes quick start, API docs, output format, and error handling.
+
+* Validate (Enhancement: Dual Output Modes)
+
+** DONE Run full ERT suite
+   CLOSED: [2025-01-20]
+   90 tests (53 org-store + 37 bundle), all passing.
+
+** TODO Manual smoke test: Paths mode
+   - Run =M-x specflow-bundle=
+   - Verify output is compact (~20 lines)
+   - Verify file paths are listed correctly
+   - Verify NEXT task content is included
+   - Verify kill-ring contains paths-mode bundle
+
+** TODO Manual smoke test: Text mode
+   - Run =M-x specflow-bundle-text=
+   - Verify output includes full file contents
+   - Verify output is comprehensive (~600 lines)
+   - Verify kill-ring contains text-mode bundle
+
+* Document (Enhancement: Dual Output Modes)
+
+** TODO Update units/bundle/README.md
+   - Document both output modes
+   - Update API section with new functions
+   - Add usage examples for both modes
+   - Update output format examples
 
 * Future Enhancements (Post-MVP)
 

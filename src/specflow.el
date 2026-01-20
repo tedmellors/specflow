@@ -667,8 +667,8 @@ Returns placeholder if no NEXT task found."
   "Format a file subsection with LABEL, PATH, and CONTENT."
   (format "### %s: %s\n%s\n" label path content))
 
-(defun specflow-bundle--format-output (project-state next-task parent-chain-content unit-content &optional timestamp)
-  "Format the complete bundle output.
+(defun specflow-bundle--format-output-text (project-state next-task parent-chain-content unit-content &optional timestamp)
+  "Format the complete bundle output with full file contents (text mode).
 PROJECT-STATE is a plist with :phase and :active-unit.
 NEXT-TASK is the extracted NEXT task string.
 PARENT-CHAIN-CONTENT is a list of (name . sections-alist) for each ancestor.
@@ -677,7 +677,7 @@ TIMESTAMP is optional; if nil, current time is used."
   (let ((ts (or timestamp (format-time-string "%Y-%m-%dT%H:%M:%S"))))
     (with-temp-buffer
       ;; Header
-      (insert (format "# SpecFlow Context Bundle\n# Generated: %s\n\n" ts))
+      (insert (format "# SpecFlow Context Bundle (Text)\n# Generated: %s\n\n" ts))
       ;; Project State
       (insert (specflow-bundle--format-section
                "Project State"
@@ -707,6 +707,48 @@ TIMESTAMP is optional; if nil, current time is used."
             (insert (specflow-bundle--format-file-section label path content)))))
       (buffer-string))))
 
+(defun specflow-bundle--format-output-paths (project-state next-task parent-chain-content unit-content &optional timestamp)
+  "Format the bundle output with file paths only (paths mode).
+PROJECT-STATE is a plist with :phase and :active-unit.
+NEXT-TASK is the extracted NEXT task string.
+PARENT-CHAIN-CONTENT is a list of (name . sections-alist) for each ancestor.
+UNIT-CONTENT is a (name . sections-alist) for the active unit.
+TIMESTAMP is optional; if nil, current time is used."
+  (let ((ts (or timestamp (format-time-string "%Y-%m-%dT%H:%M:%S"))))
+    (with-temp-buffer
+      ;; Header
+      (insert (format "# SpecFlow Context Bundle (Paths)\n# Generated: %s\n\n" ts))
+      ;; Project State
+      (insert (specflow-bundle--format-section
+               "Project State"
+               (format "Phase: %s\nActive Unit: %s"
+                       (plist-get project-state :phase)
+                       (plist-get project-state :active-unit))))
+      ;; NEXT Task (include full content - typically short)
+      (insert (specflow-bundle--format-section "NEXT Task" next-task))
+      ;; Parent chain (paths only)
+      (dolist (parent parent-chain-content)
+        (let ((name (car parent))
+              (sections (cdr parent)))
+          (insert (format "## Parent: %s\n" name))
+          (dolist (section sections)
+            (let ((label (car section))
+                  (path (cadr section)))
+              (insert (format "- %s: %s\n" label path))))
+          (insert "\n")))
+      ;; Active unit (paths only)
+      (let ((name (car unit-content))
+            (sections (cdr unit-content)))
+        (insert (format "## Unit: %s\n" name))
+        (dolist (section sections)
+          (let ((label (car section))
+                (path (cadr section)))
+            (insert (format "- %s: %s\n" label path))))
+        (insert "\n"))
+      ;; Footer
+      (insert "Read the files above for full context.\n")
+      (buffer-string))))
+
 ;;;; bundle: Core Functions
 
 (defun specflow-bundle--gather-unit-content (unit-entry project-root)
@@ -731,10 +773,9 @@ Each section is (LABEL PATH CONTENT)."
             sections))
     (cons name (nreverse sections))))
 
-(defun specflow-bundle-context (&optional unit-name)
-  "Generate a context bundle for UNIT-NAME.
-If UNIT-NAME is nil, uses the active unit from the control plane.
-Returns a formatted string containing the complete context bundle."
+(defun specflow-bundle--gather-context (&optional unit-name)
+  "Gather all context data for UNIT-NAME (or active unit if nil).
+Returns a plist with :project-state, :next-task, :parent-chain-content, :unit-content."
   (let* ((cp-path (specflow-org-store-find-control-plane))
          (project-root (specflow-org-store--project-root-from-control-plane cp-path))
          (project-state (specflow-org-store-read-project-state cp-path))
@@ -754,34 +795,65 @@ Returns a formatted string containing the complete context bundle."
     (setq parent-chain-content (nreverse parent-chain-content))
     ;; Gather active unit content
     (setq unit-content (specflow-bundle--gather-unit-content unit-entry project-root))
-    ;; Format and return
-    (specflow-bundle--format-output project-state next-task parent-chain-content unit-content)))
+    ;; Return context plist
+    (list :project-state project-state
+          :next-task next-task
+          :parent-chain-content parent-chain-content
+          :unit-content unit-content)))
+
+(defun specflow-bundle-context (&optional unit-name)
+  "Generate a context bundle for UNIT-NAME in paths mode (default).
+If UNIT-NAME is nil, uses the active unit from the control plane.
+Returns a compact string with file paths for Claude Code to read.
+For full file contents, use `specflow-bundle-context-text'."
+  (let ((ctx (specflow-bundle--gather-context unit-name)))
+    (specflow-bundle--format-output-paths
+     (plist-get ctx :project-state)
+     (plist-get ctx :next-task)
+     (plist-get ctx :parent-chain-content)
+     (plist-get ctx :unit-content))))
+
+(defun specflow-bundle-context-text (&optional unit-name)
+  "Generate a context bundle for UNIT-NAME in text mode (full content).
+If UNIT-NAME is nil, uses the active unit from the control plane.
+Returns a comprehensive string with full file contents.
+For compact output with paths only, use `specflow-bundle-context'."
+  (let ((ctx (specflow-bundle--gather-context unit-name)))
+    (specflow-bundle--format-output-text
+     (plist-get ctx :project-state)
+     (plist-get ctx :next-task)
+     (plist-get ctx :parent-chain-content)
+     (plist-get ctx :unit-content))))
 
 (defun specflow-bundle-context-no-timestamp (&optional unit-name)
-  "Like `specflow-bundle-context' but with fixed timestamp for testing."
-  (let* ((cp-path (specflow-org-store-find-control-plane))
-         (project-root (specflow-org-store--project-root-from-control-plane cp-path))
-         (project-state (specflow-org-store-read-project-state cp-path))
-         (active-unit (or unit-name (plist-get project-state :active-unit)))
-         (unit-entry (specflow-org-store-read-unit active-unit cp-path))
-         (parent-names (specflow-org-store-validate-parent-chain active-unit cp-path))
-         (next-task (specflow-bundle--extract-next-task nil project-root))
-         (parent-chain-content nil)
-         (unit-content nil))
-    (dolist (parent-name (reverse parent-names))
-      (let ((parent-entry (specflow-org-store-read-unit parent-name cp-path)))
-        (push (specflow-bundle--gather-unit-content parent-entry project-root)
-              parent-chain-content)))
-    (setq parent-chain-content (nreverse parent-chain-content))
-    (setq unit-content (specflow-bundle--gather-unit-content unit-entry project-root))
-    (specflow-bundle--format-output project-state next-task parent-chain-content unit-content
-                                    "2025-01-01T00:00:00")))
+  "Like `specflow-bundle-context' but with fixed timestamp for testing.
+Uses paths mode (default)."
+  (let ((ctx (specflow-bundle--gather-context unit-name)))
+    (specflow-bundle--format-output-paths
+     (plist-get ctx :project-state)
+     (plist-get ctx :next-task)
+     (plist-get ctx :parent-chain-content)
+     (plist-get ctx :unit-content)
+     "2025-01-01T00:00:00")))
 
-;;;; bundle: Interactive Command
+(defun specflow-bundle-context-text-no-timestamp (&optional unit-name)
+  "Like `specflow-bundle-context-text' but with fixed timestamp for testing.
+Uses text mode (full content)."
+  (let ((ctx (specflow-bundle--gather-context unit-name)))
+    (specflow-bundle--format-output-text
+     (plist-get ctx :project-state)
+     (plist-get ctx :next-task)
+     (plist-get ctx :parent-chain-content)
+     (plist-get ctx :unit-content)
+     "2025-01-01T00:00:00")))
+
+;;;; bundle: Interactive Commands
 
 (defun specflow-bundle ()
-  "Generate and display a context bundle for the active unit.
-Copies the bundle to the kill-ring and displays it in a buffer."
+  "Generate and display a context bundle in paths mode (default).
+Uses compact output with file paths for Claude Code to read.
+Copies the bundle to the kill-ring and displays it in a buffer.
+For full file contents, use `specflow-bundle-text'."
   (interactive)
   (let ((bundle (specflow-bundle-context)))
     ;; Copy to kill-ring
@@ -792,7 +864,24 @@ Copies the bundle to the kill-ring and displays it in a buffer."
       (insert bundle)
       (goto-char (point-min))
       (display-buffer (current-buffer)))
-    (message "SpecFlow bundle copied to kill-ring and displayed in *SpecFlow Bundle* buffer")))
+    (message "SpecFlow bundle (paths) copied to kill-ring and displayed in *SpecFlow Bundle* buffer")))
+
+(defun specflow-bundle-text ()
+  "Generate and display a context bundle in text mode (full content).
+Uses comprehensive output with full file contents for gptel or web Claude.
+Copies the bundle to the kill-ring and displays it in a buffer.
+For compact output with paths only, use `specflow-bundle'."
+  (interactive)
+  (let ((bundle (specflow-bundle-context-text)))
+    ;; Copy to kill-ring
+    (kill-new bundle)
+    ;; Display in buffer
+    (with-current-buffer (get-buffer-create "*SpecFlow Bundle*")
+      (erase-buffer)
+      (insert bundle)
+      (goto-char (point-min))
+      (display-buffer (current-buffer)))
+    (message "SpecFlow bundle (text) copied to kill-ring and displayed in *SpecFlow Bundle* buffer")))
 
 (provide 'specflow)
 ;;; specflow.el ends here

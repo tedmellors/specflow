@@ -207,7 +207,7 @@ Sets up control plane, units, and files for bundle testing."
     (let ((result (specflow-bundle--extract-next-task "todo.org" project-root)))
       (should (string-match-p "<no root todo.org found>" result)))))
 
-;;;; Bundle Context Tests
+;;;; Bundle Context Tests - Paths Mode (Default)
 
 (ert-deftest specflow-test-bundle-context-returns-string ()
   "Test that bundle-context returns a non-empty string."
@@ -216,6 +216,13 @@ Sets up control plane, units, and files for bundle testing."
       (let ((result (specflow-bundle-context)))
         (should (stringp result))
         (should (> (length result) 0))))))
+
+(ert-deftest specflow-test-bundle-context-paths-mode-header ()
+  "Test that paths mode includes (Paths) in header."
+  (specflow-test-with-bundle-project
+    (let ((default-directory project-root))
+      (let ((result (specflow-bundle-context)))
+        (should (string-match-p "# SpecFlow Context Bundle (Paths)" result))))))
 
 (ert-deftest specflow-test-bundle-context-includes-project-state ()
   "Test that bundle includes project state section."
@@ -227,42 +234,57 @@ Sets up control plane, units, and files for bundle testing."
         (should (string-match-p "Active Unit: bundle" result))))))
 
 (ert-deftest specflow-test-bundle-context-includes-next-task ()
-  "Test that bundle includes NEXT task section."
+  "Test that bundle includes NEXT task section with full content."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
       (let ((result (specflow-bundle-context)))
         (should (string-match-p "## NEXT Task" result))
-        (should (string-match-p "bundle: Implement phase" result))))))
+        (should (string-match-p "bundle: Implement phase" result))
+        ;; NEXT task should include full content even in paths mode
+        (should (string-match-p "Sub-item 1" result))))))
 
-(ert-deftest specflow-test-bundle-context-includes-parent ()
-  "Test that bundle includes parent unit content."
+(ert-deftest specflow-test-bundle-context-paths-mode-parent ()
+  "Test that paths mode lists parent file paths."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
       (let ((result (specflow-bundle-context)))
         (should (string-match-p "## Parent: core" result))
-        (should (string-match-p "Core spec content" result))
-        (should (string-match-p "Core CLAUDE.md content" result))))))
+        ;; Should have paths listed with type labels
+        (should (string-match-p "- SPEC: units/core/spec.org" result))
+        (should (string-match-p "- SPEC: units/core/overview.org" result))
+        (should (string-match-p "- TODO: units/core/todo.org" result))
+        (should (string-match-p "- RULES: units/core/CLAUDE.md" result))
+        ;; Should NOT include full file content in paths mode
+        (should-not (string-match-p "Core spec content" result))))))
 
-(ert-deftest specflow-test-bundle-context-includes-unit ()
-  "Test that bundle includes active unit content."
+(ert-deftest specflow-test-bundle-context-paths-mode-unit ()
+  "Test that paths mode lists unit file paths."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
       (let ((result (specflow-bundle-context)))
         (should (string-match-p "## Unit: bundle" result))
-        (should (string-match-p "Bundle spec content" result))
-        (should (string-match-p "Bundle todo content" result))
-        (should (string-match-p "Bundle CLAUDE.md content" result))))))
+        ;; Should have paths listed
+        (should (string-match-p "- SPEC: units/bundle/spec.org" result))
+        (should (string-match-p "- TODO: units/bundle/todo.org" result))
+        (should (string-match-p "- RULES: units/bundle/CLAUDE.md" result))
+        ;; Should NOT include full file content in paths mode
+        (should-not (string-match-p "Bundle spec content" result))))))
 
-(ert-deftest specflow-test-bundle-context-multi-file-spec ()
-  "Test that space-separated SPEC files are all included."
+(ert-deftest specflow-test-bundle-context-paths-mode-footer ()
+  "Test that paths mode includes footer message."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
       (let ((result (specflow-bundle-context)))
-        ;; Core has two spec files
-        (should (string-match-p "units/core/spec.org" result))
-        (should (string-match-p "units/core/overview.org" result))
-        (should (string-match-p "Core spec content" result))
-        (should (string-match-p "Core overview content" result))))))
+        (should (string-match-p "Read the files above for full context" result))))))
+
+(ert-deftest specflow-test-bundle-context-paths-mode-compact ()
+  "Test that paths mode output is compact (under 50 lines)."
+  (specflow-test-with-bundle-project
+    (let ((default-directory project-root))
+      (let* ((result (specflow-bundle-context))
+             (lines (length (split-string result "\n"))))
+        ;; Should be compact - much less than 50 lines
+        (should (< lines 50))))))
 
 (ert-deftest specflow-test-bundle-context-with-unit-name ()
   "Test bundling a specific unit by name."
@@ -281,10 +303,60 @@ Sets up control plane, units, and files for bundle testing."
       (should-error (specflow-bundle-context "nonexistent")
                     :type 'specflow-unit-not-found))))
 
+;;;; Bundle Context Tests - Text Mode
+
+(ert-deftest specflow-test-bundle-context-text-returns-string ()
+  "Test that bundle-context-text returns a non-empty string."
+  (specflow-test-with-bundle-project
+    (let ((default-directory project-root))
+      (let ((result (specflow-bundle-context-text)))
+        (should (stringp result))
+        (should (> (length result) 0))))))
+
+(ert-deftest specflow-test-bundle-context-text-mode-header ()
+  "Test that text mode includes (Text) in header."
+  (specflow-test-with-bundle-project
+    (let ((default-directory project-root))
+      (let ((result (specflow-bundle-context-text)))
+        (should (string-match-p "# SpecFlow Context Bundle (Text)" result))))))
+
+(ert-deftest specflow-test-bundle-context-text-includes-parent-content ()
+  "Test that text mode includes full parent file content."
+  (specflow-test-with-bundle-project
+    (let ((default-directory project-root))
+      (let ((result (specflow-bundle-context-text)))
+        (should (string-match-p "## Parent: core" result))
+        ;; Should include full file content
+        (should (string-match-p "Core spec content" result))
+        (should (string-match-p "Core overview content" result))
+        (should (string-match-p "Core CLAUDE.md content" result))))))
+
+(ert-deftest specflow-test-bundle-context-text-includes-unit-content ()
+  "Test that text mode includes full unit file content."
+  (specflow-test-with-bundle-project
+    (let ((default-directory project-root))
+      (let ((result (specflow-bundle-context-text)))
+        (should (string-match-p "## Unit: bundle" result))
+        ;; Should include full file content
+        (should (string-match-p "Bundle spec content" result))
+        (should (string-match-p "Bundle todo content" result))
+        (should (string-match-p "Bundle CLAUDE.md content" result))))))
+
+(ert-deftest specflow-test-bundle-context-text-multi-file-spec ()
+  "Test that space-separated SPEC files are all included with content."
+  (specflow-test-with-bundle-project
+    (let ((default-directory project-root))
+      (let ((result (specflow-bundle-context-text)))
+        ;; Core has two spec files
+        (should (string-match-p "units/core/spec.org" result))
+        (should (string-match-p "units/core/overview.org" result))
+        (should (string-match-p "Core spec content" result))
+        (should (string-match-p "Core overview content" result))))))
+
 ;;;; Soft Failure Tests
 
-(ert-deftest specflow-test-bundle-context-missing-file ()
-  "Test that missing files produce placeholders, not errors."
+(ert-deftest specflow-test-bundle-context-missing-file-paths-mode ()
+  "Test that missing files produce placeholders in paths mode."
   (specflow-test-with-temp-project
       '(".git/"
         "docs/"
@@ -318,20 +390,66 @@ Sets up control plane, units, and files for bundle testing."
       (let ((result (specflow-bundle-context)))
         ;; Should complete without error
         (should (stringp result))
+        ;; In paths mode, missing files still show path listings
+        (should (string-match-p "- SPEC: units/test/spec.org" result))))))
+
+(ert-deftest specflow-test-bundle-context-missing-file-text-mode ()
+  "Test that missing files produce placeholders in text mode."
+  (specflow-test-with-temp-project
+      '(".git/"
+        "docs/"
+        "units/test/")
+    ;; Control plane references files that don't all exist
+    (write-region
+     "#+TITLE: Test
+
+* Project
+  :PROPERTIES:
+  :SPEC_FLOW_PHASE: Plan
+  :SPEC_FLOW_ACTIVE_UNIT: test
+  :END:
+
+* Units
+
+** test
+   :PROPERTIES:
+   :SPEC: units/test/spec.org
+   :TODO: units/test/todo.org
+   :RULES: units/test/CLAUDE.md
+   :END:
+"
+     nil (expand-file-name "docs/specflow.org" project-root))
+    ;; Only create spec.org, not todo.org or CLAUDE.md
+    (write-region "Spec content" nil
+                  (expand-file-name "units/test/spec.org" project-root))
+    (write-region "" nil
+                  (expand-file-name "todo.org" project-root))
+    (let ((default-directory project-root))
+      (let ((result (specflow-bundle-context-text)))
+        ;; Should complete without error
+        (should (stringp result))
         ;; Should have placeholders for missing files
         (should (string-match-p "<file not found:" result))))))
 
 ;;;; Determinism Tests
 
-(ert-deftest specflow-test-bundle-context-deterministic ()
-  "Test that bundling twice produces identical output (with fixed timestamp)."
+(ert-deftest specflow-test-bundle-context-deterministic-paths ()
+  "Test that paths mode bundling twice produces identical output."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
       (let ((result1 (specflow-bundle-context-no-timestamp))
             (result2 (specflow-bundle-context-no-timestamp)))
         (should (equal result1 result2))))))
 
-;;;; Interactive Command Tests
+(ert-deftest specflow-test-bundle-context-deterministic-text ()
+  "Test that text mode bundling twice produces identical output."
+  (specflow-test-with-bundle-project
+    (let ((default-directory project-root))
+      (let ((result1 (specflow-bundle-context-text-no-timestamp))
+            (result2 (specflow-bundle-context-text-no-timestamp)))
+        (should (equal result1 result2))))))
+
+;;;; Interactive Command Tests - Paths Mode
 
 (ert-deftest specflow-test-bundle-command-creates-buffer ()
   "Test that M-x specflow-bundle creates the bundle buffer."
@@ -357,13 +475,13 @@ Sets up control plane, units, and files for bundle testing."
       (specflow-bundle)
       ;; Kill-ring should have content
       (should kill-ring)
-      (should (string-match-p "SpecFlow Context Bundle" (car kill-ring)))
+      (should (string-match-p "SpecFlow Context Bundle (Paths)" (car kill-ring)))
       ;; Clean up
       (when (get-buffer "*SpecFlow Bundle*")
         (kill-buffer "*SpecFlow Bundle*")))))
 
 (ert-deftest specflow-test-bundle-command-buffer-content ()
-  "Test that bundle buffer contains expected content."
+  "Test that bundle buffer contains expected paths mode content."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
       (when (get-buffer "*SpecFlow Bundle*")
@@ -371,9 +489,58 @@ Sets up control plane, units, and files for bundle testing."
       (specflow-bundle)
       (with-current-buffer "*SpecFlow Bundle*"
         (let ((content (buffer-string)))
+          (should (string-match-p "# SpecFlow Context Bundle (Paths)" content))
           (should (string-match-p "## Project State" content))
           (should (string-match-p "## NEXT Task" content))
-          (should (string-match-p "## Unit: bundle" content))))
+          (should (string-match-p "## Unit: bundle" content))
+          (should (string-match-p "Read the files above" content))))
+      (kill-buffer "*SpecFlow Bundle*"))))
+
+;;;; Interactive Command Tests - Text Mode
+
+(ert-deftest specflow-test-bundle-text-command-creates-buffer ()
+  "Test that M-x specflow-bundle-text creates the bundle buffer."
+  (specflow-test-with-bundle-project
+    (let ((default-directory project-root))
+      ;; Kill buffer if it exists
+      (when (get-buffer "*SpecFlow Bundle*")
+        (kill-buffer "*SpecFlow Bundle*"))
+      ;; Run command
+      (specflow-bundle-text)
+      ;; Buffer should exist
+      (should (get-buffer "*SpecFlow Bundle*"))
+      ;; Clean up
+      (kill-buffer "*SpecFlow Bundle*"))))
+
+(ert-deftest specflow-test-bundle-text-command-copies-to-kill-ring ()
+  "Test that M-x specflow-bundle-text copies to kill-ring."
+  (specflow-test-with-bundle-project
+    (let ((default-directory project-root))
+      ;; Clear kill-ring
+      (setq kill-ring nil)
+      ;; Run command
+      (specflow-bundle-text)
+      ;; Kill-ring should have content
+      (should kill-ring)
+      (should (string-match-p "SpecFlow Context Bundle (Text)" (car kill-ring)))
+      ;; Clean up
+      (when (get-buffer "*SpecFlow Bundle*")
+        (kill-buffer "*SpecFlow Bundle*")))))
+
+(ert-deftest specflow-test-bundle-text-command-buffer-content ()
+  "Test that bundle-text buffer contains full file content."
+  (specflow-test-with-bundle-project
+    (let ((default-directory project-root))
+      (when (get-buffer "*SpecFlow Bundle*")
+        (kill-buffer "*SpecFlow Bundle*"))
+      (specflow-bundle-text)
+      (with-current-buffer "*SpecFlow Bundle*"
+        (let ((content (buffer-string)))
+          (should (string-match-p "# SpecFlow Context Bundle (Text)" content))
+          (should (string-match-p "## Project State" content))
+          (should (string-match-p "## Unit: bundle" content))
+          ;; Text mode should include full file content
+          (should (string-match-p "Bundle spec content" content))))
       (kill-buffer "*SpecFlow Bundle*"))))
 
 (provide 'test-specflow-bundle)

@@ -54,12 +54,52 @@ SPEC, TODO, and RULES properties may contain space-separated paths:
 
 Bundle splits these into a list and reads each file.
 
-* Output Format
+* Output Modes
 
-Output is plain text with clear section delimiters:
+Bundle supports two output modes optimized for different AI tools:
+
+| Mode | Command | Output | Use Case |
+|------+-----------------------+--------------+------------------------------|
+| Paths | =M-x specflow-bundle= | File paths | Claude Code (can read files) |
+| Text | =M-x specflow-bundle-text= | Full content | gptel, web Claude, external |
+
+** Paths Mode (Default)
+
+Outputs file paths that Claude Code can read directly. More efficient for
+tools with file access (~20 lines vs ~600 lines).
 
 #+begin_example
-# SpecFlow Context Bundle
+# SpecFlow Context Bundle (Paths)
+# Generated: 2025-01-19T15:30:00
+
+## Project State
+Phase: Plan
+Active Unit: bundle
+
+## NEXT Task
+** NEXT bundle: Document phase
+   <full NEXT task content included - typically short>
+
+## Parent: core
+- SPEC: units/core/architecture.org
+- SPEC: units/core/overview.org
+- TODO: units/core/todo.org
+- RULES: units/core/CLAUDE.md
+
+## Unit: bundle
+- SPEC: units/bundle/spec.org
+- TODO: units/bundle/todo.org
+- RULES: units/bundle/CLAUDE.md
+
+Read the files above for full context.
+#+end_example
+
+** Text Mode
+
+Outputs full file contents. Use for AI tools without file access.
+
+#+begin_example
+# SpecFlow Context Bundle (Text)
 # Generated: 2025-01-19T15:30:00
 
 ## Project State
@@ -101,31 +141,55 @@ If a referenced file does not exist:
 
 * Public API
 
-** specflow-bundle-context
+** specflow-bundle-context (Paths Mode)
 
 #+begin_example
 (specflow-bundle-context &optional UNIT-NAME)
 #+end_example
 
 - Input: UNIT-NAME (optional, defaults to active unit from control plane)
-- Output: String containing the formatted context bundle
+- Output: String containing file paths bundle (default mode)
 - Errors:
   - =specflow-control-plane-not-found= if control plane missing
   - =specflow-unit-not-found= if specified unit not in registry
 
-** specflow-bundle (Interactive Command)
+** specflow-bundle-context-text (Text Mode)
+
+#+begin_example
+(specflow-bundle-context-text &optional UNIT-NAME)
+#+end_example
+
+- Input: UNIT-NAME (optional, defaults to active unit from control plane)
+- Output: String containing full file contents bundle
+- Errors: Same as =specflow-bundle-context=
+
+** specflow-bundle (Interactive Command - Paths)
 
 #+begin_example
 M-x specflow-bundle
 #+end_example
 
 Interactive command that:
-1. Calls =specflow-bundle-context= for the active unit
+1. Calls =specflow-bundle-context= for the active unit (paths mode)
 2. Copies result to kill-ring
 3. Opens result in a new buffer named =*SpecFlow Bundle*=
 4. Displays message confirming bundle is ready
 
-The buffer allows review before pasting to an AI assistant.
+Use this for Claude Code and other AI tools with file access.
+
+** specflow-bundle-text (Interactive Command - Text)
+
+#+begin_example
+M-x specflow-bundle-text
+#+end_example
+
+Interactive command that:
+1. Calls =specflow-bundle-context-text= for the active unit (text mode)
+2. Copies result to kill-ring
+3. Opens result in a new buffer named =*SpecFlow Bundle*=
+4. Displays message confirming bundle is ready
+
+Use this for gptel, web Claude, and AI tools without file access.
 
 * NEXT Task Extraction
 
@@ -182,18 +246,32 @@ Does NOT depend on:
 
 ** ERT Test Coverage
 
+*** Paths Mode
+- Bundle returns file paths, not full content
+- Paths mode output is compact (~20 lines)
+- NEXT task content is included (not just path)
+- Parent chain paths listed correctly
+- Unit paths listed correctly
+
+*** Text Mode
+- Bundle returns full file contents
+- Text mode output includes all file content
 - Bundle with single-file SPEC/TODO/RULES
 - Bundle with space-separated multi-file SPEC
 - Bundle with parent chain (single parent)
+
+*** Both Modes
 - Bundle with missing file (soft failure)
 - Bundle with no NEXT task (soft failure)
 - Determinism: bundle twice, compare output (excluding timestamp)
-- Interactive command places content in kill-ring and buffer
+- Interactive commands place content in kill-ring and buffer
 
 ** Manual Smoke Test
 
-- M-x specflow-bundle in a SpecFlow project
-- Verify output includes all expected sections
+- M-x specflow-bundle in a SpecFlow project (paths mode)
+- M-x specflow-bundle-text in a SpecFlow project (text mode)
+- Verify paths mode output is compact with file paths
+- Verify text mode output includes full content
 - Verify kill-ring contains the bundle
 - Verify buffer displays correctly
 
@@ -213,3 +291,10 @@ Decisions confirmed [2025-01-19]:
 3. Space-separated property values for multi-file support
 4. Soft failures for missing files (resilient bundling)
 5. Interactive command outputs to both kill-ring and buffer
+
+Enhancement decisions [2025-01-20]:
+6. Dual output modes: paths (default) and text (full content)
+7. Naming: =specflow-bundle= (paths), =specflow-bundle-text= (full)
+8. Default optimized for Claude Code (can read files directly)
+9. NEXT task content included in both modes (typically short)
+10. Implementation: shared core logic, two output formatters

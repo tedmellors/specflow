@@ -43,7 +43,20 @@ Implementation order: org-store → core → bundle → hydrate → docs
 
 * Active
 
-** NEXT hydrate: Plan phase
+** NEXT bundle: Enhancement - Validate phase
+   Given dual output modes are implemented,
+   when manual smoke tests pass,
+   then the enhancement is complete.
+
+   Enhancement completed:
+   - =specflow-bundle= outputs file paths (new default, ~20 lines)
+   - =specflow-bundle-text= outputs full content (~600 lines)
+   - 90 ERT tests passing
+
+   Current phase: Validate (manual smoke tests pending)
+   See =units/bundle/todo.org= for remaining validation tasks.
+
+** TODO hydrate: Plan phase
    Given org-store and bundle are complete,
    when hydrate unit Plan phase is done,
    then we have design clarity for AI workspace commands.
