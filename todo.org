@@ -10,26 +10,6 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** NEXT org-store: Refactor specflow-refine-task and specflow-activate-task behavior
-   Given a backlog task selected by the user,
-   when either command is called,
-   then the task is moved from Backlog to Active section with refinement prompt.
-
-   Behavior changes:
-   - Both commands: move selected task from Backlog → Active (not just activate-task)
-   - =specflow-refine-task=: keeps task as TODO in Active
-   - =specflow-activate-task=: promotes task to NEXT in Active (demotes existing NEXT)
-
-   Prompt changes:
-   - Include full task body (headline + all content/notes beneath it)
-   - Replace "Return only the revised task text" with instruction to edit todo.org
-   - Final line: "Refine this task and update it in the root todo.org file."
-
-   Outcomes:
-   - Task moved from Backlog to Active in both cases
-   - Kill-ring prompt includes task body for context
-   - Prompt instructs Claude to edit the file directly
-   - Update ERT tests and README.md
 ** TODO org-store: Enhance specflow-phase-shift to also set active unit
    Given the current phase and active unit from control plane,
    when =specflow-phase-shift= is called interactively,
@@ -157,6 +137,14 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    Changed target section from Active to Backlog for new task insertion.
    Tests and documentation updated. 76 org-store tests passing.
 
-   
+** DONE org-store: Simplify refine-task and activate-task to prompt-only
+   CLOSED: [2026-01-20]
+   REVISED: Commands now only generate prompts, Claude handles file edits.
+   - specflow-refine-task: generates prompt, copies to kill-ring
+   - specflow-activate-task: same, plus activation instructions
+   - Neither modifies todo.org directly
+   76 ERT tests passing. README.md updated.
+
+
 
 
