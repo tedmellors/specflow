@@ -188,6 +188,52 @@ Returns list of ancestor unit names from immediate parent to root.
 - `specflow-unit-not-found` - Unit does not exist
 - `specflow-parent-not-found` - Parent references nonexistent unit or circular reference
 
+## Interactive Commands
+
+### specflow-phase-shift
+
+Change the current SpecFlow phase.
+
+```
+M-x specflow-phase-shift RET
+```
+
+Prompts for a phase name with completion. Valid phases:
+- Plan
+- Specify
+- Scaffold
+- Implement
+- Validate
+- Document
+
+Updates `SPEC_FLOW_PHASE` in the control plane and displays confirmation.
+
+```elisp
+;; Programmatic use
+(specflow-phase-shift "Validate")
+;; => t (displays "Phase changed to Validate")
+```
+
+### specflow-add-root-task
+
+Add a TODO task to the root `todo.org` file.
+
+```
+M-x specflow-add-root-task RET
+```
+
+Prompts for a task headline. Inserts `** TODO <headline>` at the end of the Active section in the project's root `todo.org`.
+
+```elisp
+;; Programmatic use
+(specflow-add-root-task "Implement new feature")
+;; => t (displays "Task added: Implement new feature")
+```
+
+**Errors:**
+- `specflow-heading-not-found` - No "Active" heading in todo.org
+- `specflow-file-not-writable` - Cannot save todo.org
+
 ## Error Handling
 
 All errors inherit from `specflow-error`. Use `condition-case` to handle:
@@ -219,8 +265,8 @@ All errors inherit from `specflow-error`. Use `condition-case` to handle:
 Run the test suite:
 
 ```bash
-emacs --batch -l ert -l src/specflow.el -l tests/test-specflow-org-store.el \
+emacs --batch -L units/org-store/src -l units/org-store/tests/test-specflow-org-store.el \
   -f ert-run-tests-batch-and-exit
 ```
 
-53 tests covering all public functions, error conditions, and determinism.
+65 tests covering all public functions, interactive commands, error conditions, and determinism.

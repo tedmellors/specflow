@@ -11,22 +11,11 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
 
 * Active
 
-** NEXT org-store: Add workflow commands
-   Add two interactive commands to org-store:
-
-   1. =specflow-phase-shift= — change current phase in control plane
-      - Prompt for phase (Plan, Specify, Scaffold, Implement, Validate, Document)
-      - Write to SPEC_FLOW_PHASE property
-      - Display confirmation message
-
-   2. =specflow-add-root-task= — append task to root todo.org
-      - Prompt for task headline
-      - Append as TODO under Active section
-      - Optionally prompt for parent unit context
-
-   Dependencies: Uses existing org-store write infrastructure.
+(No active task. See Backlog for future enhancements.)
 
 * Backlog (future enhancements)
+** TODO i think M-x specflow-add-root-task should add it to the backlog, not active
+** TODO add M-x specflow-change-unit to org-store
 ** TODO lock down standard workflow for commiting and pushing
 - Plan → Specify → Scaffold - [COMMIT AND PUSH]
 - Implement → Validate → Document [COMMIT AND PUSH]
@@ -123,5 +112,10 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    CLOSED: [2026-01-20]
    Converted monolithic src/specflow.el (1845 lines) to minimal facade (34 lines).
    All 183 tests pass across 5 modules. Modular restructuring complete.
+
+** DONE org-store: Add workflow commands
+   CLOSED: [2026-01-20]
+   Two new interactive commands: specflow-phase-shift and specflow-add-root-task.
+   12 new ERT tests (65 org-store, 195 total). README.md updated.
 
 
