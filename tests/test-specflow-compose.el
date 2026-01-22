@@ -70,8 +70,6 @@ Sets up control plane in Plan phase for compose commands."
                          (expand-file-name ".specflow/units/docs/spec.org" project-root))
            (write-region "Docs todo content" nil
                          (expand-file-name ".specflow/units/docs/todo.org" project-root))
-           (write-region "Docs architecture" nil
-                         (expand-file-name ".specflow/units/docs/architecture.org" project-root))
            ;; Write compose files
            (write-region "Compose spec content" nil
                          (expand-file-name ".specflow/units/compose/spec.org" project-root))
@@ -236,11 +234,11 @@ Sets up control plane in Plan phase for compose commands."
 ;;;; Context File Selection Tests
 
 (ert-deftest specflow-test-compose-context-new-unit ()
-  "Test context files for new-unit include architecture."
+  "Test context files for new-unit include parent spec."
   (specflow-test-with-compose-project
     (let ((default-directory project-root))
       (let ((files (specflow-compose--context-files-new-unit)))
-        (should (cl-some (lambda (f) (string-match-p "architecture" (car f))) files))
+        (should (cl-some (lambda (f) (string-match-p "docs/spec.org" (car f))) files))
         (should (cl-some (lambda (f) (string-match-p "specflow.org" (car f))) files))
         (should (cl-some (lambda (f) (string-match-p "todo.org" (car f))) files))))))
 
@@ -357,7 +355,7 @@ Sets up control plane in Plan phase for compose commands."
 (ert-deftest specflow-test-compose-instructions-new-unit ()
   "Test new-unit instructions mention correct steps."
   (let ((instructions (specflow-compose--instructions-new-unit "myunit" "docs")))
-    (should (string-match-p "architecture.org" instructions))
+    (should (string-match-p "parent unit spec" instructions))
     (should (string-match-p "control plane" instructions))
     (should (string-match-p "units/myunit" instructions))
     (should (string-match-p "spec.org" instructions))
