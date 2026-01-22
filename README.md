@@ -23,7 +23,7 @@ git clone https://github.com/tedmellors/specflow.git
 
 ```elisp
 ;; In your init.el
-(add-to-list 'load-path "/path/to/specflow/src")
+(add-to-list 'load-path "/path/to/specflow/src/specflow")
 (require 'specflow)
 ```
 
@@ -147,17 +147,6 @@ Follow the phase rules. When ready to advance, update the control plane manually
 |---------|-------------|
 | `specflow-initiate` | Bootstrap new SpecFlow project in current directory |
 
-## Module Documentation
-
-For detailed documentation on each module:
-
-- [hydrate](units/hydrate/README.md) – Conversation header generation
-- [bundle](units/bundle/README.md) – Context bundling for AI assistants
-- [org-store](units/org-store/README.md) – Control plane parsing and writing
-- [compose](units/compose/README.md) – Task-specific prompt generation
-- [initiate](units/initiate/README.md) – Project bootstrapping
-- [rules](units/rules/README.md) – Operational rules management
-
 ## Operational Rules Workflow
 
 SpecFlow uses a structured `rules.org` file as the source of truth for AI operational rules. The root `CLAUDE.md` is auto-generated from this file.
@@ -246,7 +235,7 @@ Phase transitions are manual. Update the control plane's `SPEC_FLOW_PHASE` prope
 
 ## Project Structure
 
-SpecFlow uses a hidden `.specflow/` directory for all development artifacts:
+SpecFlow uses a hidden `.specflow/` directory for development artifacts:
 
 ```
 your-project/
@@ -258,33 +247,26 @@ your-project/
 │       └── <unit-name>/
 │           ├── spec.org          # Unit specification
 │           └── todo.org          # Unit tasks
-├── units/
-│   └── <unit-name>/
-│       ├── src/                  # Implementation
-│       ├── tests/                # Tests
-│       └── README.md             # Usage docs
+├── src/<project>/                # All source files (flat)
+├── tests/                        # All test files (flat)
 ├── CLAUDE.md                     # Generated from .specflow/rules.org
-└── src/                          # Main source code
+└── README.md                     # Project documentation
 ```
 
 The `.specflow/` directory contains specifications, tasks, and rules—everything an AI assistant needs to understand project state. The generated `CLAUDE.md` at the project root provides Claude Code with operational rules.
-
-The control plane registers units with pointers to their spec and todo files.
 
 ## Running Tests
 
 ```bash
 emacs --batch \
-  -L src \
-  -L units/org-store/src -L units/bundle/src -L units/hydrate/src \
-  -L units/compose/src -L units/initiate/src -L units/rules/src \
+  -L src/specflow \
   -l specflow.el \
-  -l units/org-store/tests/test-specflow-org-store.el \
-  -l units/bundle/tests/test-specflow-bundle.el \
-  -l units/hydrate/tests/test-specflow-hydrate.el \
-  -l units/compose/tests/test-specflow-compose.el \
-  -l units/initiate/tests/test-specflow-initiate.el \
-  -l units/rules/tests/test-specflow-rules.el \
+  -l tests/test-specflow-org-store.el \
+  -l tests/test-specflow-bundle.el \
+  -l tests/test-specflow-hydrate.el \
+  -l tests/test-specflow-compose.el \
+  -l tests/test-specflow-initiate.el \
+  -l tests/test-specflow-rules.el \
   -f ert-run-tests-batch-and-exit
 ```
 
