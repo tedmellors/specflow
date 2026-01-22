@@ -11,7 +11,74 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
 
 * Active
 
-(No active task - select from backlog)
+** NEXT org-store: Update control plane discovery for .specflow/
+   - Given a project with .specflow/specflow.org
+   - When specflow-org-store-find-control-plane is called
+   - Then it finds .specflow/specflow.org
+   Outcomes:
+   - [ ] Discovery looks for .specflow/specflow.org only
+   - [ ] Remove docs/specflow.org discovery path
+   - [ ] Update all tests to use .specflow/ structure
+   Related files:
+   - units/org-store/src/specflow-org-store.el
+   - units/org-store/tests/test-specflow-org-store.el
+
+** TODO org-store: Add root todo discovery function
+   - Given a project with .specflow/todo.org
+   - When specflow-org-store-find-root-todo is called
+   - Then it returns path to .specflow/todo.org
+   Outcomes:
+   - [ ] New function specflow-org-store-find-root-todo
+   - [ ] Looks for .specflow/todo.org only
+   - [ ] Tests added
+   Related files:
+   - units/org-store/src/specflow-org-store.el
+
+** TODO hydrate: Update rules.org discovery for .specflow/
+   - Given a project with .specflow/rules.org
+   - When specflow-hydrate-rules is called
+   - Then it finds and processes .specflow/rules.org
+   Outcomes:
+   - [ ] Looks for .specflow/rules.org only
+   - [ ] Remove units/rules/src/rules.org fallback
+   - [ ] Generates CLAUDE.md at project root
+   Related files:
+   - units/hydrate/src/specflow-hydrate.el
+
+** TODO initiate: Add .specflow/ structure template
+   - Given specflow-initiate is run in an empty directory
+   - When user runs M-x specflow-initiate
+   - Then project is created with:
+     - [ ] .specflow/specflow.org (control plane)
+     - [ ] .specflow/todo.org (root tasks)
+     - [ ] .specflow/rules.org (generates CLAUDE.md)
+     - [ ] .specflow/units/core/ directory
+     - [ ] src/<project>/ directory
+     - [ ] tests/ directory
+     - [ ] CLAUDE.md at root (generated)
+   Related files:
+   - units/initiate/src/specflow-initiate.el
+
+** TODO rules: Document .specflow/ structure
+   - Given a user wants to understand SpecFlow folder structure
+   - When they read rules.org
+   - Then they find:
+     - [ ] .specflow/ directory purpose explained
+     - [ ] Control plane discovery order documented
+     - [ ] Root tests/ convention documented
+     - [ ] Unit CLAUDE.md noted as optional
+   Related files:
+   - units/rules/src/rules.org
+
+** TODO docs: Update README with .specflow/ structure
+   - Given a user reads the root README
+   - When they look at Project Structure section
+   - Then they see:
+     - [ ] .specflow/ structure documented
+     - [ ] No mention of legacy docs/specflow.org structure
+   Related files:
+   - README.md
+   - units/initiate/README.md
 
 * Backlog (future enhancements)
 ** TODO rules: lock down standard workflow for commiting and pushing
