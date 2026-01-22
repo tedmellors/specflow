@@ -4,8 +4,8 @@
 
 * Project
   :PROPERTIES:
-  :SPEC_FLOW_PHASE: Plan
-  :SPEC_FLOW_ACTIVE_UNIT: core
+  :SPEC_FLOW_PHASE: Document
+  :SPEC_FLOW_ACTIVE_UNIT: org-store
   :END:
 
 This file is the **SpecFlow control plane**.
@@ -51,9 +51,8 @@ Tools and AI assistants may use hierarchy to:
 ** core
    :PROPERTIES:
    :DIR: src/
-   :SPEC: units/core/architecture.org units/core/overview.org
-   :TODO: units/core/todo.org
-   :RULES: units/core/CLAUDE.md
+   :SPEC: .specflow/units/core/architecture.org .specflow/units/core/overview.org
+   :TODO: .specflow/units/core/todo.org
    :CHILDREN: org-store bundle hydrate docs compose initiate rules
    :END:
 
@@ -64,61 +63,54 @@ It owns architecture, cross-cutting constraints, and project-level coordination.
    :PROPERTIES:
    :PARENT: core
    :DIR: src/
-   :SPEC: units/org-store/spec.org
-   :TODO: units/org-store/todo.org
-   :RULES: units/org-store/CLAUDE.md
+   :SPEC: .specflow/units/org-store/spec.org
+   :TODO: .specflow/units/org-store/todo.org
    :END:
 
 ** bundle
    :PROPERTIES:
    :PARENT: core
    :DIR: src/
-   :SPEC: units/bundle/spec.org
-   :TODO: units/bundle/todo.org
-   :RULES: units/bundle/CLAUDE.md
+   :SPEC: .specflow/units/bundle/spec.org
+   :TODO: .specflow/units/bundle/todo.org
    :END:
 
 ** hydrate
    :PROPERTIES:
    :PARENT: core
    :DIR: src/
-   :SPEC: units/hydrate/spec.org
-   :TODO: units/hydrate/todo.org
-   :RULES: units/hydrate/CLAUDE.md
+   :SPEC: .specflow/units/hydrate/spec.org
+   :TODO: .specflow/units/hydrate/todo.org
    :END:
 
 ** docs
    :PROPERTIES:
    :PARENT: core
    :DIR: docs/
-   :SPEC: units/docs/spec.org
-   :TODO: units/docs/todo.org
-   :RULES: units/docs/CLAUDE.md
+   :SPEC: .specflow/units/docs/spec.org
+   :TODO: .specflow/units/docs/todo.org
    :END:
 
 ** compose
    :PROPERTIES:
    :PARENT: core
    :DIR: src/
-   :SPEC: units/compose/spec.org
-   :TODO: units/compose/todo.org
-   :RULES: units/compose/CLAUDE.md
+   :SPEC: .specflow/units/compose/spec.org
+   :TODO: .specflow/units/compose/todo.org
    :END:
 
 ** initiate
    :PROPERTIES:
    :PARENT: core
    :DIR: src/
-   :SPEC: units/initiate/spec.org
-   :TODO: units/initiate/todo.org
-   :RULES: units/initiate/CLAUDE.md
+   :SPEC: .specflow/units/initiate/spec.org
+   :TODO: .specflow/units/initiate/todo.org
    :END:
 
 ** rules
    :PROPERTIES:
    :PARENT: core
    :DIR: src/
-   :SPEC: units/rules/spec.org
-   :TODO: units/rules/todo.org
-   :RULES: units/rules/CLAUDE.md
+   :SPEC: .specflow/units/rules/spec.org
+   :TODO: .specflow/units/rules/todo.org
    :END:

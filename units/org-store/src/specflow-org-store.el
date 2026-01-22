@@ -51,7 +51,7 @@ Used as fallback when automatic discovery fails."
   :type '(choice (const nil) file)
   :group 'specflow)
 
-(defcustom specflow-control-plane-filename "docs/specflow.org"
+(defcustom specflow-control-plane-filename ".specflow/specflow.org"
   "Relative path to control plane file from project root."
   :type 'string
   :group 'specflow)
@@ -268,10 +268,9 @@ CONTROL-PLANE-PATH is optional; if nil, discovered via
 
 Returns a plist:
   (:name \"org-store\"
-   :dir \"src/\"
-   :spec \"units/org-store/spec.org\"
-   :todo \"units/org-store/todo.org\"
-   :rules \"units/org-store/CLAUDE.md\"
+   :dir \"src/my_project/org-store/\"
+   :spec \".specflow/units/org-store/spec.org\"
+   :todo \".specflow/units/org-store/todo.org\"
    :parent \"core\"
    :children nil
    :context-refs nil)
@@ -279,7 +278,7 @@ Returns a plist:
 All paths are relative to project root.
 
 Signals `specflow-unit-not-found' if unit not in registry.
-Signals `specflow-unit-malformed' if required properties (SPEC, TODO, RULES) missing."
+Signals `specflow-unit-malformed' if required properties (SPEC, TODO) missing."
   (let* ((cp-path (or control-plane-path
                       (specflow-org-store-find-control-plane)))
          (buf (specflow-org-store--read-file-to-temp-buffer cp-path))
@@ -294,8 +293,7 @@ Signals `specflow-unit-malformed' if required properties (SPEC, TODO, RULES) mis
                     (list (format "Unit '%s' not found in %s" unit-name cp-path))))
           ;; Extract required properties
           (let ((spec (cdr (assoc "SPEC" props)))
-                (todo (cdr (assoc "TODO" props)))
-                (rules (cdr (assoc "RULES" props))))
+                (todo (cdr (assoc "TODO" props))))
             ;; Validate required properties
             (unless spec
               (signal 'specflow-unit-malformed
@@ -304,10 +302,6 @@ Signals `specflow-unit-malformed' if required properties (SPEC, TODO, RULES) mis
             (unless todo
               (signal 'specflow-unit-malformed
                       (list (format "Unit '%s' missing required property TODO in %s"
-                                    unit-name cp-path))))
-            (unless rules
-              (signal 'specflow-unit-malformed
-                      (list (format "Unit '%s' missing required property RULES in %s"
                                     unit-name cp-path))))
             ;; Extract optional properties
             (let ((dir (cdr (assoc "DIR" props)))
@@ -319,7 +313,6 @@ Signals `specflow-unit-malformed' if required properties (SPEC, TODO, RULES) mis
                     :dir dir
                     :spec spec
                     :todo todo
-                    :rules rules
                     :parent parent
                     :children (specflow-org-store--split-space-separated children-str)
                     :context-refs (specflow-org-store--split-space-separated context-refs-str)))))
@@ -495,13 +488,13 @@ Uses minimal-diff write strategy:
 
 (defun specflow-org-store--project-root-from-control-plane (&optional control-plane-path)
   "Get project root directory from CONTROL-PLANE-PATH.
-Control plane is expected at docs/specflow.org, so project root
-is the grandparent directory.  If CONTROL-PLANE-PATH is nil,
+Control plane is expected at .specflow/specflow.org, so project root
+is the parent directory.  If CONTROL-PLANE-PATH is nil,
 discovers it via `specflow-org-store-find-control-plane'."
   (let ((cp-path (or control-plane-path
                      (specflow-org-store-find-control-plane))))
-    ;; Control plane is at <project-root>/docs/specflow.org
-    ;; So we go up two directories: specflow.org -> docs -> project-root
+    ;; Control plane is at <project-root>/.specflow/specflow.org
+    ;; So we go up one directory: specflow.org -> .specflow -> project-root
     (file-name-directory
      (directory-file-name
       (file-name-directory cp-path)))))
@@ -515,7 +508,6 @@ PROJECT-ROOT is optional; if nil, discovered from control plane.
 Checks that the following files exist (relative to PROJECT-ROOT):
 - :spec
 - :todo
-- :rules
 
 Returns t if all required files exist.
 
@@ -526,7 +518,6 @@ if any required file does not exist."
          (unit-name (plist-get unit-entry :name))
          (spec-path (plist-get unit-entry :spec))
          (todo-path (plist-get unit-entry :todo))
-         (rules-path (plist-get unit-entry :rules))
          (missing nil))
     ;; Check each required pointer
     (unless (and spec-path
@@ -535,9 +526,6 @@ if any required file does not exist."
     (unless (and todo-path
                  (file-exists-p (expand-file-name todo-path root)))
       (push (cons :todo todo-path) missing))
-    (unless (and rules-path
-                 (file-exists-p (expand-file-name rules-path root)))
-      (push (cons :rules rules-path) missing))
     ;; Return t or signal error
     (if missing
         (signal 'specflow-unit-pointer-invalid
@@ -658,7 +646,7 @@ Returns t on success."
     t))
 
 (defun specflow-add-root-task (headline)
-  "Add a TODO task with HEADLINE to root todo.org under Backlog section.
+  "Add a TODO task with HEADLINE to .specflow/todo.org under Backlog section.
 
 Interactively, prompts for headline string.
 
@@ -667,12 +655,12 @@ section (before the next level-1 heading or end of file).
 
 Returns t on success.
 
-Signals `specflow-heading-not-found' if Backlog heading not found in todo.org.
-Signals `specflow-file-not-writable' if todo.org cannot be saved."
+Signals `specflow-heading-not-found' if Backlog heading not found in .specflow/todo.org.
+Signals `specflow-file-not-writable' if .specflow/todo.org cannot be saved."
   (interactive "sTask headline: ")
   (let* ((cp-path (specflow-org-store-find-control-plane))
          (project-root (specflow-org-store--project-root-from-control-plane cp-path))
-         (todo-file (expand-file-name "todo.org" project-root))
+         (todo-file (expand-file-name ".specflow/todo.org" project-root))
          (buf (generate-new-buffer " *specflow-add-task*")))
     (unwind-protect
         (progn
@@ -775,7 +763,7 @@ USER-CONTEXT is the user's additional context."
    "- Be specific about expected outcomes\n"
    "- If unit placement is unclear, recommend where it should live\n"
    "- Keep it concise (3-5 bullets max)\n\n"
-   "Refine this task and update it in the root todo.org file.\n"))
+   "Refine this task and update it in .specflow/todo.org.\n"))
 
 (defun specflow-refine-task ()
   "Generate a prompt for Claude to improve a backlog task.
@@ -786,13 +774,13 @@ Interactively:
 3. Add additional context for Claude
 
 The generated prompt is copied to the kill-ring.
-This command does NOT modify todo.org - the prompt instructs Claude to make changes.
+This command does NOT modify .specflow/todo.org - the prompt instructs Claude to make changes.
 
 Signals `specflow-heading-not-found' if Backlog section not found."
   (interactive)
   (let* ((cp-path (specflow-org-store-find-control-plane))
          (project-root (specflow-org-store--project-root-from-control-plane cp-path))
-         (todo-file (expand-file-name "todo.org" project-root))
+         (todo-file (expand-file-name ".specflow/todo.org" project-root))
          (tasks (specflow-org-store--parse-backlog-tasks todo-file))
          (headlines (mapcar #'car tasks))
          (selected-headline (completing-read "Select task to refine: " headlines nil t))
@@ -815,7 +803,7 @@ Interactively:
 3. Add additional context for Claude
 
 The generated prompt is copied to the kill-ring.
-This command does NOT modify todo.org - the prompt instructs Claude to:
+This command does NOT modify .specflow/todo.org - the prompt instructs Claude to:
 - Refine the task
 - Move it from Backlog to Active section as NEXT
 - Demote any existing NEXT task to TODO
@@ -824,7 +812,7 @@ Signals `specflow-heading-not-found' if Backlog section not found."
   (interactive)
   (let* ((cp-path (specflow-org-store-find-control-plane))
          (project-root (specflow-org-store--project-root-from-control-plane cp-path))
-         (todo-file (expand-file-name "todo.org" project-root))
+         (todo-file (expand-file-name ".specflow/todo.org" project-root))
          (tasks (specflow-org-store--parse-backlog-tasks todo-file))
          (headlines (mapcar #'car tasks))
          (selected-headline (completing-read "Select task to activate: " headlines nil t))

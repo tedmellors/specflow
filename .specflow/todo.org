@@ -10,21 +10,7 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** NEXT core: Update architecture.org and overview.org for .specflow/ structure
-   - Given the new .specflow/ directory structure
-   - When a developer reads the core documentation
-   - Then they find:
-     - [ ] Control plane path updated to .specflow/specflow.org
-     - [ ] Root todo path updated to .specflow/todo.org
-     - [ ] Unit structure: remove CLAUDE.md (scope/constraints go in spec.org)
-     - [ ] Control plane format: remove RULES property from units
-     - [ ] Source layout section updated for new paths
-     - [ ] rules.org path updated to .specflow/rules.org
-   Related files:
-   - units/core/architecture.org
-   - units/core/overview.org
-
-** TODO org-store: Update control plane discovery and unit format for .specflow/
+** NEXT org-store: Update control plane discovery and unit format for .specflow/
    - Given a project with .specflow/specflow.org
    - When specflow-org-store-find-control-plane is called
    - Then it finds .specflow/specflow.org
@@ -246,6 +232,12 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    Updated root README.md org-store section with 4 interactive commands.
    - Added Commands table with phase-shift, add-root-task, refine-task, activate-task
    - Updated test count from 175 to 239 (added compose/initiate to breakdown)
+
+** DONE core: Update architecture.org and overview.org for .specflow/ structure
+   CLOSED: [2026-01-22]
+   Updated core documentation to reflect new .specflow/ directory structure.
+   All references to docs/specflow.org, root todo.org, unit CLAUDE.md, and RULES
+   property updated to use new paths and conventions.
 
 
 

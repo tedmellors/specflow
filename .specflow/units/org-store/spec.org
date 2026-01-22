@@ -30,7 +30,7 @@ All other SpecFlow modules depend on org-store.
 ** Algorithm
 
 1. Start from =default-directory= of the current buffer.
-2. Search upward for =docs/specflow.org=.
+2. Search upward for =.specflow/specflow.org=.
 3. Stop conditions:
    - File found → return path
    - Reached filesystem root (=/=) → stop searching
@@ -60,7 +60,7 @@ Returned by =specflow-org-store-read-project-state=:
 #+begin_example
 (:phase "Plan"
  :active-unit "org-store"
- :control-plane-path "/path/to/docs/specflow.org")
+ :control-plane-path "/path/to/.specflow/specflow.org")
 #+end_example
 
 ** Unit Entry
@@ -69,16 +69,18 @@ Returned by =specflow-org-store-read-unit=:
 
 #+begin_example
 (:name "org-store"
- :dir "src/"
- :spec "units/org-store/spec.org"
- :todo "units/org-store/todo.org"
- :rules "units/org-store/CLAUDE.md"
+ :dir "src/my_project/org-store/"
+ :spec ".specflow/units/org-store/spec.org"
+ :todo ".specflow/units/org-store/todo.org"
  :parent "core"
  :children nil
  :context-refs nil)
 #+end_example
 
 All paths are relative to project root.
+
+Note: The =:rules= property has been removed. Unit scope and constraints
+are now documented in the unit's =spec.org= file.
 
 ** Unit Registry
 
@@ -102,7 +104,6 @@ List of unit entry plists in document order.
 | =SPEC_FLOW_ACTIVE_UNIT= | Project heading  | Name of active unit             |
 | =SPEC=                  | Unit heading     | Path to unit spec file          |
 | =TODO=                  | Unit heading     | Path to unit todo file          |
-| =RULES=                 | Unit heading     | Path to unit rules file         |
 
 ** Optional (Warning if Missing, Absent = nil)
 
@@ -183,7 +184,7 @@ List of unit entry plists in document order.
 #+end_example
 
 - Input: =UNIT-ENTRY= plist, =PROJECT-ROOT= (optional, discovered if nil)
-- Output: =t= if all required files exist
+- Output: =t= if all required files (SPEC, TODO) exist
 - Errors: =specflow-unit-pointer-invalid= listing missing files
 
 ** specflow-org-store-validate-parent-chain
@@ -236,15 +237,15 @@ List of unit entry plists in document order.
 - Interactive: Prompts for headline string
 - Behavior:
   1. Find project root from control plane
-  2. Open =todo.org= at project root
+  2. Open =.specflow/todo.org=
   3. Find =Backlog= heading (level 1)
   4. Insert =** TODO <HEADLINE>= at end of Backlog section (before next level-1 heading or EOF)
   5. Save file with minimal diff
   6. Display confirmation message: "Task added: <HEADLINE>"
 - Output: =t= on success
 - Errors:
-  - =specflow-heading-not-found= if =Backlog= heading not found in todo.org
-  - =specflow-file-not-writable= if todo.org cannot be saved
+  - =specflow-heading-not-found= if =Backlog= heading not found in =.specflow/todo.org=
+  - =specflow-file-not-writable= if =.specflow/todo.org= cannot be saved
 
 ** specflow-refine-task
 
@@ -259,7 +260,7 @@ List of unit entry plists in document order.
   3. Prompts for additional context/instructions for Claude
 - Behavior:
   1. Find project root from control plane
-  2. Read =todo.org= and parse Backlog section for level-2 headings
+  2. Read =.specflow/todo.org= and parse Backlog section for level-2 headings
   3. Display task headlines via =completing-read=
   4. Prompt for optional unit hint
   5. Prompt for user context/instructions
@@ -267,7 +268,7 @@ List of unit entry plists in document order.
   7. Copy prompt to kill-ring
   8. Display confirmation message: "Task prompt copied to kill-ring"
 - Output: Generated prompt string (also in kill-ring)
-- Note: This command does NOT modify todo.org. The generated prompt instructs Claude to make the changes.
+- Note: This command does NOT modify =.specflow/todo.org=. The generated prompt instructs Claude to make the changes.
 - Prompt Format:
   #+begin_example
   ## Task to Refine
@@ -287,10 +288,10 @@ List of unit entry plists in document order.
   - If unit placement is unclear, recommend where it should live
   - Keep it concise (3-5 bullets max)
 
-  Refine this task and update it in the root todo.org file.
+  Refine this task and update it in =.specflow/todo.org=.
   #+end_example
 - Errors:
-  - =specflow-heading-not-found= if =Backlog= heading not found in todo.org
+  - =specflow-heading-not-found= if =Backlog= heading not found in =.specflow/todo.org=
 
 ** specflow-activate-task
 
@@ -302,7 +303,7 @@ List of unit entry plists in document order.
 - Interactive: Same as =specflow-refine-task=
 - Behavior:
   1. Find project root from control plane
-  2. Read =todo.org= and parse Backlog section for level-2 headings
+  2. Read =.specflow/todo.org= and parse Backlog section for level-2 headings
   3. Display task headlines via =completing-read=
   4. Prompt for optional unit hint
   5. Prompt for user context/instructions
@@ -310,7 +311,7 @@ List of unit entry plists in document order.
   7. Copy prompt to kill-ring
   8. Display confirmation message: "Task prompt copied to kill-ring"
 - Output: Generated prompt string (also in kill-ring)
-- Note: This command does NOT modify todo.org. The generated prompt instructs Claude to make the changes
+- Note: This command does NOT modify =.specflow/todo.org=. The generated prompt instructs Claude to make the changes
   (move task to Active as NEXT, demote existing NEXT to TODO).
 - Prompt Format: Same as =specflow-refine-task=, with additional instruction:
   #+begin_example
@@ -318,18 +319,18 @@ List of unit entry plists in document order.
   If there is an existing NEXT task in Active, demote it to TODO.
   #+end_example
 - Errors:
-  - =specflow-heading-not-found= if =Backlog= heading not found
+  - =specflow-heading-not-found= if =Backlog= heading not found in =.specflow/todo.org=
 
 ** Difference between refine-task and activate-task
 
-Both commands generate a prompt and copy it to kill-ring. Neither modifies todo.org directly.
+Both commands generate a prompt and copy it to kill-ring. Neither modifies =.specflow/todo.org= directly.
 The difference is in the prompt instructions given to Claude:
 
 | Aspect | specflow-refine-task | specflow-activate-task |
 |--------|---------------------|------------------------|
 | Prompt | Yes (kill-ring) | Yes (kill-ring) |
-| Modifies todo.org | No | No |
-| Prompt instruction | "Refine and update in todo.org" | "Refine, move to Active as NEXT, demote existing NEXT" |
+| Modifies .specflow/todo.org | No | No |
+| Prompt instruction | "Refine and update in .specflow/todo.org" | "Refine, move to Active as NEXT, demote existing NEXT" |
 | Message | "Task prompt copied to kill-ring" | "Task prompt copied to kill-ring" |
 
 * Error Handling
@@ -342,7 +343,7 @@ The difference is in the prompt instructions given to Claude:
 | =specflow-control-plane-malformed= | Required project properties missing or invalid |
 | =specflow-unit-not-found=          | Requested unit not in registry                 |
 | =specflow-unit-malformed=          | Unit missing required properties               |
-| =specflow-unit-pointer-invalid=    | SPEC/TODO/RULES file does not exist            |
+| =specflow-unit-pointer-invalid=    | SPEC/TODO file does not exist                  |
 | =specflow-parent-not-found=        | PARENT references nonexistent unit             |
 | =specflow-heading-not-found=       | Write target heading not found                 |
 | =specflow-file-not-writable=       | Cannot save file                               |
@@ -415,3 +416,9 @@ Decisions confirmed [2025-01-19]:
 1. Discovery: search upward, stop at project root, fallback to =specflow-control-plane-path=
 2. No caching in MVP
 3. Plists for all return values (no structs)
+
+Decisions confirmed [2026-01-22]:
+4. Control plane at =.specflow/specflow.org= (was =docs/specflow.org=)
+5. Root todo at =.specflow/todo.org= (was =todo.org= at project root)
+6. RULES property removed from units; scope/constraints now documented in unit's =spec.org=
+7. No backward compatibility with old structure

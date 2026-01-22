@@ -16,31 +16,34 @@ The architecture deliberately separates:
 * High-Level Components
 
 *1. Control Plane (Org)*
-A single Org file (e.g. =docs/specflow.org=) defines:
+A single Org file (=.specflow/specflow.org=) defines:
 - current phase
 - active unit
-- unit registry (paths to specs, TODOs, rules)
+- unit registry (paths to specs and TODOs)
 - optional hierarchy (parent/child relationships)
 - optional context references
 
 This file is authoritative.
 
 *2. Master Task Driver*
-A root =todo.org= file is the canonical source of NEXT work.
+The =.specflow/todo.org= file is the canonical source of NEXT work.
 Only one NEXT task is active at a time.
 
 *3. Units*
 A unit represents a coherent scope of work (module, component, service).
 
 Each unit has:
-- =spec.org= — authoritative behavior definition
+- =spec.org= — authoritative behavior definition (includes scope and constraints)
 - =todo.org= — outcome-based tasks
-- =CLAUDE.md= — unit-specific rules and stop conditions
 - =src/= — implementation
 - =tests/= — tests
 - =README.md= — usage docs (written last)
 
-In SpecFlow, "unit" refers to a workflow scope (spec/todo/rules).
+Unit specs and todos live in =.specflow/units/<name>/=.
+Implementation lives in =src/<project>/<name>/=.
+Tests live in =tests/=.
+
+In SpecFlow, "unit" refers to a workflow scope (spec + todo).
 Emacs Lisp implementation lives in separate =.el= files (e.g. =specflow-core.el=,
 =specflow-org-store.el=) and is referenced by units, but is not itself the unit.
 
@@ -87,19 +90,20 @@ Initial modules are expected to include:
 
 - initiate
   - bootstraps new SpecFlow projects in empty directories
-  - creates minimal file structure (control plane, root CLAUDE.md, todo.org)
-  - provides starter templates with appropriate Org headers
+  - creates =.specflow/= directory with specflow.org, todo.org, rules.org
+  - creates =.specflow/units/core/= with spec.org and todo.org
+  - creates =src/<project>/= and =tests/= directories
+  - generates root =CLAUDE.md= from =.specflow/rules.org=
   - command: specflow-initiate
   - does NOT define specifications or implementation details
   - runs once per project to establish SpecFlow scaffolding
 
 - rules
-  - manages SpecFlow operational rules (from root CLAUDE.md)
+  - manages SpecFlow operational rules (from =.specflow/rules.org=)
   - provides structured, queryable rule format (org-based with tags/properties)
   - query API: specflow-rules-for-phase, specflow-rules-for-topic
   - integrates with bundle/hydrate for context-aware rule loading
-  - replaces monolithic root CLAUDE.md with organized rule sets
-  - does NOT manage unit-level CLAUDE.md files (those remain development rules)
+  - generates root =CLAUDE.md= from =.specflow/rules.org= (via hydrate)
 
 * Implementation Order and Dependencies
 
@@ -115,16 +119,36 @@ Dependency direction: org-store → core → bundle → hydrate → compose → 
 
 * Source Layout
 
-Each unit has implementation in =units/<unit>/src/= and tests in =units/<unit>/tests/=.
-The root =src/specflow.el= is a facade that loads all unit modules.
+SpecFlow uses a standard project layout with hidden development artifacts:
 
-Unit module files:
-- =units/org-store/src/specflow-org-store.el=
-- =units/bundle/src/specflow-bundle.el=
-- =units/hydrate/src/specflow-hydrate.el=
-- =units/compose/src/specflow-compose.el=
-- =units/initiate/src/specflow-initiate.el=
-- =units/rules/src/specflow-rules.el= (planned)
+#+begin_example
+my_project/
+├── .specflow/                    # ALL dev artifacts (hidden)
+│   ├── specflow.org              # Control plane
+│   ├── todo.org                  # Root tasks
+│   ├── rules.org                 # Rules (generates CLAUDE.md)
+│   └── units/
+│       ├── core/
+│       │   ├── spec.org
+│       │   └── todo.org
+│       └── <module>/
+│           ├── spec.org
+│           └── todo.org
+├── CLAUDE.md                     # Generated from .specflow/rules.org
+├── src/
+│   └── my_project/
+│       ├── __init__.py
+│       └── <module>/
+├── tests/
+├── docs/                         # User documentation only
+├── pyproject.toml
+└── README.md
+#+end_example
+
+For this SpecFlow repository specifically (Emacs Lisp):
+- Implementation lives in =units/<unit>/src/specflow-<unit>.el=
+- Tests live in =units/<unit>/tests/test-specflow-<unit>.el=
+- The root =src/specflow.el= is a facade that loads all unit modules
 
 The =core= and =docs= units have no implementation code (documentation only).
 
@@ -176,8 +200,8 @@ Phase boundaries are defined as follows:
   and approved.
 
 - Scaffold → Implement:
-  Scaffold ends when unit =CLAUDE.md= and =todo.org= are written,
-  reviewed, and accepted.
+  Scaffold ends when unit =todo.org= is written (with scope/constraints
+  documented in =spec.org=), reviewed, and accepted.
 
 - Implement → Validate:
   Implement ends when all TODO outcomes are implemented and tests
@@ -201,16 +225,22 @@ Units may declare hierarchy in the control plane using Org properties.
 Example control plane entry:
 
 #+begin_example
-** bundle
+** auth
    :PROPERTIES:
    :PARENT: core
-   :CONTEXT_REFS: docs/overview.org docs/architecture.org
+   :DIR: src/my_project/auth/
+   :SPEC: .specflow/units/auth/spec.org
+   :TODO: .specflow/units/auth/todo.org
+   :CONTEXT_REFS: docs/architecture.md
    :END:
 #+end_example
 
+Note: Units have SPEC, TODO, and DIR properties. No RULES property—unit
+scope and constraints are documented in =spec.org=.
+
 * Master TODO Drafting (Tooling)
 
-SpecFlow may provide a command to draft the repo root =todo.org=
+SpecFlow may provide a command to draft =.specflow/todo.org=
 from the locked-down =overview.org= and =architecture.org=.
 
 Example command:
@@ -218,14 +248,14 @@ Example command:
 
 This command operates in *Plan* phase only and must:
 - read =overview.org=, =architecture.org=, and the control plane
-- produce a *draft* root =todo.org= in a scratch buffer
+- produce a *draft* =.specflow/todo.org= in a scratch buffer
 - propose exactly one =NEXT= task
 - STOP and request human approval before writing files or changing phases
 
 LLM-assisted drafting is optional:
 - An LLM may be used only as a text transformer/summarizer
 - It must not choose tasks authoritatively, advance phases, or modify the control plane
-- The human reviewer approves the final =todo.org=
+- The human reviewer approves the final =.specflow/todo.org=
 
 * AI Integration Strategy
 
@@ -259,7 +289,7 @@ SpecFlow prefers deterministic failures over silent repair.
 - control plane is missing or malformed
 - required project properties missing (=SPEC_FLOW_PHASE=, =SPEC_FLOW_ACTIVE_UNIT=)
 - active unit not found in unit registry
-- unit pointers (=SPEC=, =TODO=, =RULES=) missing or invalid
+- unit pointers (=SPEC=, =TODO=) missing or invalid
 - parent references a nonexistent unit
 
 *Warnings* (non-fatal):

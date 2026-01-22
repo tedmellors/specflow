@@ -40,7 +40,7 @@ SpecFlow addresses this by making project state, intent, and constraints
 specification, TODOs, constraints, and lifecycle phase. Units are treated as
 independent execution targets within the project.
 
-*Control Plane*: An Org file (e.g. =docs/specflow.org=) that stores the
+*Control Plane*: An Org file (=.specflow/specflow.org=) that stores the
 authoritative project state: current phase, active unit, and unit registry.
 Used by SpecFlow tooling and AI workflows to determine what work is allowed.
 

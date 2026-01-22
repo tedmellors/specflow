@@ -335,8 +335,99 @@ Derived from =units/org-store/spec.org=.
    - PASS: Does NOT modify todo.org
    - PASS: Task body preserved
 
+** DONE Validate: .specflow/ structure migration
+   CLOSED: [2026-01-22]
+   77 ERT tests passing, manual smoke tests verified.
+
+   =specflow-org-store-find-control-plane=:
+   - PASS: Finds =.specflow/specflow.org=
+
+   =specflow-org-store-read-project-state=:
+   - PASS: Returns correct phase and active-unit
+
+   =specflow-org-store-read-unit=:
+   - PASS: Returns unit without =:rules= key
+   - PASS: Spec/Todo paths correct
+
+   =specflow-org-store-validate-unit-pointers=:
+   - PASS: Validates only SPEC and TODO (no RULES)
+
+   =specflow-org-store--project-root-from-control-plane=:
+   - PASS: Returns correct project root (1 dir up from .specflow/)
+
+* .specflow/ Structure Migration [2026-01-22]
+
+** DONE Update control plane discovery path
+   CLOSED: [2026-01-22]
+   Given a project with =.specflow/specflow.org=,
+   when =specflow-org-store-find-control-plane= is called,
+   then it finds =.specflow/specflow.org= (not =docs/specflow.org=).
+
+   Outcomes:
+   - [X] Change =specflow-control-plane-filename= default from "docs/specflow.org" to ".specflow/specflow.org"
+   - [X] Update =specflow-org-store--project-root-from-control-plane= to go up 1 dir (not 2)
+
+** DONE Remove RULES from unit reading
+   CLOSED: [2026-01-22]
+   Given a unit entry in the control plane,
+   when =specflow-org-store-read-unit= is called,
+   then it does NOT require RULES property (only SPEC and TODO required).
+
+   Outcomes:
+   - [X] Remove =:rules= from required properties check in =specflow-org-store-read-unit=
+   - [X] Remove =:rules= from returned plist (or return nil if present for compatibility)
+
+** DONE Remove RULES from unit validation
+   CLOSED: [2026-01-22]
+   Given a unit entry plist,
+   when =specflow-org-store-validate-unit-pointers= is called,
+   then it validates only SPEC and TODO files exist (not RULES).
+
+   Outcomes:
+   - [X] Remove RULES validation from =specflow-org-store-validate-unit-pointers=
+   - [X] Error message lists only missing SPEC/TODO files
+
+** DONE Update todo.org path for workflow commands
+   CLOSED: [2026-01-22]
+   Given a project with =.specflow/todo.org=,
+   when =specflow-add-root-task=, =specflow-refine-task=, or =specflow-activate-task= is called,
+   then they operate on =.specflow/todo.org= (not root =todo.org=).
+
+   Outcomes:
+   - [X] Update =specflow-add-root-task= to use =.specflow/todo.org=
+   - [X] Update =specflow-refine-task= to use =.specflow/todo.org=
+   - [X] Update =specflow-activate-task= to use =.specflow/todo.org=
+   - [X] Update prompt text to reference =.specflow/todo.org=
+
+** DONE Update all ERT tests for .specflow/ structure
+   CLOSED: [2026-01-22]
+   Given the test suite,
+   when tests are run,
+   then all tests use =.specflow/specflow.org= and =.specflow/todo.org=.
+
+   Outcomes:
+   - [X] Update test fixtures: =docs/specflow.org= → =.specflow/specflow.org=
+   - [X] Update test fixtures: =todo.org= → =.specflow/todo.org=
+   - [X] Remove RULES from test control plane fixtures
+   - [X] Remove RULES validation tests (or update to expect no RULES)
+   - [X] All tests pass with new structure (77 tests passing)
+
 * Document
 
 ** DONE Write units/org-store/README.md
    CLOSED: [2025-01-19]
    Usage examples for each public function.
+
+** DONE Update README.md for .specflow/ structure
+   CLOSED: [2026-01-22]
+   Given the README.md,
+   when a user reads it,
+   then examples show =.specflow/specflow.org= paths and no RULES property.
+
+   Changes made:
+   - Updated all paths: =docs/specflow.org= → =.specflow/specflow.org=
+   - Updated all paths: =root todo.org= → =.specflow/todo.org=
+   - Removed RULES from unit plist examples
+   - Removed RULES from required properties
+   - Updated error table (SPEC/TODO only, no RULES)
+   - Updated test count to 77
