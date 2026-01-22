@@ -113,25 +113,18 @@ Returns the path to rules.org, or nil if not found."
 
 * Purpose
 
-The docs unit produces project-level documentation that guides all other work.
-This unit has no source code - its deliverables are Org files.
+The docs unit is the parent unit for this project.
+It owns project-level documentation that guides all other work.
+This unit has no source code - its deliverable is spec.org.
 
 * Scope
 
 **In scope**
-- overview.org: Project purpose, goals, success criteria, non-goals
-- architecture.org: System structure, components, data flow, dependencies
+- spec.org: Project purpose, architecture, constraints, success criteria
 
 **Out of scope**
 - Implementation code (belongs in implementation units)
 - Unit-specific specifications (belong in each unit's spec.org)
-
-* Deliverables
-
-| File | Purpose |
-|------|---------+
-| overview.org | What the project is, why it exists, what success looks like |
-| architecture.org | How the system is structured, component relationships |
 ")
 
 (defun specflow-initiate--docs-todo-template ()
@@ -146,23 +139,18 @@ Tasks for the docs unit. Complete these before starting implementation units.
 
 * Active
 
-** NEXT Draft overview.org
-   Define what this project is and why it exists.
+** NEXT Draft spec.org
+   Define project intent and architecture.
 
    - Purpose and goals
    - Target users
+   - System structure and components
    - Success criteria
    - Non-goals and scope boundaries
 
 * Backlog
 
-** TODO Draft architecture.org
-   Define how the system will be structured.
-
-   - Components and their responsibilities
-   - Data flow
-   - Dependencies
-   - Implementation order
+(Add future tasks here)
 
 * Completed
 ")
@@ -218,7 +206,7 @@ Created:
 Next steps:
   1. Review .specflow/specflow.org
   2. Start with root: Plan phase
-  3. Draft overview.org and architecture.org" project-name project-name))
+  3. Draft spec.org" project-name project-name))
           (error
            (message "SpecFlow project \"%s\" initialized (CLAUDE.md not generated: %s).
 
@@ -235,7 +223,7 @@ Run M-x specflow-hydrate-rules to generate CLAUDE.md.
 Next steps:
   1. Review .specflow/specflow.org
   2. Start with root: Plan phase
-  3. Draft overview.org and architecture.org" project-name (error-message-string err) project-name)))
+  3. Draft spec.org" project-name (error-message-string err) project-name)))
       ;; specflow-hydrate-rules not available
       (message "SpecFlow project \"%s\" initialized (CLAUDE.md not generated).
 
@@ -252,7 +240,7 @@ Run M-x specflow-hydrate-rules to generate CLAUDE.md.
 Next steps:
   1. Review .specflow/specflow.org
   2. Start with root: Plan phase
-  3. Draft overview.org and architecture.org" project-name project-name))))
+  3. Draft spec.org" project-name project-name))))
 
 (provide 'specflow-initiate)
 ;;; specflow-initiate.el ends here

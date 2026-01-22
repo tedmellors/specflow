@@ -112,17 +112,15 @@
   "Test docs spec.org template describes documentation deliverables."
   (let ((template (specflow-initiate--docs-spec-template)))
     (should (string-match-p "docs – Specification" template))
-    (should (string-match-p "overview.org" template))
-    (should (string-match-p "architecture.org" template))
+    (should (string-match-p "spec.org" template))
     (should (string-match-p "no source code" template))))
 
 (ert-deftest specflow-test-initiate-docs-todo-template ()
-  "Test docs todo.org template has NEXT task for overview."
+  "Test docs todo.org template has NEXT task for spec.org."
   (let ((template (specflow-initiate--docs-todo-template)))
     (should (string-match-p "docs – Unit TODO" template))
     (should (string-match-p "NEXT" template))
-    (should (string-match-p "Draft overview.org" template))
-    (should (string-match-p "Draft architecture.org" template))))
+    (should (string-match-p "Draft spec.org" template))))
 
 ;;;; Full Initialization Tests - Directory Structure
 
@@ -221,8 +219,8 @@
     (let ((content (with-temp-buffer
                      (insert-file-contents ".specflow/units/docs/spec.org")
                      (buffer-string))))
-      (should (string-match-p "overview.org" content))
-      (should (string-match-p "architecture.org" content)))))
+      (should (string-match-p "spec.org" content))
+      (should (string-match-p "no source code" content)))))
 
 (ert-deftest specflow-test-initiate-docs-todo-content ()
   "Test that created docs todo.org has correct content."
@@ -232,7 +230,7 @@
                      (insert-file-contents ".specflow/units/docs/todo.org")
                      (buffer-string))))
       (should (string-match-p "NEXT" content))
-      (should (string-match-p "Draft overview.org" content)))))
+      (should (string-match-p "Draft spec.org" content)))))
 
 ;;;; Error Case Tests
 
