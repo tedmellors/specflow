@@ -16,7 +16,7 @@
 ;;   .specflow/
 ;;     specflow.org          - Control plane
 ;;     todo.org              - Root tasks
-;;     rules.org             - Default rules (generates CLAUDE.md)
+;;     rules.org             - Full rules (copied from specflow installation)
 ;;     units/
 ;;       docs/
 ;;         spec.org          - Docs unit specification
@@ -97,94 +97,14 @@ Only ONE task is marked NEXT at a time.
 (Move completed tasks here)
 " project-name project-name))
 
-(defun specflow-initiate--rules-template (project-name)
-  "Return default rules.org template for PROJECT-NAME."
-  (format "#+TITLE: %s – Operational Rules
-#+STARTUP: overview
-
-* Scope
-  :PROPERTIES:
-  :RULE_ID: scope
-  :PRIORITY: mandatory
-  :PHASE: all
-  :TAGS: philosophy overview
-  :END:
-
-This repository follows the **SpecFlow philosophy**:
-a **spec-driven, phase-gated workflow** for AI-assisted software development.
-
-The system is organized into **units** (modules, services, components), each with:
-- an explicit specification
-- outcome-based TODOs
-- unit-level constraints
-- a well-defined lifecycle phase
-
-* Control Plane Authority
-  :PROPERTIES:
-  :RULE_ID: control-plane-authority
-  :PRIORITY: mandatory
-  :PHASE: all
-  :TAGS: control-plane startup
-  :END:
-
-The current operational state of this repo is defined by the SpecFlow control plane:
-- =.specflow/specflow.org=
-
-Before starting any work, you MUST:
-1) Read the control plane
-2) Identify the active unit and phase
-3) Follow the phase rules for that phase
-
-* Task Discovery
-  :PROPERTIES:
-  :RULE_ID: task-discovery
-  :PRIORITY: mandatory
-  :PHASE: all
-  :TAGS: todo tasks
-  :END:
-
-Canonical NEXT task source is =.specflow/todo.org=.
-
-When asked \"what is the NEXT actionable task\":
-1) Open =.specflow/todo.org=.
-2) Find the first heading marked =NEXT=.
-3) Return that exact heading and its immediate bullets/subtasks as the actionable plan.
-
-* Phase Enforcement
-  :PROPERTIES:
-  :RULE_ID: phase-enforcement
-  :PRIORITY: mandatory
-  :PHASE: all
-  :TAGS: phase rules
-  :END:
-
-Each unit progresses strictly through:
-
-**Plan → Specify → Scaffold → Implement → Validate → Document**
-
-- **Plan**: Design only. No code, no specs. Summarize, identify constraints, propose options.
-- **Specify**: Edit spec.org only. No code.
-- **Scaffold**: Write todo.org only. No implementation code.
-- **Implement**: Write code and tests per spec.
-- **Validate**: Verify behavior. No changes.
-- **Document**: Write documentation only.
-
-If an action would violate the current phase, **STOP and ask for confirmation**.
-
-* Global Rules
-  :PROPERTIES:
-  :RULE_ID: global-rules
-  :PRIORITY: mandatory
-  :PHASE: all
-  :TAGS: rules constraints
-  :END:
-
-1. **One unit at a time.** Only edit files within the active unit unless explicitly authorized.
-2. **Spec-driven development.** Implement only what is explicitly stated.
-3. **Smallest possible change.** Prefer the minimal diff needed.
-4. **Testing is mandatory.** Every behavior change includes test updates.
-5. **TODOs describe outcomes, not tasks.** Use Given/When/Then style.
-" project-name))
+(defun specflow-initiate--find-rules-org ()
+  "Find the full rules.org in the specflow installation directory.
+Returns the path to rules.org, or nil if not found."
+  (let* ((lib-file (locate-library "specflow-initiate"))
+         (install-dir (and lib-file (file-name-directory lib-file)))
+         (rules-path (and install-dir (expand-file-name "rules.org" install-dir))))
+    (when (and rules-path (file-exists-p rules-path))
+      rules-path)))
 
 (defun specflow-initiate--docs-spec-template ()
   "Return docs unit spec.org template."
@@ -268,9 +188,11 @@ rules, and a docs unit for project documentation."
     ;; Write .specflow/todo.org (root tasks)
     (write-region (specflow-initiate--todo-template project-name)
                   nil (expand-file-name ".specflow/todo.org"))
-    ;; Write .specflow/rules.org (default rules)
-    (write-region (specflow-initiate--rules-template project-name)
-                  nil (expand-file-name ".specflow/rules.org"))
+    ;; Copy full rules.org from specflow installation
+    (let ((source-rules (specflow-initiate--find-rules-org)))
+      (if source-rules
+          (copy-file source-rules (expand-file-name ".specflow/rules.org"))
+        (user-error "Cannot find rules.org in specflow installation")))
     ;; Write .specflow/units/docs/spec.org
     (write-region (specflow-initiate--docs-spec-template)
                   nil (expand-file-name ".specflow/units/docs/spec.org"))
@@ -295,7 +217,7 @@ Created:
 
 Next steps:
   1. Review .specflow/specflow.org
-  2. Start with docs: Plan phase
+  2. Start with root: Plan phase
   3. Draft overview.org and architecture.org" project-name project-name))
           (error
            (message "SpecFlow project \"%s\" initialized (CLAUDE.md not generated: %s).
@@ -312,7 +234,7 @@ Run M-x specflow-hydrate-rules to generate CLAUDE.md.
 
 Next steps:
   1. Review .specflow/specflow.org
-  2. Start with docs: Plan phase
+  2. Start with root: Plan phase
   3. Draft overview.org and architecture.org" project-name (error-message-string err) project-name)))
       ;; specflow-hydrate-rules not available
       (message "SpecFlow project \"%s\" initialized (CLAUDE.md not generated).
@@ -329,7 +251,7 @@ Run M-x specflow-hydrate-rules to generate CLAUDE.md.
 
 Next steps:
   1. Review .specflow/specflow.org
-  2. Start with docs: Plan phase
+  2. Start with root: Plan phase
   3. Draft overview.org and architecture.org" project-name project-name))))
 
 (provide 'specflow-initiate)
