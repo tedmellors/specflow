@@ -629,3 +629,23 @@ When starting work on a specific unit, update the active unit accordingly.
 
 Check the control plane (=.specflow/specflow.org=) or =.specflow/todo.org=
 for the active =NEXT= task and current phase.
+
+* README Documentation
+  :PROPERTIES:
+  :RULE_ID: readme-documentation
+  :PRIORITY: mandatory
+  :PHASE: document
+  :TAGS: docs readme workflow
+  :END:
+
+During the Document phase, review and update root =README.md= as needed.
+
+Check and update:
+- Command list and descriptions
+- Test count (total and per-module breakdown)
+- Project structure section
+- Installation/usage examples
+- Any feature changes from the completed work
+
+If =README.md= is already current, no changes needed.
+Commit =README.md= updates as part of the Document phase checkpoint.

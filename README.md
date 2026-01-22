@@ -190,7 +190,7 @@ After editing `.specflow/rules.org`, regenerate `CLAUDE.md`:
 
 ```elisp
 M-x specflow-hydrate-rules
-;; => "CLAUDE.md regenerated (18 rules)"
+;; => "CLAUDE.md regenerated (24 rules)"
 ```
 
 The generated file includes a header warning not to edit directly:
@@ -270,7 +270,7 @@ emacs --batch \
   -f ert-run-tests-batch-and-exit
 ```
 
-254 tests covering org-store (82), bundle (37), hydrate (35), compose (43), initiate (32), and rules (25).
+253 tests covering org-store (82), bundle (36), hydrate (35), compose (43), initiate (32), and rules (25).
 
 ## License
 
