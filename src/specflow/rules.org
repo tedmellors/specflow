@@ -517,6 +517,99 @@ When a bug or runtime issue is discovered:
 
 This applies even to "simple" or obvious fixes.
 
+* TODO File Format
+  :PROPERTIES:
+  :RULE_ID: todo-format
+  :PRIORITY: mandatory
+  :PHASE: all
+  :TAGS: todo format structure
+  :END:
+
+The =.specflow/todo.org= file uses three sections:
+
+** Active
+
+Contains tasks currently being worked on:
+- Exactly ONE =NEXT= task at the top (the current focus)
+- Followed by ranked =TODO= tasks (well-defined, high priority)
+- Tasks should be outcome-based (Given/When/Then style)
+
+** Backlog
+
+Contains tasks that are:
+- Less immediate or lower priority
+- Less well-defined (may need refinement before activation)
+- Candidates for future NEXT tasks
+
+** Completed
+
+Contains =DONE= tasks with:
+- =CLOSED: [YYYY-MM-DD]= timestamp
+- 1-2 line summary of what was accomplished
+
+When a task is completed:
+1. Change =NEXT= or =TODO= to =DONE=
+2. Add =CLOSED: [YYYY-MM-DD]= timestamp
+3. Add brief summary
+4. Move the entire entry from Active to Completed section
+
+Do NOT leave DONE tasks in the Active section.
+Avoid excessive whitespace between tasks and headers.
+
+* Checkpoint Commits
+  :PROPERTIES:
+  :RULE_ID: checkpoint-commits
+  :PRIORITY: mandatory
+  :PHASE: scaffold document
+  :TAGS: git commits workflow
+  :END:
+
+Certain phases require a commit and push checkpoint before proceeding:
+
+1. **After Scaffold phase**: Commit and push the scaffolded =todo.org=
+2. **After Document phase**: Commit and push documentation changes
+
+This ensures:
+- Work is preserved before moving to implementation
+- Documentation is captured before starting new work
+- Progress can be resumed from known checkpoints
+
+Format: =git commit -m "<unit>: <phase> phase complete"= then =git push=
+
+* Phase Transition Stops
+  :PROPERTIES:
+  :RULE_ID: phase-transition-stops
+  :PRIORITY: mandatory
+  :PHASE: all
+  :TAGS: phase transition workflow
+  :END:
+
+At EVERY phase transition, Claude MUST:
+
+1. **STOP** and announce the phase is complete
+2. **Summarize** what was accomplished in the phase
+3. **Wait** for explicit confirmation before proceeding
+
+Do NOT auto-advance through phases. Even if the next phase seems obvious,
+wait for the user to say "proceed to <phase>" or equivalent.
+
+Example transition announcement:
+#+BEGIN_EXAMPLE
+Specify phase complete.
+
+Summary: Added 3 new rules to rules.org (todo-format, checkpoint-commits,
+phase-transition-stops).
+
+Ready to proceed to Scaffold phase when you confirm.
+#+END_EXAMPLE
+
+This applies to ALL phase transitions:
+- Plan → Specify
+- Specify → Scaffold
+- Scaffold → Implement
+- Implement → Validate
+- Validate → Document
+
 * Current Focus
   :PROPERTIES:
   :RULE_ID: current-focus
