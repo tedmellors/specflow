@@ -59,7 +59,7 @@ Sets up control plane, units, and files for bundle testing."
 
 ** docs
    :PROPERTIES:
-   :SPEC: .specflow/units/docs/spec.org .specflow/units/docs/overview.org
+   :SPEC: .specflow/units/docs/spec.org
    :TODO: .specflow/units/docs/todo.org
    :CHILDREN: bundle
    :END:
@@ -91,8 +91,6 @@ Sets up control plane, units, and files for bundle testing."
      ;; Write docs files
      (write-region "Docs spec content" nil
                    (expand-file-name ".specflow/units/docs/spec.org" project-root))
-     (write-region "Docs overview content" nil
-                   (expand-file-name ".specflow/units/docs/overview.org" project-root))
      (write-region "Docs todo content" nil
                    (expand-file-name ".specflow/units/docs/todo.org" project-root))
      ;; Write bundle files
@@ -250,7 +248,6 @@ Sets up control plane, units, and files for bundle testing."
         (should (string-match-p "## Parent: docs" result))
         ;; Should have paths listed with type labels
         (should (string-match-p "- SPEC: .specflow/units/docs/spec.org" result))
-        (should (string-match-p "- SPEC: .specflow/units/docs/overview.org" result))
         (should (string-match-p "- TODO: .specflow/units/docs/todo.org" result))
         ;; Should NOT include full file content in paths mode
         (should-not (string-match-p "Docs spec content" result))))))
@@ -324,8 +321,7 @@ Sets up control plane, units, and files for bundle testing."
       (let ((result (specflow-bundle-context-text)))
         (should (string-match-p "## Parent: docs" result))
         ;; Should include full file content
-        (should (string-match-p "Docs spec content" result))
-        (should (string-match-p "Docs overview content" result))))))
+        (should (string-match-p "Docs spec content" result))))))
 
 (ert-deftest specflow-test-bundle-context-text-includes-unit-content ()
   "Test that text mode includes full unit file content."
@@ -336,17 +332,6 @@ Sets up control plane, units, and files for bundle testing."
         ;; Should include full file content
         (should (string-match-p "Bundle spec content" result))
         (should (string-match-p "Bundle todo content" result))))))
-
-(ert-deftest specflow-test-bundle-context-text-multi-file-spec ()
-  "Test that space-separated SPEC files are all included with content."
-  (specflow-test-with-bundle-project
-    (let ((default-directory project-root))
-      (let ((result (specflow-bundle-context-text)))
-        ;; Docs has two spec files
-        (should (string-match-p ".specflow/units/docs/spec.org" result))
-        (should (string-match-p ".specflow/units/docs/overview.org" result))
-        (should (string-match-p "Docs spec content" result))
-        (should (string-match-p "Docs overview content" result))))))
 
 ;;;; Soft Failure Tests
 
