@@ -148,47 +148,28 @@ When prompted to bootstrap:
 
 This repo uses a top-down documentation pipeline:
 
-1) =.specflow/units/docs/overview.org= (intent)
-2) =.specflow/units/docs/architecture.org= (structure)
-3) =.specflow/todo.org= (execution plan)
-4) unit specs/todos in =.specflow/units/<unit>/= (scoped implementation)
+1) Parent unit spec (=.specflow/units/docs/spec.org=) - project intent and architecture
+2) =.specflow/todo.org= - execution plan
+3) Unit specs/todos in =.specflow/units/<unit>/= - scoped implementation
 
 These artifacts are created or updated **only when explicitly requested**.
 Do not generate or modify them "opportunistically."
 
-** overview.org (Intent Layer)
+** Parent Unit Spec
 
-=overview.org= defines:
-- the product/system goal
-- user workflow and success criteria
-- scope boundaries and non-goals
-- key invariants and constraints
-- glossary / shared vocabulary (optional)
+The parent unit (typically =docs=) owns the project-level specification.
+This spec defines project intent, architecture, and cross-cutting constraints.
 
-When I ask to draft or revise =overview.org=:
+When I ask to draft or revise the parent unit spec:
 - stay high-level (no module internals)
 - prefer clear constraints and examples
 - capture open questions explicitly
-- STOP and request review before moving to architecture
-
-** architecture.org (Structure Layer)
-
-=architecture.org= derives from =overview.org= and defines:
-- system decomposition into units/modules
-- data flow / state model
-- interfaces/contracts (as needed)
-- phase plan: what gets built first and why
-- validation strategy (how we know it works)
-
-When I ask to draft or revise =architecture.org=:
-- do not invent new product requirements beyond overview
-- keep it implementable (but still high-level)
-- STOP and request review before moving to master todo
+- STOP and request review before proceeding
 
 ** .specflow/todo.org (Execution Layer)
 
 The =.specflow/todo.org= file is the canonical task driver.
-It is generated from =overview.org= + =architecture.org= **only when prompted**.
+It is generated from the parent unit spec **only when prompted**.
 
 When I ask to bootstrap or revise =.specflow/todo.org=:
 - produce a phase-structured roadmap
@@ -332,10 +313,8 @@ project/
 │   ├── rules.org             # Operational rules (generates CLAUDE.md)
 │   └── units/
 │       ├── docs/
-│       │   ├── spec.org      # Docs specification
-│       │   ├── todo.org      # Docs tasks
-│       │   ├── architecture.org
-│       │   └── overview.org
+│       │   ├── spec.org      # Parent unit specification
+│       │   └── todo.org      # Parent unit tasks
 │       └── <unit>/
 │           ├── spec.org      # Unit specification (includes scope/constraints)
 │           └── todo.org      # Unit tasks
