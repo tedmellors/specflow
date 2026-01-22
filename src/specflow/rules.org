@@ -148,8 +148,8 @@ When prompted to bootstrap:
 
 This repo uses a top-down documentation pipeline:
 
-1) =.specflow/units/core/overview.org= (intent)
-2) =.specflow/units/core/architecture.org= (structure)
+1) =.specflow/units/docs/overview.org= (intent)
+2) =.specflow/units/docs/architecture.org= (structure)
 3) =.specflow/todo.org= (execution plan)
 4) unit specs/todos in =.specflow/units/<unit>/= (scoped implementation)
 
@@ -331,9 +331,9 @@ project/
 │   ├── todo.org              # Root task list
 │   ├── rules.org             # Operational rules (generates CLAUDE.md)
 │   └── units/
-│       ├── core/
-│       │   ├── spec.org      # Core specification
-│       │   ├── todo.org      # Core tasks
+│       ├── docs/
+│       │   ├── spec.org      # Docs specification
+│       │   ├── todo.org      # Docs tasks
 │       │   ├── architecture.org
 │       │   └── overview.org
 │       └── <unit>/
