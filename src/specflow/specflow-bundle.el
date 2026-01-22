@@ -45,12 +45,23 @@ Returns file content as string, or placeholder if file not found."
 
 (defun specflow-bundle--extract-next-task (&optional todo-path project-root)
   "Extract the first NEXT task from TODO-PATH.
-TODO-PATH defaults to 'todo.org' at PROJECT-ROOT.
+TODO-PATH defaults to .specflow/todo.org discovered via org-store.
+If TODO-PATH is relative and PROJECT-ROOT is provided, expands relative to it.
 Returns the NEXT heading and its content as a string.
 Returns placeholder if no NEXT task found."
-  (let* ((root (or project-root
-                   (specflow-org-store--project-root-from-control-plane)))
-         (path (expand-file-name (or todo-path "todo.org") root)))
+  (let* ((path (cond
+                ;; Explicit path provided with project-root
+                ((and todo-path project-root)
+                 (expand-file-name todo-path project-root))
+                ;; Explicit absolute path
+                ((and todo-path (file-name-absolute-p todo-path))
+                 todo-path)
+                ;; Explicit relative path without project-root - expand to discovered root
+                (todo-path
+                 (expand-file-name todo-path
+                                   (specflow-org-store--project-root-from-control-plane)))
+                ;; No path - use org-store discovery
+                (t (specflow-org-store-find-root-todo)))))
     (if (not (file-exists-p path))
         "<no root todo.org found>"
       (with-temp-buffer

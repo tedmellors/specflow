@@ -42,9 +42,9 @@ Sets up control plane, units, and files for bundle testing."
   (declare (indent 0))
   `(specflow-test-with-temp-project
        '(".git/"
-         "docs/"
-         "units/core/"
-         "units/bundle/")
+         ".specflow/"
+         ".specflow/units/docs/"
+         ".specflow/units/bundle/")
      ;; Write control plane
      (write-region
       "#+TITLE: Test Control Plane
@@ -57,23 +57,21 @@ Sets up control plane, units, and files for bundle testing."
 
 * Units
 
-** core
+** docs
    :PROPERTIES:
-   :SPEC: units/core/spec.org units/core/overview.org
-   :TODO: units/core/todo.org
-   :RULES: units/core/CLAUDE.md
+   :SPEC: .specflow/units/docs/spec.org .specflow/units/docs/overview.org
+   :TODO: .specflow/units/docs/todo.org
    :CHILDREN: bundle
    :END:
 
 ** bundle
    :PROPERTIES:
-   :PARENT: core
-   :SPEC: units/bundle/spec.org
-   :TODO: units/bundle/todo.org
-   :RULES: units/bundle/CLAUDE.md
+   :PARENT: docs
+   :SPEC: .specflow/units/bundle/spec.org
+   :TODO: .specflow/units/bundle/todo.org
    :END:
 "
-      nil (expand-file-name "docs/specflow.org" project-root))
+      nil (expand-file-name ".specflow/specflow.org" project-root))
      ;; Write root todo.org with NEXT task
      (write-region
       "#+TITLE: Test TODO
@@ -89,23 +87,19 @@ Sets up control plane, units, and files for bundle testing."
 ** TODO Another task
    Not the next one.
 "
-      nil (expand-file-name "todo.org" project-root))
-     ;; Write core files
-     (write-region "Core spec content" nil
-                   (expand-file-name "units/core/spec.org" project-root))
-     (write-region "Core overview content" nil
-                   (expand-file-name "units/core/overview.org" project-root))
-     (write-region "Core todo content" nil
-                   (expand-file-name "units/core/todo.org" project-root))
-     (write-region "Core CLAUDE.md content" nil
-                   (expand-file-name "units/core/CLAUDE.md" project-root))
+      nil (expand-file-name ".specflow/todo.org" project-root))
+     ;; Write docs files
+     (write-region "Docs spec content" nil
+                   (expand-file-name ".specflow/units/docs/spec.org" project-root))
+     (write-region "Docs overview content" nil
+                   (expand-file-name ".specflow/units/docs/overview.org" project-root))
+     (write-region "Docs todo content" nil
+                   (expand-file-name ".specflow/units/docs/todo.org" project-root))
      ;; Write bundle files
      (write-region "Bundle spec content" nil
-                   (expand-file-name "units/bundle/spec.org" project-root))
+                   (expand-file-name ".specflow/units/bundle/spec.org" project-root))
      (write-region "Bundle todo content" nil
-                   (expand-file-name "units/bundle/todo.org" project-root))
-     (write-region "Bundle CLAUDE.md content" nil
-                   (expand-file-name "units/bundle/CLAUDE.md" project-root))
+                   (expand-file-name ".specflow/units/bundle/todo.org" project-root))
      ,@body))
 
 ;;;; Path Splitting Tests
@@ -142,7 +136,7 @@ Sets up control plane, units, and files for bundle testing."
 (ert-deftest specflow-test-bundle-read-file-content-exists ()
   "Test reading existing file returns content."
   (specflow-test-with-temp-project
-      '(".git/" "docs/specflow.org" "test.txt")
+      '(".git/" ".specflow/specflow.org" "test.txt")
     (write-region "File content here" nil
                   (expand-file-name "test.txt" project-root))
     (should (equal "File content here"
@@ -151,14 +145,14 @@ Sets up control plane, units, and files for bundle testing."
 (ert-deftest specflow-test-bundle-read-file-content-missing ()
   "Test reading missing file returns placeholder."
   (specflow-test-with-temp-project
-      '(".git/" "docs/specflow.org")
+      '(".git/" ".specflow/specflow.org")
     (let ((result (specflow-bundle--read-file-content "nonexistent.txt" project-root)))
       (should (string-match-p "<file not found:" result)))))
 
 (ert-deftest specflow-test-bundle-read-file-content-absolute-path ()
   "Test reading with absolute path."
   (specflow-test-with-temp-project
-      '(".git/" "docs/specflow.org" "test.txt")
+      '(".git/" ".specflow/specflow.org" "test.txt")
     (let ((abs-path (expand-file-name "test.txt" project-root)))
       (write-region "Absolute path content" nil abs-path)
       (should (equal "Absolute path content"
@@ -169,7 +163,7 @@ Sets up control plane, units, and files for bundle testing."
 (ert-deftest specflow-test-bundle-extract-next-task-found ()
   "Test extracting NEXT task when present."
   (specflow-test-with-temp-project
-      '(".git/" "docs/specflow.org")
+      '(".git/" ".specflow/specflow.org")
     (write-region
      "#+TITLE: TODO
 
@@ -183,8 +177,8 @@ Sets up control plane, units, and files for bundle testing."
 
 ** TODO Second task
 "
-     nil (expand-file-name "todo.org" project-root))
-    (let ((result (specflow-bundle--extract-next-task "todo.org" project-root)))
+     nil (expand-file-name ".specflow/todo.org" project-root))
+    (let ((result (specflow-bundle--extract-next-task ".specflow/todo.org" project-root)))
       (should (string-match-p "NEXT First task" result))
       (should (string-match-p "Description here" result))
       (should (string-match-p "Item 1" result)))))
@@ -192,7 +186,7 @@ Sets up control plane, units, and files for bundle testing."
 (ert-deftest specflow-test-bundle-extract-next-task-not-found ()
   "Test placeholder when no NEXT task exists."
   (specflow-test-with-temp-project
-      '(".git/" "docs/specflow.org")
+      '(".git/" ".specflow/specflow.org")
     (write-region
      "#+TITLE: TODO
 
@@ -201,15 +195,15 @@ Sets up control plane, units, and files for bundle testing."
 ** TODO First task
 ** TODO Second task
 "
-     nil (expand-file-name "todo.org" project-root))
-    (let ((result (specflow-bundle--extract-next-task "todo.org" project-root)))
+     nil (expand-file-name ".specflow/todo.org" project-root))
+    (let ((result (specflow-bundle--extract-next-task ".specflow/todo.org" project-root)))
       (should (string-match-p "<no NEXT task found>" result)))))
 
 (ert-deftest specflow-test-bundle-extract-next-task-no-file ()
   "Test placeholder when todo.org doesn't exist."
   (specflow-test-with-temp-project
-      '(".git/" "docs/specflow.org")
-    (let ((result (specflow-bundle--extract-next-task "todo.org" project-root)))
+      '(".git/" ".specflow/specflow.org")
+    (let ((result (specflow-bundle--extract-next-task ".specflow/todo.org" project-root)))
       (should (string-match-p "<no root todo.org found>" result)))))
 
 ;;;; Bundle Context Tests - Paths Mode (Default)
@@ -253,14 +247,13 @@ Sets up control plane, units, and files for bundle testing."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
       (let ((result (specflow-bundle-context)))
-        (should (string-match-p "## Parent: core" result))
+        (should (string-match-p "## Parent: docs" result))
         ;; Should have paths listed with type labels
-        (should (string-match-p "- SPEC: units/core/spec.org" result))
-        (should (string-match-p "- SPEC: units/core/overview.org" result))
-        (should (string-match-p "- TODO: units/core/todo.org" result))
-        (should (string-match-p "- RULES: units/core/CLAUDE.md" result))
+        (should (string-match-p "- SPEC: .specflow/units/docs/spec.org" result))
+        (should (string-match-p "- SPEC: .specflow/units/docs/overview.org" result))
+        (should (string-match-p "- TODO: .specflow/units/docs/todo.org" result))
         ;; Should NOT include full file content in paths mode
-        (should-not (string-match-p "Core spec content" result))))))
+        (should-not (string-match-p "Docs spec content" result))))))
 
 (ert-deftest specflow-test-bundle-context-paths-mode-unit ()
   "Test that paths mode lists unit file paths."
@@ -269,9 +262,8 @@ Sets up control plane, units, and files for bundle testing."
       (let ((result (specflow-bundle-context)))
         (should (string-match-p "## Unit: bundle" result))
         ;; Should have paths listed
-        (should (string-match-p "- SPEC: units/bundle/spec.org" result))
-        (should (string-match-p "- TODO: units/bundle/todo.org" result))
-        (should (string-match-p "- RULES: units/bundle/CLAUDE.md" result))
+        (should (string-match-p "- SPEC: .specflow/units/bundle/spec.org" result))
+        (should (string-match-p "- TODO: .specflow/units/bundle/todo.org" result))
         ;; Should NOT include full file content in paths mode
         (should-not (string-match-p "Bundle spec content" result))))))
 
@@ -295,10 +287,10 @@ Sets up control plane, units, and files for bundle testing."
   "Test bundling a specific unit by name."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
-      (let ((result (specflow-bundle-context "core")))
-        ;; Should bundle core, not bundle
-        (should (string-match-p "## Unit: core" result))
-        ;; core has no parent, so no parent section
+      (let ((result (specflow-bundle-context "docs")))
+        ;; Should bundle docs, not bundle
+        (should (string-match-p "## Unit: docs" result))
+        ;; docs has no parent, so no parent section
         (should-not (string-match-p "## Parent:" result))))))
 
 (ert-deftest specflow-test-bundle-context-unit-not-found ()
@@ -330,11 +322,10 @@ Sets up control plane, units, and files for bundle testing."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
       (let ((result (specflow-bundle-context-text)))
-        (should (string-match-p "## Parent: core" result))
+        (should (string-match-p "## Parent: docs" result))
         ;; Should include full file content
-        (should (string-match-p "Core spec content" result))
-        (should (string-match-p "Core overview content" result))
-        (should (string-match-p "Core CLAUDE.md content" result))))))
+        (should (string-match-p "Docs spec content" result))
+        (should (string-match-p "Docs overview content" result))))))
 
 (ert-deftest specflow-test-bundle-context-text-includes-unit-content ()
   "Test that text mode includes full unit file content."
@@ -344,19 +335,18 @@ Sets up control plane, units, and files for bundle testing."
         (should (string-match-p "## Unit: bundle" result))
         ;; Should include full file content
         (should (string-match-p "Bundle spec content" result))
-        (should (string-match-p "Bundle todo content" result))
-        (should (string-match-p "Bundle CLAUDE.md content" result))))))
+        (should (string-match-p "Bundle todo content" result))))))
 
 (ert-deftest specflow-test-bundle-context-text-multi-file-spec ()
   "Test that space-separated SPEC files are all included with content."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
       (let ((result (specflow-bundle-context-text)))
-        ;; Core has two spec files
-        (should (string-match-p "units/core/spec.org" result))
-        (should (string-match-p "units/core/overview.org" result))
-        (should (string-match-p "Core spec content" result))
-        (should (string-match-p "Core overview content" result))))))
+        ;; Docs has two spec files
+        (should (string-match-p ".specflow/units/docs/spec.org" result))
+        (should (string-match-p ".specflow/units/docs/overview.org" result))
+        (should (string-match-p "Docs spec content" result))
+        (should (string-match-p "Docs overview content" result))))))
 
 ;;;; Soft Failure Tests
 
@@ -364,8 +354,8 @@ Sets up control plane, units, and files for bundle testing."
   "Test that missing files produce placeholders in paths mode."
   (specflow-test-with-temp-project
       '(".git/"
-        "docs/"
-        "units/test/")
+        ".specflow/"
+        ".specflow/units/test/")
     ;; Control plane references files that don't all exist
     (write-region
      "#+TITLE: Test
@@ -380,30 +370,29 @@ Sets up control plane, units, and files for bundle testing."
 
 ** test
    :PROPERTIES:
-   :SPEC: units/test/spec.org
-   :TODO: units/test/todo.org
-   :RULES: units/test/CLAUDE.md
+   :SPEC: .specflow/units/test/spec.org
+   :TODO: .specflow/units/test/todo.org
    :END:
 "
-     nil (expand-file-name "docs/specflow.org" project-root))
-    ;; Only create spec.org, not todo.org or CLAUDE.md
+     nil (expand-file-name ".specflow/specflow.org" project-root))
+    ;; Only create spec.org, not todo.org
     (write-region "Spec content" nil
-                  (expand-file-name "units/test/spec.org" project-root))
+                  (expand-file-name ".specflow/units/test/spec.org" project-root))
     (write-region "" nil
-                  (expand-file-name "todo.org" project-root))
+                  (expand-file-name ".specflow/todo.org" project-root))
     (let ((default-directory project-root))
       (let ((result (specflow-bundle-context)))
         ;; Should complete without error
         (should (stringp result))
         ;; In paths mode, missing files still show path listings
-        (should (string-match-p "- SPEC: units/test/spec.org" result))))))
+        (should (string-match-p "- SPEC: .specflow/units/test/spec.org" result))))))
 
 (ert-deftest specflow-test-bundle-context-missing-file-text-mode ()
   "Test that missing files produce placeholders in text mode."
   (specflow-test-with-temp-project
       '(".git/"
-        "docs/"
-        "units/test/")
+        ".specflow/"
+        ".specflow/units/test/")
     ;; Control plane references files that don't all exist
     (write-region
      "#+TITLE: Test
@@ -418,17 +407,16 @@ Sets up control plane, units, and files for bundle testing."
 
 ** test
    :PROPERTIES:
-   :SPEC: units/test/spec.org
-   :TODO: units/test/todo.org
-   :RULES: units/test/CLAUDE.md
+   :SPEC: .specflow/units/test/spec.org
+   :TODO: .specflow/units/test/todo.org
    :END:
 "
-     nil (expand-file-name "docs/specflow.org" project-root))
-    ;; Only create spec.org, not todo.org or CLAUDE.md
+     nil (expand-file-name ".specflow/specflow.org" project-root))
+    ;; Only create spec.org, not todo.org
     (write-region "Spec content" nil
-                  (expand-file-name "units/test/spec.org" project-root))
+                  (expand-file-name ".specflow/units/test/spec.org" project-root))
     (write-region "" nil
-                  (expand-file-name "todo.org" project-root))
+                  (expand-file-name ".specflow/todo.org" project-root))
     (let ((default-directory project-root))
       (let ((result (specflow-bundle-context-text)))
         ;; Should complete without error

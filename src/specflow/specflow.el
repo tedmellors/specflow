@@ -13,7 +13,7 @@
 ;; spec-driven, phase-gated, AI-assisted software development.
 ;;
 ;; This file is a facade that loads all SpecFlow modules.
-;; Each module lives in its own unit directory under units/<module>/src/.
+;; All modules live in src/specflow/ alongside this file.
 ;;
 ;; Modules:
 ;; - specflow-org-store: Control plane discovery and access
@@ -21,17 +21,9 @@
 ;; - specflow-hydrate: AI conversation framing
 ;; - specflow-compose: Task-specific prompt generation
 ;; - specflow-initiate: Project bootstrapping
+;; - specflow-rules: Operational rules management
 
 ;;; Code:
-
-;; Set up load-path for unit modules relative to this file's location
-(let ((specflow-root (file-name-directory
-                      (directory-file-name
-                       (file-name-directory
-                        (or load-file-name buffer-file-name))))))
-  (dolist (unit '("org-store" "bundle" "hydrate" "compose" "initiate" "rules"))
-    (add-to-list 'load-path
-                 (expand-file-name (format "units/%s/src" unit) specflow-root))))
 
 (require 'specflow-org-store)
 (require 'specflow-bundle)

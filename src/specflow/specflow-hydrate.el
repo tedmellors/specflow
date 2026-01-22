@@ -72,7 +72,7 @@ Returns a list of path strings, or nil if VALUE is nil or empty."
 PROJECT-ROOT is used to resolve relative paths.
 Returns the heading and its immediate body, or a placeholder if not found."
   (let* ((root (or project-root (specflow-org-store--project-root-from-control-plane)))
-         (path (or todo-path "todo.org"))
+         (path (or todo-path ".specflow/todo.org"))
          (full-path (expand-file-name path root)))
     (if (not (file-exists-p full-path))
         "<no root todo.org found>"
@@ -103,8 +103,8 @@ CP-PATH is the control plane path."
   (let ((pointers nil))
     ;; Control plane (always include)
     (push (format "- %s (control plane)" cp-path) pointers)
-    ;; Root todo.org
-    (let ((root-todo (expand-file-name "todo.org" project-root)))
+    ;; Root todo.org (in .specflow/)
+    (let ((root-todo (expand-file-name ".specflow/todo.org" project-root)))
       (push (format "- %s (root todo)" root-todo) pointers))
     ;; Unit files
     (when unit-entry
@@ -144,7 +144,7 @@ Returns a multi-line string with phase context, files, and NEXT task."
          (file-pointers (specflow-hydrate--gather-file-pointers
                          unit-entry parent-chain project-root cp-path))
          (phase-actions (specflow-hydrate--phase-actions phase))
-         (next-task (specflow-hydrate--extract-next-task "todo.org" project-root)))
+         (next-task (specflow-hydrate--extract-next-task ".specflow/todo.org" project-root)))
     (concat
      (format "Active unit: %s\n" active-unit)
      (format "Phase: %s\n" phase)
@@ -208,7 +208,7 @@ Safe buffers: *scratch*, buffers with gptel/claude/chat in name."
             (yes-or-no-p "Insert NEXT task in this buffer? "))
     (let* ((cp-path (specflow-org-store-find-control-plane))
            (project-root (and cp-path (specflow-org-store--project-root-from-control-plane cp-path)))
-           (next-task (specflow-hydrate--extract-next-task "todo.org" project-root)))
+           (next-task (specflow-hydrate--extract-next-task ".specflow/todo.org" project-root)))
       (insert next-task)
       (message "NEXT task inserted"))))
 
@@ -227,11 +227,11 @@ Safe buffers: *scratch*, buffers with gptel/claude/chat in name."
     (message "Opened control plane: %s" cp-path)))
 
 (defun specflow-hydrate-open-root-todo ()
-  "Open the root todo.org file."
+  "Open the root todo.org file (.specflow/todo.org)."
   (interactive)
   (let* ((cp-path (specflow-org-store-find-control-plane))
          (project-root (and cp-path (specflow-org-store--project-root-from-control-plane cp-path)))
-         (todo-path (and project-root (expand-file-name "todo.org" project-root))))
+         (todo-path (and project-root (expand-file-name ".specflow/todo.org" project-root))))
     (unless todo-path
       (user-error "No project root found"))
     (unless (file-exists-p todo-path)
@@ -357,12 +357,6 @@ Returns list of (line-num . matched-text) pairs."
 
 ;;;; CLAUDE.md Generation
 
-(defconst specflow-hydrate--rules-path "units/rules/src/rules.org"
-  "Path to rules.org relative to specflow root.")
-
-(defvar specflow-hydrate--install-root nil
-  "Cached specflow installation root, set at load time.")
-
 (defun specflow-hydrate--format-rule-as-markdown (rule)
   "Format a single RULE plist as markdown.
 Returns a string with ## heading and content."
@@ -384,66 +378,32 @@ Returns a complete markdown string with header and all rules."
                          "\n\n---\n\n")))
     (concat header "\n" body "\n")))
 
-(defun specflow-hydrate--find-specflow-root ()
-  "Find the specflow installation root directory.
-Returns cached value if available, otherwise searches for
-units/rules/src/rules.org starting from `load-file-name'
-or the current file's directory."
-  ;; Return cached value if we have it
-  (or specflow-hydrate--install-root
-      (let ((start-dir (or (and load-file-name (file-name-directory load-file-name))
-                           (and buffer-file-name (file-name-directory buffer-file-name))
-                           default-directory)))
-        ;; Walk up looking for the rules.org file
-        (let ((dir start-dir)
-              (found nil))
-          (while (and (not found)
-                      (not (string= dir (file-name-directory (directory-file-name dir)))))
-            (let ((candidate (expand-file-name specflow-hydrate--rules-path dir)))
-              (if (file-exists-p candidate)
-                  (setq found dir)
-                (setq dir (file-name-directory (directory-file-name dir))))))
-          found))))
-
-(defun specflow-hydrate-rules (&optional target-dir specflow-root)
-  "Generate CLAUDE.md from rules.org.
+(defun specflow-hydrate-rules (&optional target-dir)
+  "Generate CLAUDE.md from .specflow/rules.org.
 
 TARGET-DIR is the directory to write CLAUDE.md to.
 Defaults to the project root (from control plane).
 
-SPECFLOW-ROOT is the specflow installation directory.
-Defaults to auto-detection via `specflow-hydrate--find-specflow-root'.
+Finds the project root via control plane discovery, loads all rules
+from .specflow/rules.org, formats them as markdown, and writes to
+CLAUDE.md in the target directory.
 
-Loads all rules from specflow's rules.org, formats them as markdown,
-and writes to CLAUDE.md in the target directory."
+Signals `specflow-rules-file-not-found' if .specflow/rules.org does not exist."
   (interactive)
-  (let* ((sf-root (or specflow-root (specflow-hydrate--find-specflow-root)))
-         (_ (unless sf-root
-              (user-error "Cannot find specflow installation (rules.org not found)")))
-         (rules-path (expand-file-name specflow-hydrate--rules-path sf-root))
+  (let* ((project-root (specflow-org-store--project-root-from-control-plane))
+         (_ (unless project-root
+              (user-error "Cannot determine project root")))
+         (rules-path (expand-file-name ".specflow/rules.org" project-root))
+         (_ (unless (file-exists-p rules-path)
+              (signal 'specflow-rules-file-not-found
+                      (list (format "rules.org not found: %s" rules-path)))))
          (rules (specflow-rules-load rules-path))
          (markdown (specflow-hydrate--format-rules-as-markdown rules))
-         (target (or target-dir
-                     (specflow-org-store--project-root-from-control-plane)))
-         (_ (unless target
-              (user-error "Cannot determine target directory")))
+         (target (or target-dir project-root))
          (output-path (expand-file-name "CLAUDE.md" target)))
     (with-temp-file output-path
       (insert markdown))
     (message "CLAUDE.md regenerated (%d rules)" (length rules))))
-
-;;;; Initialization
-
-;; Cache the specflow root at load time when load-file-name is available
-(when load-file-name
-  (let ((dir (file-name-directory load-file-name)))
-    ;; Walk up to find specflow root
-    (while (and (not specflow-hydrate--install-root)
-                (not (string= dir (file-name-directory (directory-file-name dir)))))
-      (let ((candidate (expand-file-name specflow-hydrate--rules-path dir)))
-        (if (file-exists-p candidate)
-            (setq specflow-hydrate--install-root dir)
-          (setq dir (file-name-directory (directory-file-name dir))))))))
 
 (provide 'specflow-hydrate)
 ;;; specflow-hydrate.el ends here

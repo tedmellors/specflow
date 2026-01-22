@@ -25,9 +25,9 @@ Sets up control plane in Plan phase for compose commands."
          (progn
            ;; Create directory structure
            (make-directory (expand-file-name ".git" project-root) t)
-           (make-directory (expand-file-name "docs" project-root) t)
-           (make-directory (expand-file-name "units/core" project-root) t)
-           (make-directory (expand-file-name "units/compose" project-root) t)
+           (make-directory (expand-file-name ".specflow" project-root) t)
+           (make-directory (expand-file-name ".specflow/units/docs" project-root) t)
+           (make-directory (expand-file-name ".specflow/units/compose" project-root) t)
            ;; Write control plane (Plan phase)
            (write-region
             "#+TITLE: Test Control Plane
@@ -40,23 +40,21 @@ Sets up control plane in Plan phase for compose commands."
 
 * Units
 
-** core
+** docs
    :PROPERTIES:
-   :SPEC: units/core/spec.org
-   :TODO: units/core/todo.org
-   :RULES: units/core/CLAUDE.md
+   :SPEC: .specflow/units/docs/spec.org
+   :TODO: .specflow/units/docs/todo.org
    :CHILDREN: compose
    :END:
 
 ** compose
    :PROPERTIES:
-   :PARENT: core
-   :SPEC: units/compose/spec.org
-   :TODO: units/compose/todo.org
-   :RULES: units/compose/CLAUDE.md
+   :PARENT: docs
+   :SPEC: .specflow/units/compose/spec.org
+   :TODO: .specflow/units/compose/todo.org
    :END:
 "
-            nil (expand-file-name "docs/specflow.org" project-root))
+            nil (expand-file-name ".specflow/specflow.org" project-root))
            ;; Write root todo.org
            (write-region
             "#+TITLE: Test TODO
@@ -66,23 +64,19 @@ Sets up control plane in Plan phase for compose commands."
 ** NEXT compose: Plan phase
    Planning the compose unit.
 "
-            nil (expand-file-name "todo.org" project-root))
-           ;; Write core files
-           (write-region "Core spec content" nil
-                         (expand-file-name "units/core/spec.org" project-root))
-           (write-region "Core todo content" nil
-                         (expand-file-name "units/core/todo.org" project-root))
-           (write-region "Core CLAUDE.md content" nil
-                         (expand-file-name "units/core/CLAUDE.md" project-root))
-           (write-region "Core architecture" nil
-                         (expand-file-name "units/core/architecture.org" project-root))
+            nil (expand-file-name ".specflow/todo.org" project-root))
+           ;; Write docs files
+           (write-region "Docs spec content" nil
+                         (expand-file-name ".specflow/units/docs/spec.org" project-root))
+           (write-region "Docs todo content" nil
+                         (expand-file-name ".specflow/units/docs/todo.org" project-root))
+           (write-region "Docs architecture" nil
+                         (expand-file-name ".specflow/units/docs/architecture.org" project-root))
            ;; Write compose files
            (write-region "Compose spec content" nil
-                         (expand-file-name "units/compose/spec.org" project-root))
+                         (expand-file-name ".specflow/units/compose/spec.org" project-root))
            (write-region "Compose todo content" nil
-                         (expand-file-name "units/compose/todo.org" project-root))
-           (write-region "Compose CLAUDE.md content" nil
-                         (expand-file-name "units/compose/CLAUDE.md" project-root))
+                         (expand-file-name ".specflow/units/compose/todo.org" project-root))
            ,@body)
        ;; Cleanup
        (delete-directory project-root t))))
@@ -94,7 +88,7 @@ Sets up control plane in Plan phase for compose commands."
      (unwind-protect
          (progn
            (make-directory (expand-file-name ".git" project-root) t)
-           (make-directory (expand-file-name "docs" project-root) t)
+           (make-directory (expand-file-name ".specflow" project-root) t)
            (write-region
             "#+TITLE: Test Control Plane
 
@@ -108,10 +102,10 @@ Sets up control plane in Plan phase for compose commands."
 
 ** compose
    :PROPERTIES:
-   :SPEC: units/compose/spec.org
+   :SPEC: .specflow/units/compose/spec.org
    :END:
 "
-            nil (expand-file-name "docs/specflow.org" project-root))
+            nil (expand-file-name ".specflow/specflow.org" project-root))
            ,@body)
        (delete-directory project-root t))))
 
@@ -277,12 +271,12 @@ Sets up control plane in Plan phase for compose commands."
         (should-not (cl-some (lambda (f) (string-match-p "parent:" (cdr f))) files))))))
 
 (ert-deftest specflow-test-compose-context-refactor ()
-  "Test context files for refactor include spec and rules."
+  "Test context files for refactor include spec and todo."
   (specflow-test-with-compose-project
     (let ((default-directory project-root))
       (let ((files (specflow-compose--context-files-refactor "compose")))
         (should (cl-some (lambda (f) (string-match-p "spec.org" (car f))) files))
-        (should (cl-some (lambda (f) (string-match-p "CLAUDE.md" (car f))) files))))))
+        (should (cl-some (lambda (f) (string-match-p "todo.org" (car f))) files))))))
 
 ;;;; Prompt Generation Tests
 
@@ -293,7 +287,7 @@ Sets up control plane in Plan phase for compose commands."
       (let ((prompt (specflow-compose--generate-prompt
                      'new-unit
                      '(("Unit Name" . "test-unit")
-                       ("Parent" . "core")
+                       ("Parent" . "docs")
                        ("Purpose (one line)" . "Test purpose")
                        ("Problem it solves" . "Test problem")
                        ("In Scope" . "Test scope")))))
@@ -362,7 +356,7 @@ Sets up control plane in Plan phase for compose commands."
 
 (ert-deftest specflow-test-compose-instructions-new-unit ()
   "Test new-unit instructions mention correct steps."
-  (let ((instructions (specflow-compose--instructions-new-unit "myunit" "core")))
+  (let ((instructions (specflow-compose--instructions-new-unit "myunit" "docs")))
     (should (string-match-p "architecture.org" instructions))
     (should (string-match-p "control plane" instructions))
     (should (string-match-p "units/myunit" instructions))
@@ -469,7 +463,7 @@ Sets up control plane in Plan phase for compose commands."
   "Test that phase completion section includes checklist items."
   (let ((section (specflow-compose--phase-completion-section "Plan" "myunit")))
     (should (string-match-p "### Phase Completion Checklist" section))
-    (should (string-match-p "Update root todo.org" section))
+    (should (string-match-p "Update .specflow/todo.org" section))
     (should (string-match-p "Update control plane" section))
     (should (string-match-p "Commit:" section))))
 
@@ -493,7 +487,7 @@ Sets up control plane in Plan phase for compose commands."
                      'new-unit
                      '(("Unit Name" . "test-unit")))))
         (should (string-match-p "### Phase Completion Checklist" prompt))
-        (should (string-match-p "Update root todo.org" prompt))
+        (should (string-match-p "Update .specflow/todo.org" prompt))
         (should (string-match-p "Update control plane" prompt))
         (should (string-match-p "test-unit: Plan phase" prompt))))))
 

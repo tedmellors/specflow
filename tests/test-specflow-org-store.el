@@ -36,26 +36,26 @@ The macro binds `project-root' to the temporary directory."
 (ert-deftest specflow-test-find-control-plane-at-root ()
   "Test finding control plane at project root."
   (specflow-test-with-temp-project
-      '(".git/" "docs/specflow.org")
-    (let ((expected (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/specflow.org")
+    (let ((expected (expand-file-name ".specflow/specflow.org" project-root)))
       (should (equal (specflow-org-store-find-control-plane project-root)
                      expected)))))
 
 (ert-deftest specflow-test-find-control-plane-from-subdir ()
   "Test finding control plane when starting from a subdirectory."
   (specflow-test-with-temp-project
-      '(".git/" "docs/specflow.org" "src/foo/bar/")
+      '(".git/" ".specflow/specflow.org" "src/foo/bar/")
     (let ((start-dir (expand-file-name "src/foo/bar" project-root))
-          (expected (expand-file-name "docs/specflow.org" project-root)))
+          (expected (expand-file-name ".specflow/specflow.org" project-root)))
       (should (equal (specflow-org-store-find-control-plane start-dir)
                      expected)))))
 
 (ert-deftest specflow-test-find-control-plane-two-levels-up ()
   "Test finding control plane two directory levels up."
   (specflow-test-with-temp-project
-      '(".git/" "docs/specflow.org" "units/org-store/")
+      '(".git/" ".specflow/specflow.org" "units/org-store/")
     (let ((start-dir (expand-file-name "units/org-store" project-root))
-          (expected (expand-file-name "docs/specflow.org" project-root)))
+          (expected (expand-file-name ".specflow/specflow.org" project-root)))
       (should (equal (specflow-org-store-find-control-plane start-dir)
                      expected)))))
 
@@ -98,23 +98,23 @@ The macro binds `project-root' to the temporary directory."
 (ert-deftest specflow-test-find-control-plane-projectile-marker ()
   "Test that .projectile is recognized as project root marker."
   (specflow-test-with-temp-project
-      '(".projectile" "docs/specflow.org")
-    (let ((expected (expand-file-name "docs/specflow.org" project-root)))
+      '(".projectile" ".specflow/specflow.org")
+    (let ((expected (expand-file-name ".specflow/specflow.org" project-root)))
       (should (equal (specflow-org-store-find-control-plane project-root)
                      expected)))))
 
 (ert-deftest specflow-test-find-control-plane-specflow-root-marker ()
   "Test that .specflow-root is recognized as project root marker."
   (specflow-test-with-temp-project
-      '(".specflow-root" "docs/specflow.org")
-    (let ((expected (expand-file-name "docs/specflow.org" project-root)))
+      '(".specflow-root" ".specflow/specflow.org")
+    (let ((expected (expand-file-name ".specflow/specflow.org" project-root)))
       (should (equal (specflow-org-store-find-control-plane project-root)
                      expected)))))
 
 (ert-deftest specflow-test-find-control-plane-returns-absolute-path ()
   "Test that returned path is always absolute."
   (specflow-test-with-temp-project
-      '(".git/" "docs/specflow.org")
+      '(".git/" ".specflow/specflow.org")
     (let ((result (specflow-org-store-find-control-plane project-root)))
       (should (file-name-absolute-p result)))))
 
@@ -123,10 +123,54 @@ The macro binds `project-root' to the temporary directory."
 (ert-deftest specflow-test-find-control-plane-deterministic ()
   "Test that calling find-control-plane twice returns identical results."
   (specflow-test-with-temp-project
-      '(".git/" "docs/specflow.org" "src/")
+      '(".git/" ".specflow/specflow.org" "src/")
     (let ((start-dir (expand-file-name "src" project-root)))
       (should (equal (specflow-org-store-find-control-plane start-dir)
                      (specflow-org-store-find-control-plane start-dir))))))
+
+;;;; Root Todo Discovery Tests
+
+(ert-deftest specflow-test-find-root-todo-returns-correct-path ()
+  "Test that find-root-todo returns correct absolute path."
+  (specflow-test-with-temp-project
+      '(".git/" ".specflow/specflow.org" ".specflow/todo.org")
+    (let ((default-directory project-root))
+      (should (equal (specflow-org-store-find-root-todo)
+                     (expand-file-name ".specflow/todo.org" project-root))))))
+
+(ert-deftest specflow-test-find-root-todo-with-provided-control-plane ()
+  "Test that find-root-todo uses provided control plane path."
+  (specflow-test-with-temp-project
+      '(".git/" ".specflow/specflow.org" ".specflow/todo.org")
+    (let* ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+           (result (specflow-org-store-find-root-todo cp-path)))
+      (should (equal result
+                     (expand-file-name ".specflow/todo.org" project-root))))))
+
+(ert-deftest specflow-test-find-root-todo-auto-discovers-control-plane ()
+  "Test that find-root-todo auto-discovers control plane if not provided."
+  (specflow-test-with-temp-project
+      '(".git/" ".specflow/specflow.org" ".specflow/todo.org" "src/foo/")
+    (let ((default-directory (expand-file-name "src/foo" project-root)))
+      (should (equal (specflow-org-store-find-root-todo)
+                     (expand-file-name ".specflow/todo.org" project-root))))))
+
+(ert-deftest specflow-test-find-root-todo-signals-error-when-no-control-plane ()
+  "Test that find-root-todo signals error when control plane not found."
+  (specflow-test-with-temp-project
+      '(".git/")  ; No control plane
+    (let ((default-directory project-root)
+          (specflow-control-plane-path nil))
+      (should-error (specflow-org-store-find-root-todo)
+                    :type 'specflow-control-plane-not-found))))
+
+(ert-deftest specflow-test-find-root-todo-deterministic ()
+  "Test that calling find-root-todo twice returns identical results."
+  (specflow-test-with-temp-project
+      '(".git/" ".specflow/specflow.org" ".specflow/todo.org")
+    (let ((default-directory project-root))
+      (should (equal (specflow-org-store-find-root-todo)
+                     (specflow-org-store-find-root-todo))))))
 
 ;;;; Project State Tests
 
@@ -145,9 +189,8 @@ Some content here.
 
 ** org-store
    :PROPERTIES:
-   :SPEC: units/org-store/spec.org
-   :TODO: units/org-store/todo.org
-   :RULES: units/org-store/CLAUDE.md
+   :SPEC: .specflow/units/org-store/spec.org
+   :TODO: .specflow/units/org-store/todo.org
    :END:
 "
   "Valid control plane content for testing.")
@@ -179,7 +222,7 @@ Some content here.
 
 ** org-store
    :PROPERTIES:
-   :SPEC: units/org-store/spec.org
+   :SPEC: .specflow/units/org-store/spec.org
    :END:
 "
   "Control plane without Project heading.")
@@ -187,8 +230,8 @@ Some content here.
 (ert-deftest specflow-test-read-project-state-valid ()
   "Test reading project state from a valid control plane."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (let ((result (specflow-org-store-read-project-state cp-path)))
         (should (equal (plist-get result :phase) "Implement"))
@@ -198,8 +241,8 @@ Some content here.
 (ert-deftest specflow-test-read-project-state-discovers-control-plane ()
   "Test that read-project-state discovers control plane when path not given."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (let ((default-directory project-root))
         (let ((result (specflow-org-store-read-project-state)))
@@ -209,8 +252,8 @@ Some content here.
 (ert-deftest specflow-test-read-project-state-missing-phase ()
   "Test error when SPEC_FLOW_PHASE is missing."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-missing-phase nil cp-path)
       (should-error (specflow-org-store-read-project-state cp-path)
                     :type 'specflow-control-plane-malformed))))
@@ -218,8 +261,8 @@ Some content here.
 (ert-deftest specflow-test-read-project-state-missing-active-unit ()
   "Test error when SPEC_FLOW_ACTIVE_UNIT is missing."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-missing-active-unit nil cp-path)
       (should-error (specflow-org-store-read-project-state cp-path)
                     :type 'specflow-control-plane-malformed))))
@@ -227,8 +270,8 @@ Some content here.
 (ert-deftest specflow-test-read-project-state-no-project-heading ()
   "Test error when Project heading is missing."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-no-project-heading nil cp-path)
       (should-error (specflow-org-store-read-project-state cp-path)
                     :type 'specflow-control-plane-malformed))))
@@ -236,8 +279,8 @@ Some content here.
 (ert-deftest specflow-test-read-project-state-deterministic ()
   "Test that reading project state twice returns identical results."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (should (equal (specflow-org-store-read-project-state cp-path)
                      (specflow-org-store-read-project-state cp-path))))))
@@ -255,30 +298,26 @@ Some content here.
 
 * Units
 
-** core
+** docs
    :PROPERTIES:
-   :DIR: src/
-   :SPEC: units/core/spec.org
-   :TODO: units/core/todo.org
-   :RULES: units/core/CLAUDE.md
+   :SPEC: .specflow/units/docs/spec.org
+   :TODO: .specflow/units/docs/todo.org
    :CHILDREN: org-store bundle
    :END:
 
 ** org-store
    :PROPERTIES:
-   :PARENT: core
+   :PARENT: docs
    :DIR: src/
-   :SPEC: units/org-store/spec.org
-   :TODO: units/org-store/todo.org
-   :RULES: units/org-store/CLAUDE.md
-   :CONTEXT_REFS: docs/overview.org docs/architecture.org
+   :SPEC: .specflow/units/org-store/spec.org
+   :TODO: .specflow/units/org-store/todo.org
+   :CONTEXT_REFS: .specflow/units/docs/overview.org .specflow/units/docs/architecture.org
    :END:
 
 ** minimal-unit
    :PROPERTIES:
-   :SPEC: units/minimal/spec.org
-   :TODO: units/minimal/todo.org
-   :RULES: units/minimal/CLAUDE.md
+   :SPEC: .specflow/units/minimal/spec.org
+   :TODO: .specflow/units/minimal/todo.org
    :END:
 "
   "Control plane with multiple units for testing.")
@@ -296,8 +335,7 @@ Some content here.
 
 ** bad-unit
    :PROPERTIES:
-   :TODO: units/bad/todo.org
-   :RULES: units/bad/CLAUDE.md
+   :TODO: .specflow/units/bad/todo.org
    :END:
 "
   "Control plane with unit missing SPEC property.")
@@ -315,67 +353,47 @@ Some content here.
 
 ** bad-unit
    :PROPERTIES:
-   :SPEC: units/bad/spec.org
-   :RULES: units/bad/CLAUDE.md
+   :SPEC: .specflow/units/bad/spec.org
    :END:
 "
   "Control plane with unit missing TODO property.")
 
-(defconst specflow-test-control-plane-unit-missing-rules
-  "#+TITLE: Test Control Plane
-
-* Project
-  :PROPERTIES:
-  :SPEC_FLOW_PHASE: Plan
-  :SPEC_FLOW_ACTIVE_UNIT: bad-unit
-  :END:
-
-* Units
-
-** bad-unit
-   :PROPERTIES:
-   :SPEC: units/bad/spec.org
-   :TODO: units/bad/todo.org
-   :END:
-"
-  "Control plane with unit missing RULES property.")
-
 (ert-deftest specflow-test-read-unit-valid ()
   "Test reading a valid unit with all properties."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
+      (make-directory (file-name-directory cp-path) t)
       (write-region specflow-test-control-plane-with-units nil cp-path)
       (let ((result (specflow-org-store-read-unit "org-store" cp-path)))
         (should (equal (plist-get result :name) "org-store"))
         (should (equal (plist-get result :dir) "src/"))
-        (should (equal (plist-get result :spec) "units/org-store/spec.org"))
-        (should (equal (plist-get result :todo) "units/org-store/todo.org"))
-        (should (equal (plist-get result :rules) "units/org-store/CLAUDE.md"))
-        (should (equal (plist-get result :parent) "core"))
+        (should (equal (plist-get result :spec) ".specflow/units/org-store/spec.org"))
+        (should (equal (plist-get result :todo) ".specflow/units/org-store/todo.org"))
+        (should (equal (plist-get result :parent) "docs"))
         (should (equal (plist-get result :context-refs)
-                       '("docs/overview.org" "docs/architecture.org")))))))
+                       '(".specflow/units/docs/overview.org" ".specflow/units/docs/architecture.org")))))))
 
 (ert-deftest specflow-test-read-unit-with-children ()
   "Test reading a unit with CHILDREN property."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-units nil cp-path)
-      (let ((result (specflow-org-store-read-unit "core" cp-path)))
-        (should (equal (plist-get result :name) "core"))
+      (let ((result (specflow-org-store-read-unit "docs" cp-path)))
+        (should (equal (plist-get result :name) "docs"))
         (should (equal (plist-get result :children) '("org-store" "bundle")))
         (should (null (plist-get result :parent)))))))
 
 (ert-deftest specflow-test-read-unit-minimal ()
   "Test reading a unit with only required properties."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-units nil cp-path)
       (let ((result (specflow-org-store-read-unit "minimal-unit" cp-path)))
         (should (equal (plist-get result :name) "minimal-unit"))
-        (should (equal (plist-get result :spec) "units/minimal/spec.org"))
+        (should (equal (plist-get result :spec) ".specflow/units/minimal/spec.org"))
         (should (null (plist-get result :dir)))
         (should (null (plist-get result :parent)))
         (should (null (plist-get result :children)))
@@ -384,8 +402,8 @@ Some content here.
 (ert-deftest specflow-test-read-unit-not-found ()
   "Test error when unit does not exist."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-units nil cp-path)
       (should-error (specflow-org-store-read-unit "nonexistent-unit" cp-path)
                     :type 'specflow-unit-not-found))))
@@ -393,8 +411,8 @@ Some content here.
 (ert-deftest specflow-test-read-unit-missing-spec ()
   "Test error when unit is missing SPEC property."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-unit-missing-spec nil cp-path)
       (should-error (specflow-org-store-read-unit "bad-unit" cp-path)
                     :type 'specflow-unit-malformed))))
@@ -402,26 +420,17 @@ Some content here.
 (ert-deftest specflow-test-read-unit-missing-todo ()
   "Test error when unit is missing TODO property."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-unit-missing-todo nil cp-path)
-      (should-error (specflow-org-store-read-unit "bad-unit" cp-path)
-                    :type 'specflow-unit-malformed))))
-
-(ert-deftest specflow-test-read-unit-missing-rules ()
-  "Test error when unit is missing RULES property."
-  (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
-      (write-region specflow-test-control-plane-unit-missing-rules nil cp-path)
       (should-error (specflow-org-store-read-unit "bad-unit" cp-path)
                     :type 'specflow-unit-malformed))))
 
 (ert-deftest specflow-test-read-unit-deterministic ()
   "Test that reading a unit twice returns identical results."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-units nil cp-path)
       (should (equal (specflow-org-store-read-unit "org-store" cp-path)
                      (specflow-org-store-read-unit "org-store" cp-path))))))
@@ -455,16 +464,14 @@ Some content here.
 
 ** org-store
    :PROPERTIES:
-   :SPEC: units/org-store/spec.org
-   :TODO: units/org-store/todo.org
-   :RULES: units/org-store/CLAUDE.md
+   :SPEC: .specflow/units/org-store/spec.org
+   :TODO: .specflow/units/org-store/todo.org
    :END:
 
 ** bundle
    :PROPERTIES:
-   :SPEC: units/bundle/spec.org
-   :TODO: units/bundle/todo.org
-   :RULES: units/bundle/CLAUDE.md
+   :SPEC: .specflow/units/bundle/spec.org
+   :TODO: .specflow/units/bundle/todo.org
    :END:
 "
   "Control plane with multiple units for phase-shift tests.")
@@ -472,22 +479,22 @@ Some content here.
 (ert-deftest specflow-test-read-unit-registry-multiple-units ()
   "Test reading registry with multiple units in document order."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-units nil cp-path)
       (let ((result (specflow-org-store-read-unit-registry cp-path)))
         ;; Should have 3 units
         (should (= (length result) 3))
-        ;; Should be in document order: core, org-store, minimal-unit
-        (should (equal (plist-get (nth 0 result) :name) "core"))
+        ;; Should be in document order: docs, org-store, minimal-unit
+        (should (equal (plist-get (nth 0 result) :name) "docs"))
         (should (equal (plist-get (nth 1 result) :name) "org-store"))
         (should (equal (plist-get (nth 2 result) :name) "minimal-unit"))))))
 
 (ert-deftest specflow-test-read-unit-registry-empty ()
   "Test reading empty unit registry returns empty list."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-empty-registry nil cp-path)
       (let ((result (specflow-org-store-read-unit-registry cp-path)))
         (should (null result))))))
@@ -495,8 +502,8 @@ Some content here.
 (ert-deftest specflow-test-read-unit-registry-validates-units ()
   "Test that registry read validates each unit's required properties."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-unit-missing-spec nil cp-path)
       (should-error (specflow-org-store-read-unit-registry cp-path)
                     :type 'specflow-unit-malformed))))
@@ -504,8 +511,8 @@ Some content here.
 (ert-deftest specflow-test-read-unit-registry-deterministic ()
   "Test that reading registry twice returns identical results."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-units nil cp-path)
       (should (equal (specflow-org-store-read-unit-registry cp-path)
                      (specflow-org-store-read-unit-registry cp-path))))))
@@ -513,17 +520,17 @@ Some content here.
 (ert-deftest specflow-test-read-unit-registry-each-unit-complete ()
   "Test that each unit in registry has all expected properties."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-units nil cp-path)
       (let ((result (specflow-org-store-read-unit-registry cp-path)))
         ;; Check org-store unit has all properties
-        (let ((org-store (nth 1 result)))
-          (should (equal (plist-get org-store :name) "org-store"))
-          (should (equal (plist-get org-store :parent) "core"))
-          (should (equal (plist-get org-store :spec) "units/org-store/spec.org"))
-          (should (equal (plist-get org-store :context-refs)
-                         '("docs/overview.org" "docs/architecture.org"))))))))
+        (let ((unit (nth 1 result)))
+          (should (equal (plist-get unit :name) "org-store"))
+          (should (equal (plist-get unit :parent) "docs"))
+          (should (equal (plist-get unit :spec) ".specflow/units/org-store/spec.org"))
+          (should (equal (plist-get unit :context-refs)
+                         '(".specflow/units/docs/overview.org" ".specflow/units/docs/architecture.org"))))))))
 
 ;;;; Write Property Tests
 
@@ -533,7 +540,7 @@ Some content here.
 * Project
   :PROPERTIES:
   :SPEC_FLOW_PHASE: Plan
-  :SPEC_FLOW_ACTIVE_UNIT: core
+  :SPEC_FLOW_ACTIVE_UNIT: docs
   :END:
 
 Some content here.
@@ -556,7 +563,7 @@ Some content here.
 
 ** org-store
    :PROPERTIES:
-   :SPEC: units/org-store/spec.org
+   :SPEC: .specflow/units/org-store/spec.org
    :END:
 
 Content under org-store.
@@ -566,8 +573,8 @@ Content under org-store.
 (ert-deftest specflow-test-write-property-replace-existing ()
   "Test replacing an existing property value."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((file-path (expand-file-name "docs/test.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((file-path (expand-file-name ".specflow/test.org" project-root)))
       (write-region specflow-test-file-with-drawer nil file-path)
       ;; Write new value
       (should (specflow-org-store-write-property
@@ -580,8 +587,8 @@ Content under org-store.
 (ert-deftest specflow-test-write-property-add-to-drawer ()
   "Test adding a new property to existing drawer."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((file-path (expand-file-name "docs/test.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((file-path (expand-file-name ".specflow/test.org" project-root)))
       (write-region specflow-test-file-with-drawer nil file-path)
       ;; Write new property
       (should (specflow-org-store-write-property
@@ -597,8 +604,8 @@ Content under org-store.
 (ert-deftest specflow-test-write-property-create-drawer ()
   "Test creating property drawer when none exists."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((file-path (expand-file-name "docs/test.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((file-path (expand-file-name ".specflow/test.org" project-root)))
       (write-region specflow-test-file-without-drawer nil file-path)
       ;; Write property - should create drawer
       (should (specflow-org-store-write-property
@@ -613,8 +620,8 @@ Content under org-store.
 (ert-deftest specflow-test-write-property-nested-heading ()
   "Test writing property to nested heading."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((file-path (expand-file-name "docs/test.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((file-path (expand-file-name ".specflow/test.org" project-root)))
       (write-region specflow-test-file-nested-heading nil file-path)
       ;; Write to nested heading
       (should (specflow-org-store-write-property
@@ -627,8 +634,8 @@ Content under org-store.
 (ert-deftest specflow-test-write-property-heading-not-found ()
   "Test error when heading path is invalid."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((file-path (expand-file-name "docs/test.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((file-path (expand-file-name ".specflow/test.org" project-root)))
       (write-region specflow-test-file-with-drawer nil file-path)
       (should-error (specflow-org-store-write-property
                      file-path '("NonExistent") "PROP" "value")
@@ -637,8 +644,8 @@ Content under org-store.
 (ert-deftest specflow-test-write-property-nested-heading-not-found ()
   "Test error when nested heading path is invalid."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((file-path (expand-file-name "docs/test.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((file-path (expand-file-name ".specflow/test.org" project-root)))
       (write-region specflow-test-file-nested-heading nil file-path)
       (should-error (specflow-org-store-write-property
                      file-path '("Units" "nonexistent") "PROP" "value")
@@ -647,8 +654,8 @@ Content under org-store.
 (ert-deftest specflow-test-write-property-minimal-diff ()
   "Test that only the property line changes (minimal diff)."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((file-path (expand-file-name "docs/test.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((file-path (expand-file-name ".specflow/test.org" project-root)))
       (write-region specflow-test-file-with-drawer nil file-path)
       ;; Get original content
       (let ((original-content (with-temp-buffer
@@ -670,8 +677,8 @@ Content under org-store.
 (ert-deftest specflow-test-write-then-read-property ()
   "Test that write followed by read returns the written value."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((file-path (expand-file-name "docs/test.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((file-path (expand-file-name ".specflow/test.org" project-root)))
       (write-region specflow-test-valid-control-plane nil file-path)
       ;; Write new phase
       (specflow-org-store-write-property
@@ -683,8 +690,8 @@ Content under org-store.
 (ert-deftest specflow-test-write-property-idempotent ()
   "Test that writing same value twice produces same file."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((file-path (expand-file-name "docs/test.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((file-path (expand-file-name ".specflow/test.org" project-root)))
       (write-region specflow-test-file-with-drawer nil file-path)
       ;; Write once
       (specflow-org-store-write-property
@@ -707,14 +714,12 @@ Content under org-store.
   "Test validation passes when all required files exist."
   (specflow-test-with-temp-project
       '(".git/"
-        "docs/specflow.org"
-        "units/org-store/spec.org"
-        "units/org-store/todo.org"
-        "units/org-store/CLAUDE.md")
+        ".specflow/specflow.org"
+        ".specflow/units/org-store/spec.org"
+        ".specflow/units/org-store/todo.org")
     (let ((unit-entry (list :name "org-store"
-                            :spec "units/org-store/spec.org"
-                            :todo "units/org-store/todo.org"
-                            :rules "units/org-store/CLAUDE.md")))
+                            :spec ".specflow/units/org-store/spec.org"
+                            :todo ".specflow/units/org-store/todo.org")))
       (should (eq t (specflow-org-store-validate-unit-pointers
                      unit-entry project-root))))))
 
@@ -722,13 +727,11 @@ Content under org-store.
   "Test validation fails when SPEC file is missing."
   (specflow-test-with-temp-project
       '(".git/"
-        "docs/specflow.org"
-        "units/org-store/todo.org"
-        "units/org-store/CLAUDE.md")
+        ".specflow/specflow.org"
+        ".specflow/units/org-store/todo.org")
     (let ((unit-entry (list :name "org-store"
-                            :spec "units/org-store/spec.org"
-                            :todo "units/org-store/todo.org"
-                            :rules "units/org-store/CLAUDE.md")))
+                            :spec ".specflow/units/org-store/spec.org"
+                            :todo ".specflow/units/org-store/todo.org")))
       (should-error (specflow-org-store-validate-unit-pointers
                      unit-entry project-root)
                     :type 'specflow-unit-pointer-invalid))))
@@ -737,28 +740,11 @@ Content under org-store.
   "Test validation fails when TODO file is missing."
   (specflow-test-with-temp-project
       '(".git/"
-        "docs/specflow.org"
-        "units/org-store/spec.org"
-        "units/org-store/CLAUDE.md")
+        ".specflow/specflow.org"
+        ".specflow/units/org-store/spec.org")
     (let ((unit-entry (list :name "org-store"
-                            :spec "units/org-store/spec.org"
-                            :todo "units/org-store/todo.org"
-                            :rules "units/org-store/CLAUDE.md")))
-      (should-error (specflow-org-store-validate-unit-pointers
-                     unit-entry project-root)
-                    :type 'specflow-unit-pointer-invalid))))
-
-(ert-deftest specflow-test-validate-unit-pointers-missing-rules ()
-  "Test validation fails when RULES file is missing."
-  (specflow-test-with-temp-project
-      '(".git/"
-        "docs/specflow.org"
-        "units/org-store/spec.org"
-        "units/org-store/todo.org")
-    (let ((unit-entry (list :name "org-store"
-                            :spec "units/org-store/spec.org"
-                            :todo "units/org-store/todo.org"
-                            :rules "units/org-store/CLAUDE.md")))
+                            :spec ".specflow/units/org-store/spec.org"
+                            :todo ".specflow/units/org-store/todo.org")))
       (should-error (specflow-org-store-validate-unit-pointers
                      unit-entry project-root)
                     :type 'specflow-unit-pointer-invalid))))
@@ -767,33 +753,29 @@ Content under org-store.
   "Test error message lists all missing files."
   (specflow-test-with-temp-project
       '(".git/"
-        "docs/specflow.org")
+        ".specflow/specflow.org")
     (let ((unit-entry (list :name "org-store"
-                            :spec "units/org-store/spec.org"
-                            :todo "units/org-store/todo.org"
-                            :rules "units/org-store/CLAUDE.md")))
+                            :spec ".specflow/units/org-store/spec.org"
+                            :todo ".specflow/units/org-store/todo.org")))
       (condition-case err
           (progn
             (specflow-org-store-validate-unit-pointers unit-entry project-root)
             (should nil))  ; Should not reach here
         (specflow-unit-pointer-invalid
-         ;; Error message should mention all three missing files
+         ;; Error message should mention both missing files
          (let ((msg (cadr err)))
            (should (string-match-p ":spec=" msg))
-           (should (string-match-p ":todo=" msg))
-           (should (string-match-p ":rules=" msg))))))))
+           (should (string-match-p ":todo=" msg))))))))
 
 (ert-deftest specflow-test-validate-unit-pointers-nil-path ()
   "Test validation fails when path is nil."
   (specflow-test-with-temp-project
       '(".git/"
-        "docs/specflow.org"
-        "units/org-store/spec.org"
-        "units/org-store/todo.org")
+        ".specflow/specflow.org"
+        ".specflow/units/org-store/spec.org")
     (let ((unit-entry (list :name "org-store"
-                            :spec "units/org-store/spec.org"
-                            :todo "units/org-store/todo.org"
-                            :rules nil)))  ; nil rules path
+                            :spec ".specflow/units/org-store/spec.org"
+                            :todo nil)))  ; nil todo path
       (should-error (specflow-org-store-validate-unit-pointers
                      unit-entry project-root)
                     :type 'specflow-unit-pointer-invalid))))
@@ -802,14 +784,12 @@ Content under org-store.
   "Test validation discovers project root from control plane."
   (specflow-test-with-temp-project
       '(".git/"
-        "docs/specflow.org"
-        "units/org-store/spec.org"
-        "units/org-store/todo.org"
-        "units/org-store/CLAUDE.md")
+        ".specflow/specflow.org"
+        ".specflow/units/org-store/spec.org"
+        ".specflow/units/org-store/todo.org")
     (let ((unit-entry (list :name "org-store"
-                            :spec "units/org-store/spec.org"
-                            :todo "units/org-store/todo.org"
-                            :rules "units/org-store/CLAUDE.md"))
+                            :spec ".specflow/units/org-store/spec.org"
+                            :todo ".specflow/units/org-store/todo.org"))
           (default-directory project-root))
       ;; Don't pass project-root explicitly - should discover it
       (should (eq t (specflow-org-store-validate-unit-pointers unit-entry))))))
@@ -829,30 +809,27 @@ Content under org-store.
 
 ** root
    :PROPERTIES:
-   :SPEC: units/root/spec.org
-   :TODO: units/root/todo.org
-   :RULES: units/root/CLAUDE.md
-   :CHILDREN: core
+   :SPEC: .specflow/units/root/spec.org
+   :TODO: .specflow/units/root/todo.org
+   :CHILDREN: docs
    :END:
 
-** core
+** docs
    :PROPERTIES:
    :PARENT: root
-   :SPEC: units/core/spec.org
-   :TODO: units/core/todo.org
-   :RULES: units/core/CLAUDE.md
+   :SPEC: .specflow/units/docs/spec.org
+   :TODO: .specflow/units/docs/todo.org
    :CHILDREN: org-store
    :END:
 
 ** org-store
    :PROPERTIES:
-   :PARENT: core
-   :SPEC: units/org-store/spec.org
-   :TODO: units/org-store/todo.org
-   :RULES: units/org-store/CLAUDE.md
+   :PARENT: docs
+   :SPEC: .specflow/units/org-store/spec.org
+   :TODO: .specflow/units/org-store/todo.org
    :END:
 "
-  "Control plane with multi-level hierarchy: root -> core -> org-store.")
+  "Control plane with multi-level hierarchy: root -> docs -> org-store.")
 
 (defconst specflow-test-control-plane-missing-parent
   "#+TITLE: Test Control Plane
@@ -868,9 +845,8 @@ Content under org-store.
 ** org-store
    :PROPERTIES:
    :PARENT: nonexistent-unit
-   :SPEC: units/org-store/spec.org
-   :TODO: units/org-store/todo.org
-   :RULES: units/org-store/CLAUDE.md
+   :SPEC: .specflow/units/org-store/spec.org
+   :TODO: .specflow/units/org-store/todo.org
    :END:
 "
   "Control plane where unit references nonexistent parent.")
@@ -889,17 +865,15 @@ Content under org-store.
 ** unit-a
    :PROPERTIES:
    :PARENT: unit-b
-   :SPEC: units/a/spec.org
-   :TODO: units/a/todo.org
-   :RULES: units/a/CLAUDE.md
+   :SPEC: .specflow/units/a/spec.org
+   :TODO: .specflow/units/a/todo.org
    :END:
 
 ** unit-b
    :PROPERTIES:
    :PARENT: unit-a
-   :SPEC: units/b/spec.org
-   :TODO: units/b/todo.org
-   :RULES: units/b/CLAUDE.md
+   :SPEC: .specflow/units/b/spec.org
+   :TODO: .specflow/units/b/todo.org
    :END:
 "
   "Control plane with circular parent reference.")
@@ -907,8 +881,8 @@ Content under org-store.
 (ert-deftest specflow-test-validate-parent-chain-no-parent ()
   "Test that unit with no parent returns empty list."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-hierarchy nil cp-path)
       ;; root has no parent
       (should (equal '() (specflow-org-store-validate-parent-chain "root" cp-path))))))
@@ -916,27 +890,27 @@ Content under org-store.
 (ert-deftest specflow-test-validate-parent-chain-single-parent ()
   "Test that unit with one parent returns single-element list."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-hierarchy nil cp-path)
-      ;; core has parent root
-      (should (equal '("root") (specflow-org-store-validate-parent-chain "core" cp-path))))))
+      ;; docs has parent root
+      (should (equal '("root") (specflow-org-store-validate-parent-chain "docs" cp-path))))))
 
 (ert-deftest specflow-test-validate-parent-chain-multi-level ()
   "Test that multi-level hierarchy returns correct ancestor list."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-hierarchy nil cp-path)
-      ;; org-store -> core -> root
-      (should (equal '("core" "root")
+      ;; org-store -> docs -> root
+      (should (equal '("docs" "root")
                      (specflow-org-store-validate-parent-chain "org-store" cp-path))))))
 
 (ert-deftest specflow-test-validate-parent-chain-missing-parent ()
   "Test error when parent unit does not exist."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-missing-parent nil cp-path)
       (should-error (specflow-org-store-validate-parent-chain "org-store" cp-path)
                     :type 'specflow-parent-not-found))))
@@ -944,8 +918,8 @@ Content under org-store.
 (ert-deftest specflow-test-validate-parent-chain-unit-not-found ()
   "Test error when unit itself does not exist."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-hierarchy nil cp-path)
       (should-error (specflow-org-store-validate-parent-chain "nonexistent" cp-path)
                     :type 'specflow-unit-not-found))))
@@ -953,8 +927,8 @@ Content under org-store.
 (ert-deftest specflow-test-validate-parent-chain-circular ()
   "Test error when circular parent reference detected."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-circular-parent nil cp-path)
       (should-error (specflow-org-store-validate-parent-chain "unit-a" cp-path)
                     :type 'specflow-parent-not-found))))
@@ -962,8 +936,8 @@ Content under org-store.
 (ert-deftest specflow-test-validate-parent-chain-deterministic ()
   "Test that calling validate-parent-chain twice returns identical results."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-hierarchy nil cp-path)
       (should (equal (specflow-org-store-validate-parent-chain "org-store" cp-path)
                      (specflow-org-store-validate-parent-chain "org-store" cp-path))))))
@@ -973,8 +947,8 @@ Content under org-store.
 (ert-deftest specflow-test-phase-shift-changes-both ()
   "Test that phase-shift successfully changes both phase and unit."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-multi-unit nil cp-path)
       (let ((default-directory project-root))
         ;; Change both phase and unit
@@ -987,8 +961,8 @@ Content under org-store.
 (ert-deftest specflow-test-phase-shift-changes-phase-only ()
   "Test that phase-shift can change only phase (keep unit)."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (let ((default-directory project-root))
         ;; Change phase, keep unit
@@ -1001,8 +975,8 @@ Content under org-store.
 (ert-deftest specflow-test-phase-shift-changes-unit-only ()
   "Test that phase-shift can change only unit (keep phase)."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-multi-unit nil cp-path)
       (let ((default-directory project-root))
         ;; Change unit, keep phase (Implement)
@@ -1015,8 +989,8 @@ Content under org-store.
 (ert-deftest specflow-test-phase-shift-all-valid-phases ()
   "Test that all valid phases can be set."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (let ((default-directory project-root))
         (dolist (phase specflow-valid-phases)
@@ -1027,8 +1001,8 @@ Content under org-store.
 (ert-deftest specflow-test-phase-shift-rejects-invalid-phase ()
   "Test that invalid phase is rejected with user-error."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (let ((default-directory project-root))
         (should-error (specflow-phase-shift "InvalidPhase" "org-store")
@@ -1037,8 +1011,8 @@ Content under org-store.
 (ert-deftest specflow-test-phase-shift-rejects-invalid-unit ()
   "Test that invalid unit is rejected with user-error."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (let ((default-directory project-root))
         (should-error (specflow-phase-shift "Implement" "nonexistent-unit")
@@ -1047,8 +1021,8 @@ Content under org-store.
 (ert-deftest specflow-test-phase-shift-displays-message ()
   "Test that phase-shift displays confirmation message with both values."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
           (messages nil))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (let ((default-directory project-root))
@@ -1063,8 +1037,8 @@ Content under org-store.
 (ert-deftest specflow-test-phase-shift-writes-both-properties ()
   "Test that phase-shift writes both properties to control plane."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-multi-unit nil cp-path)
       (let ((default-directory project-root))
         (specflow-phase-shift "Scaffold" "bundle")
@@ -1116,9 +1090,9 @@ Content under org-store.
 (ert-deftest specflow-test-add-root-task-adds-task ()
   "Test that add-root-task adds a task to Backlog section."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-org nil todo-path)
       (let ((default-directory project-root))
@@ -1132,9 +1106,9 @@ Content under org-store.
 (ert-deftest specflow-test-add-root-task-creates-todo-not-next ()
   "Test that new tasks are TODO, not NEXT."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-org nil todo-path)
       (let ((default-directory project-root))
@@ -1150,9 +1124,9 @@ Content under org-store.
 (ert-deftest specflow-test-add-root-task-inserts-in-backlog-section ()
   "Test that task is inserted at end of Backlog section."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-org nil todo-path)
       (let ((default-directory project-root))
@@ -1167,9 +1141,9 @@ Content under org-store.
 (ert-deftest specflow-test-add-root-task-missing-backlog-heading ()
   "Test error when Backlog heading not found."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-org-no-backlog nil todo-path)
       (let ((default-directory project-root))
@@ -1179,9 +1153,9 @@ Content under org-store.
 (ert-deftest specflow-test-add-root-task-displays-message ()
   "Test that add-root-task displays confirmation message."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root))
           (messages nil))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-org nil todo-path)
@@ -1195,9 +1169,9 @@ Content under org-store.
 (ert-deftest specflow-test-add-root-task-minimal-diff ()
   "Test that only the new task is added (minimal diff)."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-org nil todo-path)
       (let ((default-directory project-root))
@@ -1216,9 +1190,9 @@ Content under org-store.
 (ert-deftest specflow-test-add-root-task-multiple-tasks ()
   "Test adding multiple tasks sequentially."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-org nil todo-path)
       (let ((default-directory project-root))
@@ -1274,8 +1248,8 @@ Content under org-store.
 (ert-deftest specflow-test-parse-backlog-tasks ()
   "Test parsing backlog tasks from todo.org."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-todo-with-backlog nil todo-path)
       (let ((tasks (specflow-org-store--parse-backlog-tasks todo-path)))
         ;; Should have 3 tasks
@@ -1291,8 +1265,8 @@ Content under org-store.
 (ert-deftest specflow-test-parse-backlog-tasks-missing-backlog ()
   "Test error when Backlog section missing."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-todo-no-backlog nil todo-path)
       (should-error (specflow-org-store--parse-backlog-tasks todo-path)
                     :type 'specflow-heading-not-found))))
@@ -1312,7 +1286,7 @@ Content under org-store.
     (should (string-match-p "Notes: Some user context" prompt))
     (should (string-match-p "## Guidelines" prompt))
     ;; Check edit instruction ending
-    (should (string-match-p "Refine this task and update it in the root todo.org file" prompt))))
+    (should (string-match-p "Refine this task and update it in .specflow/todo.org" prompt))))
 
 (ert-deftest specflow-test-format-refine-prompt-empty-unit ()
   "Test prompt formatting with empty unit."
@@ -1327,9 +1301,9 @@ Content under org-store.
 (ert-deftest specflow-test-refine-task-copies-to-kill-ring ()
   "Test that refine-task copies prompt to kill-ring."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-with-backlog nil todo-path)
       (let ((default-directory project-root))
@@ -1348,9 +1322,9 @@ Content under org-store.
 (ert-deftest specflow-test-refine-task-does-not-modify-file ()
   "Test that refine-task does NOT modify todo.org."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-with-backlog nil todo-path)
       (let ((default-directory project-root)
@@ -1369,9 +1343,9 @@ Content under org-store.
 (ert-deftest specflow-test-refine-task-displays-message ()
   "Test that refine-task displays 'Task prompt copied' message."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root))
           (messages nil))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-with-backlog nil todo-path)
@@ -1391,9 +1365,9 @@ Content under org-store.
 (ert-deftest specflow-test-activate-task-copies-to-kill-ring ()
   "Test that activate-task copies prompt to kill-ring."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-with-backlog nil todo-path)
       (let ((default-directory project-root))
@@ -1408,9 +1382,9 @@ Content under org-store.
 (ert-deftest specflow-test-activate-task-does-not-modify-file ()
   "Test that activate-task does NOT modify todo.org."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-with-backlog nil todo-path)
       (let ((default-directory project-root)
@@ -1429,9 +1403,9 @@ Content under org-store.
 (ert-deftest specflow-test-activate-task-displays-message ()
   "Test that activate-task displays 'Task prompt copied' message."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root))
           (messages nil))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-with-backlog nil todo-path)
@@ -1449,9 +1423,9 @@ Content under org-store.
 (ert-deftest specflow-test-activate-task-prompt-contains-activation-instructions ()
   "Test that activate-task prompt contains activation instructions."
   (specflow-test-with-temp-project
-      '(".git/" "docs/")
-    (let ((cp-path (expand-file-name "docs/specflow.org" project-root))
-          (todo-path (expand-file-name "todo.org" project-root)))
+      '(".git/" ".specflow/")
+    (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+          (todo-path (expand-file-name ".specflow/todo.org" project-root)))
       (write-region specflow-test-valid-control-plane nil cp-path)
       (write-region specflow-test-todo-with-backlog nil todo-path)
       (let ((default-directory project-root))
@@ -1462,7 +1436,7 @@ Content under org-store.
           (specflow-activate-task)
           ;; Verify prompt contains base edit instruction
           (should (string-match-p
-                   "Refine this task and update it in the root todo.org file"
+                   "Refine this task and update it in .specflow/todo.org"
                    (car kill-ring)))
           ;; Verify prompt contains activation-specific instructions
           (should (string-match-p
