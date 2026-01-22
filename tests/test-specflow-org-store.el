@@ -311,7 +311,7 @@ Some content here.
    :DIR: src/
    :SPEC: .specflow/units/org-store/spec.org
    :TODO: .specflow/units/org-store/todo.org
-   :CONTEXT_REFS: .specflow/units/docs/overview.org .specflow/units/docs/architecture.org
+   :CONTEXT_REFS: .specflow/units/docs/spec.org .specflow/rules.org
    :END:
 
 ** minimal-unit
@@ -372,7 +372,7 @@ Some content here.
         (should (equal (plist-get result :todo) ".specflow/units/org-store/todo.org"))
         (should (equal (plist-get result :parent) "docs"))
         (should (equal (plist-get result :context-refs)
-                       '(".specflow/units/docs/overview.org" ".specflow/units/docs/architecture.org")))))))
+                       '(".specflow/units/docs/spec.org" ".specflow/rules.org")))))))
 
 (ert-deftest specflow-test-read-unit-with-children ()
   "Test reading a unit with CHILDREN property."
@@ -530,7 +530,7 @@ Some content here.
           (should (equal (plist-get unit :parent) "docs"))
           (should (equal (plist-get unit :spec) ".specflow/units/org-store/spec.org"))
           (should (equal (plist-get unit :context-refs)
-                         '(".specflow/units/docs/overview.org" ".specflow/units/docs/architecture.org"))))))))
+                         '(".specflow/units/docs/spec.org" ".specflow/rules.org"))))))))
 
 ;;;; Write Property Tests
 
