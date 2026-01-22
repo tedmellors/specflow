@@ -101,16 +101,12 @@
     (should (string-match-p "root: Plan phase" template))
     (should (string-match-p "Backlog" template))))
 
-(ert-deftest specflow-test-initiate-rules-template ()
-  "Test rules.org template includes essential rules."
-  (let ((template (specflow-initiate--rules-template "test-project")))
-    (should (string-match-p "test-project" template))
-    (should (string-match-p "SpecFlow philosophy" template))
-    (should (string-match-p "Control Plane Authority" template))
-    (should (string-match-p "Task Discovery" template))
-    (should (string-match-p "Phase Enforcement" template))
-    (should (string-match-p ".specflow/specflow.org" template))
-    (should (string-match-p ".specflow/todo.org" template))))
+(ert-deftest specflow-test-initiate-find-rules-org ()
+  "Test find-rules-org locates rules.org in specflow installation."
+  (let ((rules-path (specflow-initiate--find-rules-org)))
+    (should rules-path)
+    (should (file-exists-p rules-path))
+    (should (string-match-p "rules\\.org$" rules-path))))
 
 (ert-deftest specflow-test-initiate-docs-spec-template ()
   "Test docs spec.org template describes documentation deliverables."
