@@ -51,7 +51,7 @@ Returns nil if OK, or an error message string."
 * Project
   :PROPERTIES:
   :SPEC_FLOW_PHASE: Plan
-  :SPEC_FLOW_ACTIVE_UNIT: docs
+  :SPEC_FLOW_ACTIVE_UNIT: root
   :END:
 
 This is the SpecFlow control plane for %s.
@@ -81,12 +81,12 @@ Only ONE task is marked NEXT at a time.
 
 * Active
 
-** NEXT docs: Plan phase
-   Define the project architecture and initial unit structure.
+** NEXT root: Plan phase
+   Define the project scope and initial structure.
 
-   - Draft overview.org (purpose, constraints, success criteria)
-   - Draft architecture.org (components, data flow, dependencies)
-   - Identify first implementation unit
+   - Clarify project purpose and goals
+   - Identify key constraints and success criteria
+   - Determine initial unit structure
 
 * Backlog
 
