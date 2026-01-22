@@ -81,7 +81,7 @@
   (let ((template (specflow-initiate--control-plane-template "test-project")))
     (should (string-match-p "test-project" template))
     (should (string-match-p "SPEC_FLOW_PHASE: Plan" template))
-    (should (string-match-p "SPEC_FLOW_ACTIVE_UNIT: docs" template))
+    (should (string-match-p "SPEC_FLOW_ACTIVE_UNIT: root" template))
     (should (string-match-p "\\* Units" template))
     (should (string-match-p "\\*\\* docs" template))
     (should (string-match-p ".specflow/units/docs/spec.org" template))
@@ -98,7 +98,7 @@
   (let ((template (specflow-initiate--todo-template "test-project")))
     (should (string-match-p "test-project" template))
     (should (string-match-p "NEXT" template))
-    (should (string-match-p "docs: Plan phase" template))
+    (should (string-match-p "root: Plan phase" template))
     (should (string-match-p "Backlog" template))))
 
 (ert-deftest specflow-test-initiate-rules-template ()
@@ -195,7 +195,7 @@
                      (insert-file-contents ".specflow/specflow.org")
                      (buffer-string))))
       (should (string-match-p "SPEC_FLOW_PHASE: Plan" content))
-      (should (string-match-p "SPEC_FLOW_ACTIVE_UNIT: docs" content))
+      (should (string-match-p "SPEC_FLOW_ACTIVE_UNIT: root" content))
       (should (string-match-p ".specflow/units/docs/spec.org" content)))))
 
 (ert-deftest specflow-test-initiate-todo-content ()
@@ -206,7 +206,7 @@
                      (insert-file-contents ".specflow/todo.org")
                      (buffer-string))))
       (should (string-match-p "NEXT" content))
-      (should (string-match-p "docs: Plan phase" content)))))
+      (should (string-match-p "root: Plan phase" content)))))
 
 (ert-deftest specflow-test-initiate-rules-content ()
   "Test that created rules.org has correct content."
