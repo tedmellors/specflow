@@ -624,6 +624,22 @@ Do NOT include Claude attribution in git commits.
 - No mention of Claude or AI assistance in commit messages
 - Commits should appear as solely authored by the user
 
+* Root Active Unit
+  :PROPERTIES:
+  :RULE_ID: root-active-unit
+  :PRIORITY: recommended
+  :PHASE: all
+  :TAGS: control-plane units workflow
+  :END:
+
+Use =root= as the active unit when:
+- Managing tasks in =.specflow/todo.org= (adding, refining, activating)
+- Planning cross-unit work
+- Between unit work (no specific unit in progress)
+
+=root= is a pseudo-unit indicating project-level focus, not a registered unit.
+When starting work on a specific unit, update the active unit accordingly.
+
 * Current Focus
   :PROPERTIES:
   :RULE_ID: current-focus
