@@ -10,18 +10,7 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** NEXT org-store: Add root todo discovery function
-   - Given a project with .specflow/todo.org
-   - When specflow-org-store-find-root-todo is called
-   - Then it returns path to .specflow/todo.org
-   Outcomes:
-   - [ ] New function specflow-org-store-find-root-todo
-   - [ ] Looks for .specflow/todo.org only
-   - [ ] Tests added
-   Related files:
-   - units/org-store/src/specflow-org-store.el
-
-** TODO hydrate: Update rules.org discovery for .specflow/
+** NEXT hydrate: Update rules.org discovery for .specflow/
    - Given a project with .specflow/rules.org
    - When specflow-hydrate-rules is called
    - Then it finds and processes .specflow/rules.org
@@ -61,6 +50,12 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    - units/initiate/README.md
 
 * Backlog (future enhancements)
+** TODO rules: Lock down expected todo.org structure/formatting
+- claude does a good job, then changes formatting. lets keep this standard
+- rule for completing a task, summarizing, and moving to an organized 'Complete' header
+- requirements for NEXT
+- requirements for TODO
+- requirements for DONE
 ** TODO rules: lock down standard workflow for commiting and pushing
 - Plan → Specify → Scaffold - [COMMIT AND PUSH]
 - Implement → Validate → Document [COMMIT AND PUSH]
@@ -71,10 +66,6 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
 - we need rules to spend remaining context on saving where we are and documenting rather than trying to sqeeze out more work. 
 ** TODO rules: need to have better phase change enforcement
 ** TODO rules: lock down modular unit structure with src/ and tests/
-** TODO rules: Lock down expected todo.org structure/formatting
-- requirements for NEXT
-- requirements for TODO
-- requirements for DONE
 ** TODO rules: lock down phase workflow always: Plan → Specify → Scaffold → Implement → Validate → Document
 ** someday:
 *** TODO gptel integration for hydrate
@@ -222,6 +213,11 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    CLOSED: [2026-01-22]
    Discovery updated to .specflow/specflow.org, RULES removed from unit reading
    and validation, all 77 tests updated and passing, repo migrated to new structure.
+
+** DONE org-store: Add root todo discovery function
+   CLOSED: [2026-01-22]
+   New function specflow-org-store-find-root-todo returns path to .specflow/todo.org.
+   5 new ERT tests added, 82 total org-store tests passing.
 
 
 

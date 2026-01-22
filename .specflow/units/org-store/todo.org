@@ -21,6 +21,18 @@ Derived from =units/org-store/spec.org=.
    - Falls back to =specflow-control-plane-path= variable
    - Signals =specflow-control-plane-not-found= if not found
 
+** DONE Discovery: specflow-org-store-find-root-todo
+   CLOSED: [2026-01-22]
+   Given a SpecFlow project,
+   when =specflow-org-store-find-root-todo= is called,
+   then it returns the absolute path to =.specflow/todo.org=.
+
+   Outcomes:
+   - Derives project root from control plane location
+   - Returns =<project-root>/.specflow/todo.org=
+   - Signals =specflow-control-plane-not-found= if control plane not found
+   - Does NOT check if todo.org file exists (caller responsibility)
+
 ** DONE Read: specflow-org-store-read-project-state
    CLOSED: [2025-01-19]
    Given a valid control plane file,
@@ -77,13 +89,27 @@ Derived from =units/org-store/spec.org=.
 
 * Test
 
-** DONE ERT: Discovery tests
+** DONE ERT: Control plane discovery tests
    CLOSED: [2025-01-19]
    - File found at project root
    - File found 2 levels up
    - Fallback to =specflow-control-plane-path=
    - Error when not found
    11 tests, all passing.
+
+** DONE ERT: Root todo discovery tests
+   CLOSED: [2026-01-22]
+   Given =specflow-org-store-find-root-todo=,
+   when called in various project configurations,
+   then it returns the correct path or signals appropriate error.
+
+   Test cases:
+   - Returns correct absolute path to =.specflow/todo.org=
+   - Derives path from provided control plane path
+   - Auto-discovers control plane if not provided
+   - Signals =specflow-control-plane-not-found= when control plane missing
+   - Determinism: calling twice returns identical path
+   5 tests, all passing.
 
 ** DONE ERT: Project state tests
    CLOSED: [2025-01-19]

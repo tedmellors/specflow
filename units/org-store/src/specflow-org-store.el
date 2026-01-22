@@ -112,6 +112,23 @@ Returns absolute path to control plane file (string)."
                             (or start-dir default-directory)
                             control-plane-filename))))))
 
+(defun specflow-org-store-find-root-todo (&optional control-plane-path)
+  "Find the root todo file (.specflow/todo.org).
+
+CONTROL-PLANE-PATH is optional; if nil, discovered via
+`specflow-org-store-find-control-plane'.
+
+Returns absolute path to .specflow/todo.org.
+
+Note: This function returns the path without checking if the file exists.
+Callers should handle missing file if needed.
+
+Signals `specflow-control-plane-not-found' if control plane not found."
+  (let* ((cp-path (or control-plane-path
+                      (specflow-org-store-find-control-plane)))
+         (project-root (specflow-org-store--project-root-from-control-plane cp-path)))
+    (expand-file-name ".specflow/todo.org" project-root)))
+
 ;;;; Property Parsing Helpers
 
 (defun specflow-org-store--get-property-drawer-contents (buffer heading-name)

@@ -128,6 +128,50 @@ The macro binds `project-root' to the temporary directory."
       (should (equal (specflow-org-store-find-control-plane start-dir)
                      (specflow-org-store-find-control-plane start-dir))))))
 
+;;;; Root Todo Discovery Tests
+
+(ert-deftest specflow-test-find-root-todo-returns-correct-path ()
+  "Test that find-root-todo returns correct absolute path."
+  (specflow-test-with-temp-project
+      '(".git/" ".specflow/specflow.org" ".specflow/todo.org")
+    (let ((default-directory project-root))
+      (should (equal (specflow-org-store-find-root-todo)
+                     (expand-file-name ".specflow/todo.org" project-root))))))
+
+(ert-deftest specflow-test-find-root-todo-with-provided-control-plane ()
+  "Test that find-root-todo uses provided control plane path."
+  (specflow-test-with-temp-project
+      '(".git/" ".specflow/specflow.org" ".specflow/todo.org")
+    (let* ((cp-path (expand-file-name ".specflow/specflow.org" project-root))
+           (result (specflow-org-store-find-root-todo cp-path)))
+      (should (equal result
+                     (expand-file-name ".specflow/todo.org" project-root))))))
+
+(ert-deftest specflow-test-find-root-todo-auto-discovers-control-plane ()
+  "Test that find-root-todo auto-discovers control plane if not provided."
+  (specflow-test-with-temp-project
+      '(".git/" ".specflow/specflow.org" ".specflow/todo.org" "src/foo/")
+    (let ((default-directory (expand-file-name "src/foo" project-root)))
+      (should (equal (specflow-org-store-find-root-todo)
+                     (expand-file-name ".specflow/todo.org" project-root))))))
+
+(ert-deftest specflow-test-find-root-todo-signals-error-when-no-control-plane ()
+  "Test that find-root-todo signals error when control plane not found."
+  (specflow-test-with-temp-project
+      '(".git/")  ; No control plane
+    (let ((default-directory project-root)
+          (specflow-control-plane-path nil))
+      (should-error (specflow-org-store-find-root-todo)
+                    :type 'specflow-control-plane-not-found))))
+
+(ert-deftest specflow-test-find-root-todo-deterministic ()
+  "Test that calling find-root-todo twice returns identical results."
+  (specflow-test-with-temp-project
+      '(".git/" ".specflow/specflow.org" ".specflow/todo.org")
+    (let ((default-directory project-root))
+      (should (equal (specflow-org-store-find-root-todo)
+                     (specflow-org-store-find-root-todo))))))
+
 ;;;; Project State Tests
 
 (defconst specflow-test-valid-control-plane

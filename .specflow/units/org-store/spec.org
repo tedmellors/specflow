@@ -126,6 +126,24 @@ List of unit entry plists in document order.
 - Output: Absolute path to control plane file (string)
 - Errors: =specflow-control-plane-not-found= if discovery fails
 
+** specflow-org-store-find-root-todo
+
+#+begin_example
+(specflow-org-store-find-root-todo &optional CONTROL-PLANE-PATH)
+#+end_example
+
+- Input: =CONTROL-PLANE-PATH= (optional, discovered if nil)
+- Output: Absolute path to root todo file (=.specflow/todo.org=)
+- Errors: =specflow-control-plane-not-found= if control plane discovery fails
+
+Discovery algorithm:
+1. Find control plane via =specflow-org-store-find-control-plane= (or use provided path)
+2. Derive project root from control plane location
+3. Return =<project-root>/.specflow/todo.org=
+
+Note: This function returns the path without checking if the file exists.
+Callers should handle missing file if needed.
+
 ** specflow-org-store-read-project-state
 
 #+begin_example
@@ -385,7 +403,8 @@ invalidation hooks.
 
 ** ERT Test Coverage
 
-- Discovery: file found at various depths, fallback to variable, error on not found
+- Control plane discovery: file found at various depths, fallback to variable, error on not found
+- Root todo discovery: returns correct path, derives from control plane, error if control plane not found
 - Project state: valid parse, missing =SPEC_FLOW_PHASE=, missing =SPEC_FLOW_ACTIVE_UNIT=
 - Unit read: valid unit, missing unit, missing required properties
 - Unit registry: multiple units, empty registry

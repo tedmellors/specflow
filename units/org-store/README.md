@@ -46,6 +46,30 @@ Discover the control plane file.
 (setq specflow-control-plane-path "/path/to/control-plane.org")
 ```
 
+### specflow-org-store-find-root-todo
+
+Find the root todo file (`.specflow/todo.org`).
+
+```elisp
+;; Auto-discover from current directory
+(specflow-org-store-find-root-todo)
+;; => "/path/to/project/.specflow/todo.org"
+
+;; With explicit control plane path
+(specflow-org-store-find-root-todo "/path/to/.specflow/specflow.org")
+;; => "/path/to/project/.specflow/todo.org"
+```
+
+**Discovery algorithm:**
+1. Find control plane via `specflow-org-store-find-control-plane` (or use provided path)
+2. Derive project root from control plane location
+3. Return `<project-root>/.specflow/todo.org`
+
+**Note:** This function returns the path without checking if the file exists. Callers should handle missing file if needed.
+
+**Errors:**
+- `specflow-control-plane-not-found` - Control plane discovery failed
+
 ### specflow-org-store-read-project-state
 
 Read current project state from the control plane.
@@ -355,4 +379,4 @@ emacs --batch -L units/org-store/src -L units/org-store/tests \
   -l test-specflow-org-store.el -f ert-run-tests-batch-and-exit
 ```
 
-77 tests covering all public functions, interactive commands, error conditions, and determinism.
+82 tests covering all public functions, interactive commands, error conditions, and determinism.
