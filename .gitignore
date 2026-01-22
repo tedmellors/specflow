@@ -2,3 +2,6 @@
 *~
 \#*\#
 .#*
+
+# SpecFlow development artifacts
+.specflow/
