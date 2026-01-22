@@ -10,14 +10,29 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
+** NEXT core: Update architecture.org and overview.org for .specflow/ structure
+   - Given the new .specflow/ directory structure
+   - When a developer reads the core documentation
+   - Then they find:
+     - [ ] Control plane path updated to .specflow/specflow.org
+     - [ ] Root todo path updated to .specflow/todo.org
+     - [ ] Unit structure: remove CLAUDE.md (scope/constraints go in spec.org)
+     - [ ] Control plane format: remove RULES property from units
+     - [ ] Source layout section updated for new paths
+     - [ ] rules.org path updated to .specflow/rules.org
+   Related files:
+   - units/core/architecture.org
+   - units/core/overview.org
 
-** NEXT org-store: Update control plane discovery for .specflow/
+** TODO org-store: Update control plane discovery and unit format for .specflow/
    - Given a project with .specflow/specflow.org
    - When specflow-org-store-find-control-plane is called
    - Then it finds .specflow/specflow.org
    Outcomes:
    - [ ] Discovery looks for .specflow/specflow.org only
    - [ ] Remove docs/specflow.org discovery path
+   - [ ] Remove RULES property from unit reading (no unit CLAUDE.md)
+   - [ ] Update specflow-org-store-validate-unit-pointers (no RULES validation)
    - [ ] Update all tests to use .specflow/ structure
    Related files:
    - units/org-store/src/specflow-org-store.el
@@ -64,9 +79,9 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    - When they read rules.org
    - Then they find:
      - [ ] .specflow/ directory purpose explained
-     - [ ] Control plane discovery order documented
+     - [ ] Control plane discovery documented
      - [ ] Root tests/ convention documented
-     - [ ] Unit CLAUDE.md noted as optional
+     - [ ] No unit CLAUDE.md - scope/constraints go in spec.org
    Related files:
    - units/rules/src/rules.org
 
