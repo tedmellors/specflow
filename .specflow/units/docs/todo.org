@@ -5,28 +5,37 @@
 * About
 
 This file tracks outcome-based tasks for the docs unit.
-See =spec.org= for requirements, =CLAUDE.md= for constraints.
+See =spec.org= for requirements.
 
 * Active
+
+** DONE Migrate core unit into docs
+   CLOSED: [2026-01-22]
+   Migrated core unit into docs: moved architecture.org and overview.org,
+   updated control plane (docs is now parent), updated specflow-compose.el
+   and all 4 test files. All 254 tests passing.
+
+** NEXT Update README.md for .specflow/ structure
+   - Given the new .specflow/ directory structure
+   - When a user reads the root README
+   - Then:
+     - [ ] Quick Start shows .specflow/specflow.org (not docs/specflow.org)
+     - [ ] Quick Start shows .specflow/todo.org (not root todo.org)
+     - [ ] Project Structure section shows .specflow/ layout
+     - [ ] No RULES property in unit examples
+     - [ ] Test count updated to current (254)
+
+* Backlog
+
+(empty)
+
+* Done
 
 ** DONE Write root README.md
    CLOSED: [2025-01-20]
    Given spec.org defines the required sections,
    when README.md is written,
    then it contains all 9 sections within 300 lines.
-
-   Sections:
-   - [ ] Title and tagline
-   - [ ] What is SpecFlow (2-3 paragraphs)
-   - [ ] Installation (prerequisites, clone, load-path, require)
-   - [ ] Quick Start (5-step workflow)
-   - [ ] Commands Overview (table by module)
-   - [ ] Module Documentation (links to unit READMEs)
-   - [ ] The SpecFlow Workflow (brief phase explanation)
-   - [ ] Project Structure (expected repo layout)
-   - [ ] License
-
-* Backlog
 
 ** DONE Validate README against spec
    CLOSED: [2025-01-20]

@@ -26,7 +26,7 @@ Sets up control plane in Plan phase for compose commands."
            ;; Create directory structure
            (make-directory (expand-file-name ".git" project-root) t)
            (make-directory (expand-file-name ".specflow" project-root) t)
-           (make-directory (expand-file-name ".specflow/units/core" project-root) t)
+           (make-directory (expand-file-name ".specflow/units/docs" project-root) t)
            (make-directory (expand-file-name ".specflow/units/compose" project-root) t)
            ;; Write control plane (Plan phase)
            (write-region
@@ -40,16 +40,16 @@ Sets up control plane in Plan phase for compose commands."
 
 * Units
 
-** core
+** docs
    :PROPERTIES:
-   :SPEC: .specflow/units/core/spec.org
-   :TODO: .specflow/units/core/todo.org
+   :SPEC: .specflow/units/docs/spec.org
+   :TODO: .specflow/units/docs/todo.org
    :CHILDREN: compose
    :END:
 
 ** compose
    :PROPERTIES:
-   :PARENT: core
+   :PARENT: docs
    :SPEC: .specflow/units/compose/spec.org
    :TODO: .specflow/units/compose/todo.org
    :END:
@@ -65,13 +65,13 @@ Sets up control plane in Plan phase for compose commands."
    Planning the compose unit.
 "
             nil (expand-file-name ".specflow/todo.org" project-root))
-           ;; Write core files
-           (write-region "Core spec content" nil
-                         (expand-file-name ".specflow/units/core/spec.org" project-root))
-           (write-region "Core todo content" nil
-                         (expand-file-name ".specflow/units/core/todo.org" project-root))
-           (write-region "Core architecture" nil
-                         (expand-file-name ".specflow/units/core/architecture.org" project-root))
+           ;; Write docs files
+           (write-region "Docs spec content" nil
+                         (expand-file-name ".specflow/units/docs/spec.org" project-root))
+           (write-region "Docs todo content" nil
+                         (expand-file-name ".specflow/units/docs/todo.org" project-root))
+           (write-region "Docs architecture" nil
+                         (expand-file-name ".specflow/units/docs/architecture.org" project-root))
            ;; Write compose files
            (write-region "Compose spec content" nil
                          (expand-file-name ".specflow/units/compose/spec.org" project-root))
@@ -287,7 +287,7 @@ Sets up control plane in Plan phase for compose commands."
       (let ((prompt (specflow-compose--generate-prompt
                      'new-unit
                      '(("Unit Name" . "test-unit")
-                       ("Parent" . "core")
+                       ("Parent" . "docs")
                        ("Purpose (one line)" . "Test purpose")
                        ("Problem it solves" . "Test problem")
                        ("In Scope" . "Test scope")))))
@@ -356,7 +356,7 @@ Sets up control plane in Plan phase for compose commands."
 
 (ert-deftest specflow-test-compose-instructions-new-unit ()
   "Test new-unit instructions mention correct steps."
-  (let ((instructions (specflow-compose--instructions-new-unit "myunit" "core")))
+  (let ((instructions (specflow-compose--instructions-new-unit "myunit" "docs")))
     (should (string-match-p "architecture.org" instructions))
     (should (string-match-p "control plane" instructions))
     (should (string-match-p "units/myunit" instructions))

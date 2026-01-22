@@ -43,7 +43,7 @@ Sets up control plane, units, and files for bundle testing."
   `(specflow-test-with-temp-project
        '(".git/"
          ".specflow/"
-         ".specflow/units/core/"
+         ".specflow/units/docs/"
          ".specflow/units/bundle/")
      ;; Write control plane
      (write-region
@@ -57,16 +57,16 @@ Sets up control plane, units, and files for bundle testing."
 
 * Units
 
-** core
+** docs
    :PROPERTIES:
-   :SPEC: .specflow/units/core/spec.org .specflow/units/core/overview.org
-   :TODO: .specflow/units/core/todo.org
+   :SPEC: .specflow/units/docs/spec.org .specflow/units/docs/overview.org
+   :TODO: .specflow/units/docs/todo.org
    :CHILDREN: bundle
    :END:
 
 ** bundle
    :PROPERTIES:
-   :PARENT: core
+   :PARENT: docs
    :SPEC: .specflow/units/bundle/spec.org
    :TODO: .specflow/units/bundle/todo.org
    :END:
@@ -88,13 +88,13 @@ Sets up control plane, units, and files for bundle testing."
    Not the next one.
 "
       nil (expand-file-name ".specflow/todo.org" project-root))
-     ;; Write core files
-     (write-region "Core spec content" nil
-                   (expand-file-name ".specflow/units/core/spec.org" project-root))
-     (write-region "Core overview content" nil
-                   (expand-file-name ".specflow/units/core/overview.org" project-root))
-     (write-region "Core todo content" nil
-                   (expand-file-name ".specflow/units/core/todo.org" project-root))
+     ;; Write docs files
+     (write-region "Docs spec content" nil
+                   (expand-file-name ".specflow/units/docs/spec.org" project-root))
+     (write-region "Docs overview content" nil
+                   (expand-file-name ".specflow/units/docs/overview.org" project-root))
+     (write-region "Docs todo content" nil
+                   (expand-file-name ".specflow/units/docs/todo.org" project-root))
      ;; Write bundle files
      (write-region "Bundle spec content" nil
                    (expand-file-name ".specflow/units/bundle/spec.org" project-root))
@@ -247,13 +247,13 @@ Sets up control plane, units, and files for bundle testing."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
       (let ((result (specflow-bundle-context)))
-        (should (string-match-p "## Parent: core" result))
+        (should (string-match-p "## Parent: docs" result))
         ;; Should have paths listed with type labels
-        (should (string-match-p "- SPEC: .specflow/units/core/spec.org" result))
-        (should (string-match-p "- SPEC: .specflow/units/core/overview.org" result))
-        (should (string-match-p "- TODO: .specflow/units/core/todo.org" result))
+        (should (string-match-p "- SPEC: .specflow/units/docs/spec.org" result))
+        (should (string-match-p "- SPEC: .specflow/units/docs/overview.org" result))
+        (should (string-match-p "- TODO: .specflow/units/docs/todo.org" result))
         ;; Should NOT include full file content in paths mode
-        (should-not (string-match-p "Core spec content" result))))))
+        (should-not (string-match-p "Docs spec content" result))))))
 
 (ert-deftest specflow-test-bundle-context-paths-mode-unit ()
   "Test that paths mode lists unit file paths."
@@ -287,10 +287,10 @@ Sets up control plane, units, and files for bundle testing."
   "Test bundling a specific unit by name."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
-      (let ((result (specflow-bundle-context "core")))
-        ;; Should bundle core, not bundle
-        (should (string-match-p "## Unit: core" result))
-        ;; core has no parent, so no parent section
+      (let ((result (specflow-bundle-context "docs")))
+        ;; Should bundle docs, not bundle
+        (should (string-match-p "## Unit: docs" result))
+        ;; docs has no parent, so no parent section
         (should-not (string-match-p "## Parent:" result))))))
 
 (ert-deftest specflow-test-bundle-context-unit-not-found ()
@@ -322,10 +322,10 @@ Sets up control plane, units, and files for bundle testing."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
       (let ((result (specflow-bundle-context-text)))
-        (should (string-match-p "## Parent: core" result))
+        (should (string-match-p "## Parent: docs" result))
         ;; Should include full file content
-        (should (string-match-p "Core spec content" result))
-        (should (string-match-p "Core overview content" result))))))
+        (should (string-match-p "Docs spec content" result))
+        (should (string-match-p "Docs overview content" result))))))
 
 (ert-deftest specflow-test-bundle-context-text-includes-unit-content ()
   "Test that text mode includes full unit file content."
@@ -342,11 +342,11 @@ Sets up control plane, units, and files for bundle testing."
   (specflow-test-with-bundle-project
     (let ((default-directory project-root))
       (let ((result (specflow-bundle-context-text)))
-        ;; Core has two spec files
-        (should (string-match-p ".specflow/units/core/spec.org" result))
-        (should (string-match-p ".specflow/units/core/overview.org" result))
-        (should (string-match-p "Core spec content" result))
-        (should (string-match-p "Core overview content" result))))))
+        ;; Docs has two spec files
+        (should (string-match-p ".specflow/units/docs/spec.org" result))
+        (should (string-match-p ".specflow/units/docs/overview.org" result))
+        (should (string-match-p "Docs spec content" result))
+        (should (string-match-p "Docs overview content" result))))))
 
 ;;;; Soft Failure Tests
 

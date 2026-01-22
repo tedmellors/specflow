@@ -10,10 +10,11 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** DONE compose: Update tests to use .specflow/ structure
+** DONE docs: Migrate core unit into docs unit
    CLOSED: [2026-01-22]
-   Updated source and tests for .specflow/ paths. Changed refactor context
-   from RULES to TODO. All 43 compose tests, 254 total tests passing.
+   Migrated core unit into docs: docs is now parent unit with architecture.org
+   and overview.org. Updated control plane, specflow-compose.el, and all 4 test
+   files. All 254 tests passing.
 
 ** NEXT docs: Update README with .specflow/ structure
    - Given a user reads the root README
@@ -224,3 +225,8 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    CLOSED: [2026-01-22]
    Updated test fixtures and specflow-bundle--extract-next-task to use
    .specflow/ structure. All 37 bundle tests passing. README updated.
+
+** DONE compose: Update tests to use .specflow/ structure
+   CLOSED: [2026-01-22]
+   Updated source and tests for .specflow/ paths. Changed refactor context
+   from RULES to TODO. All 43 compose tests, 254 total tests passing.

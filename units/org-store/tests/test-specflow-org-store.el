@@ -298,21 +298,20 @@ Some content here.
 
 * Units
 
-** core
+** docs
    :PROPERTIES:
-   :DIR: src/
-   :SPEC: .specflow/units/core/spec.org
-   :TODO: .specflow/units/core/todo.org
+   :SPEC: .specflow/units/docs/spec.org
+   :TODO: .specflow/units/docs/todo.org
    :CHILDREN: org-store bundle
    :END:
 
 ** org-store
    :PROPERTIES:
-   :PARENT: core
+   :PARENT: docs
    :DIR: src/
    :SPEC: .specflow/units/org-store/spec.org
    :TODO: .specflow/units/org-store/todo.org
-   :CONTEXT_REFS: docs/overview.org docs/architecture.org
+   :CONTEXT_REFS: .specflow/units/docs/overview.org .specflow/units/docs/architecture.org
    :END:
 
 ** minimal-unit
@@ -371,9 +370,9 @@ Some content here.
         (should (equal (plist-get result :dir) "src/"))
         (should (equal (plist-get result :spec) ".specflow/units/org-store/spec.org"))
         (should (equal (plist-get result :todo) ".specflow/units/org-store/todo.org"))
-        (should (equal (plist-get result :parent) "core"))
+        (should (equal (plist-get result :parent) "docs"))
         (should (equal (plist-get result :context-refs)
-                       '("docs/overview.org" "docs/architecture.org")))))))
+                       '(".specflow/units/docs/overview.org" ".specflow/units/docs/architecture.org")))))))
 
 (ert-deftest specflow-test-read-unit-with-children ()
   "Test reading a unit with CHILDREN property."
@@ -381,8 +380,8 @@ Some content here.
       '(".git/" ".specflow/")
     (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-units nil cp-path)
-      (let ((result (specflow-org-store-read-unit "core" cp-path)))
-        (should (equal (plist-get result :name) "core"))
+      (let ((result (specflow-org-store-read-unit "docs" cp-path)))
+        (should (equal (plist-get result :name) "docs"))
         (should (equal (plist-get result :children) '("org-store" "bundle")))
         (should (null (plist-get result :parent)))))))
 
@@ -486,8 +485,8 @@ Some content here.
       (let ((result (specflow-org-store-read-unit-registry cp-path)))
         ;; Should have 3 units
         (should (= (length result) 3))
-        ;; Should be in document order: core, org-store, minimal-unit
-        (should (equal (plist-get (nth 0 result) :name) "core"))
+        ;; Should be in document order: docs, org-store, minimal-unit
+        (should (equal (plist-get (nth 0 result) :name) "docs"))
         (should (equal (plist-get (nth 1 result) :name) "org-store"))
         (should (equal (plist-get (nth 2 result) :name) "minimal-unit"))))))
 
@@ -528,10 +527,10 @@ Some content here.
         ;; Check org-store unit has all properties
         (let ((unit (nth 1 result)))
           (should (equal (plist-get unit :name) "org-store"))
-          (should (equal (plist-get unit :parent) "core"))
+          (should (equal (plist-get unit :parent) "docs"))
           (should (equal (plist-get unit :spec) ".specflow/units/org-store/spec.org"))
           (should (equal (plist-get unit :context-refs)
-                         '("docs/overview.org" "docs/architecture.org"))))))))
+                         '(".specflow/units/docs/overview.org" ".specflow/units/docs/architecture.org"))))))))
 
 ;;;; Write Property Tests
 
@@ -541,7 +540,7 @@ Some content here.
 * Project
   :PROPERTIES:
   :SPEC_FLOW_PHASE: Plan
-  :SPEC_FLOW_ACTIVE_UNIT: core
+  :SPEC_FLOW_ACTIVE_UNIT: docs
   :END:
 
 Some content here.
@@ -812,25 +811,25 @@ Content under org-store.
    :PROPERTIES:
    :SPEC: .specflow/units/root/spec.org
    :TODO: .specflow/units/root/todo.org
-   :CHILDREN: core
+   :CHILDREN: docs
    :END:
 
-** core
+** docs
    :PROPERTIES:
    :PARENT: root
-   :SPEC: .specflow/units/core/spec.org
-   :TODO: .specflow/units/core/todo.org
+   :SPEC: .specflow/units/docs/spec.org
+   :TODO: .specflow/units/docs/todo.org
    :CHILDREN: org-store
    :END:
 
 ** org-store
    :PROPERTIES:
-   :PARENT: core
+   :PARENT: docs
    :SPEC: .specflow/units/org-store/spec.org
    :TODO: .specflow/units/org-store/todo.org
    :END:
 "
-  "Control plane with multi-level hierarchy: root -> core -> org-store.")
+  "Control plane with multi-level hierarchy: root -> docs -> org-store.")
 
 (defconst specflow-test-control-plane-missing-parent
   "#+TITLE: Test Control Plane
@@ -894,8 +893,8 @@ Content under org-store.
       '(".git/" ".specflow/")
     (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-hierarchy nil cp-path)
-      ;; core has parent root
-      (should (equal '("root") (specflow-org-store-validate-parent-chain "core" cp-path))))))
+      ;; docs has parent root
+      (should (equal '("root") (specflow-org-store-validate-parent-chain "docs" cp-path))))))
 
 (ert-deftest specflow-test-validate-parent-chain-multi-level ()
   "Test that multi-level hierarchy returns correct ancestor list."
@@ -903,8 +902,8 @@ Content under org-store.
       '(".git/" ".specflow/")
     (let ((cp-path (expand-file-name ".specflow/specflow.org" project-root)))
       (write-region specflow-test-control-plane-with-hierarchy nil cp-path)
-      ;; org-store -> core -> root
-      (should (equal '("core" "root")
+      ;; org-store -> docs -> root
+      (should (equal '("docs" "root")
                      (specflow-org-store-validate-parent-chain "org-store" cp-path))))))
 
 (ert-deftest specflow-test-validate-parent-chain-missing-parent ()

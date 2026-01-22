@@ -5,7 +5,7 @@
 * Project
   :PROPERTIES:
   :SPEC_FLOW_PHASE: Document
-  :SPEC_FLOW_ACTIVE_UNIT: compose
+  :SPEC_FLOW_ACTIVE_UNIT: docs
   :END:
 
 This file is the **SpecFlow control plane**.
@@ -48,20 +48,19 @@ Tools and AI assistants may use hierarchy to:
 
 * Units
 
-** core
+** docs
    :PROPERTIES:
-   :DIR: src/
-   :SPEC: .specflow/units/core/architecture.org .specflow/units/core/overview.org
-   :TODO: .specflow/units/core/todo.org
-   :CHILDREN: org-store bundle hydrate docs compose initiate rules
+   :SPEC: .specflow/units/docs/spec.org .specflow/units/docs/overview.org .specflow/units/docs/architecture.org
+   :TODO: .specflow/units/docs/todo.org
+   :CHILDREN: org-store bundle hydrate compose initiate rules
    :END:
 
-The core unit is the **development controller** for this repository.
-It owns architecture, cross-cutting constraints, and project-level coordination.
+The docs unit is the **parent unit** for this repository.
+It owns overview, architecture, cross-cutting constraints, and user-facing documentation.
 
 ** org-store
    :PROPERTIES:
-   :PARENT: core
+   :PARENT: docs
    :DIR: src/
    :SPEC: .specflow/units/org-store/spec.org
    :TODO: .specflow/units/org-store/todo.org
@@ -69,7 +68,7 @@ It owns architecture, cross-cutting constraints, and project-level coordination.
 
 ** bundle
    :PROPERTIES:
-   :PARENT: core
+   :PARENT: docs
    :DIR: src/
    :SPEC: .specflow/units/bundle/spec.org
    :TODO: .specflow/units/bundle/todo.org
@@ -77,23 +76,15 @@ It owns architecture, cross-cutting constraints, and project-level coordination.
 
 ** hydrate
    :PROPERTIES:
-   :PARENT: core
+   :PARENT: docs
    :DIR: src/
    :SPEC: .specflow/units/hydrate/spec.org
    :TODO: .specflow/units/hydrate/todo.org
    :END:
 
-** docs
-   :PROPERTIES:
-   :PARENT: core
-   :DIR: docs/
-   :SPEC: .specflow/units/docs/spec.org
-   :TODO: .specflow/units/docs/todo.org
-   :END:
-
 ** compose
    :PROPERTIES:
-   :PARENT: core
+   :PARENT: docs
    :DIR: src/
    :SPEC: .specflow/units/compose/spec.org
    :TODO: .specflow/units/compose/todo.org
@@ -101,7 +92,7 @@ It owns architecture, cross-cutting constraints, and project-level coordination.
 
 ** initiate
    :PROPERTIES:
-   :PARENT: core
+   :PARENT: docs
    :DIR: src/
    :SPEC: .specflow/units/initiate/spec.org
    :TODO: .specflow/units/initiate/todo.org
@@ -109,7 +100,7 @@ It owns architecture, cross-cutting constraints, and project-level coordination.
 
 ** rules
    :PROPERTIES:
-   :PARENT: core
+   :PARENT: docs
    :DIR: src/
    :SPEC: .specflow/units/rules/spec.org
    :TODO: .specflow/units/rules/todo.org

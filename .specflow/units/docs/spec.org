@@ -3,26 +3,79 @@
 
 * Purpose
 
-The docs unit produces user-facing documentation for SpecFlow.
+The docs unit is the **parent unit** for the SpecFlow project.
+
+It owns:
+- Project-level documentation (overview.org, architecture.org)
+- User-facing documentation (README.md)
+- Cross-cutting constraints that apply to all child units
 
 Target audience: Developers who want to use SpecFlow for their own projects.
 
 * Scope
 
 **In scope**
-- Root README.md (project entry point)
+- overview.org (project purpose, problem statement, key concepts)
+- architecture.org (system structure, components, data flow)
+- Root README.md (project entry point for external users)
 - Links to existing unit READMEs
 
 **Out of scope**
-- Unit-level READMEs (already exist, owned by respective units)
-- Internal design docs (overview.org, architecture.org owned by core)
+- Unit-level READMEs (owned by respective units)
 - API documentation or docstrings
+- Implementation code
+
+* Hierarchy
+
+The docs unit is the parent of all implementation units:
+
+#+BEGIN_EXAMPLE
+docs (parent)
+├── org-store
+├── bundle
+├── hydrate
+├── compose
+├── initiate
+└── rules
+#+END_EXAMPLE
+
+Child units must not redefine constraints established in docs.
 
 * Artifacts
 
+** overview.org
+
+Location: =.specflow/units/docs/overview.org=
+
+Purpose: Define the "what and why" of SpecFlow.
+
+*** Required Sections
+
+1. *Purpose* - What SpecFlow is and its primary goal
+2. *Problem Statement* - What failures it addresses
+3. *Key Concepts* - Unit, Control Plane, Phase Transition
+4. *Success Criteria* - How to know if SpecFlow is working
+5. *Principles* - Core design principles
+6. *Non-Goals* - What SpecFlow explicitly does not do
+
+** architecture.org
+
+Location: =.specflow/units/docs/architecture.org=
+
+Purpose: Define the "how" of SpecFlow - system structure.
+
+*** Required Sections
+
+1. *Architectural Overview* - High-level component summary
+2. *High-Level Components* - Control plane, task driver, units, tooling
+3. *Unit Structure* - What each unit contains
+4. *Data Flow* - How information moves through the system
+5. *Error Handling* - How errors are surfaced
+6. *Implementation Order* - Dependency-based build sequence
+
 ** Root README.md
 
-Location: Repository root (`README.md`)
+Location: Repository root (=README.md=)
 
 Length: 200-300 lines
 
@@ -44,7 +97,7 @@ Length: 200-300 lines
 
 4. *Quick Start*
    - 5-step workflow to get started:
-     1. Create control plane (docs/specflow.org)
+     1. Create control plane (.specflow/specflow.org)
      2. Set phase and active unit
      3. Run specflow-hydrate-copy-header
      4. Paste into AI chat
@@ -57,24 +110,29 @@ Length: 200-300 lines
    - Link to unit README for details
 
 6. *Module Documentation*
-   - Links to:
-     - units/org-store/README.md
-     - units/bundle/README.md
-     - units/hydrate/README.md
+   - Links to unit READMEs
 
-7. *The SpecFlow Workflow*
+7. *Operational Rules Workflow*
+   - Explain rules.org → CLAUDE.md generation
+
+8. *The SpecFlow Workflow*
    - Brief explanation of phases: Plan → Specify → Scaffold → Implement → Validate → Document
    - One sentence per phase describing what's allowed
    - Not a full methodology guide
 
-8. *Project Structure*
+9. *Project Structure*
    - Explain expected repo layout:
-     - docs/specflow.org (control plane)
-     - todo.org (root tasks)
-     - units/<name>/ (unit directories)
+     - .specflow/specflow.org (control plane)
+     - .specflow/todo.org (root tasks)
+     - .specflow/units/<name>/ (unit specs and todos)
+     - units/<name>/ (implementation: src/, tests/, README.md)
 
-9. *License*
-   - State the license (if applicable)
+10. *Running Tests*
+    - Command to run all tests
+    - Current test count
+
+11. *License*
+    - State the license (if applicable)
 
 *** Style Guidelines
 
@@ -87,9 +145,9 @@ Length: 200-300 lines
 * Constraints
 
 1. Do not duplicate content from unit READMEs; link instead
-2. Do not explain internal architecture; that's in architecture.org
-3. Do not write a full SpecFlow methodology guide; keep practical
-4. Maximum 300 lines for root README
+2. Do not write a full SpecFlow methodology guide; keep practical
+3. Maximum 300 lines for root README
+4. overview.org and architecture.org are authoritative - child unit specs must not contradict them
 
 * Success Criteria
 
@@ -100,3 +158,10 @@ then they can:
 - Install it (under 5 minutes)
 - Run their first hydrate command (under 10 minutes)
 - Know where to find detailed docs for each module
+
+Given a developer working on a SpecFlow unit,
+when they read overview.org and architecture.org,
+then they understand:
+- The project's purpose and constraints
+- How their unit fits into the larger system
+- What invariants they must preserve

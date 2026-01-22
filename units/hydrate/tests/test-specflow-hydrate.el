@@ -28,7 +28,7 @@ Uses new .specflow/ directory structure."
          (progn
            ;; Create directory structure
            (make-directory (expand-file-name ".git" project-root) t)
-           (make-directory (expand-file-name ".specflow/units/core" project-root) t)
+           (make-directory (expand-file-name ".specflow/units/docs" project-root) t)
            (make-directory (expand-file-name ".specflow/units/hydrate" project-root) t)
            ;; Write control plane
            (write-region
@@ -42,16 +42,16 @@ Uses new .specflow/ directory structure."
 
 * Units
 
-** core
+** docs
    :PROPERTIES:
-   :SPEC: .specflow/units/core/spec.org
-   :TODO: .specflow/units/core/todo.org
+   :SPEC: .specflow/units/docs/spec.org
+   :TODO: .specflow/units/docs/todo.org
    :CHILDREN: hydrate
    :END:
 
 ** hydrate
    :PROPERTIES:
-   :PARENT: core
+   :PARENT: docs
    :SPEC: .specflow/units/hydrate/spec.org
    :TODO: .specflow/units/hydrate/todo.org
    :END:
@@ -73,11 +73,11 @@ Uses new .specflow/ directory structure."
    Not the next one.
 "
             nil (expand-file-name ".specflow/todo.org" project-root))
-           ;; Write core files
-           (write-region "Core spec content" nil
-                         (expand-file-name ".specflow/units/core/spec.org" project-root))
-           (write-region "Core todo content" nil
-                         (expand-file-name ".specflow/units/core/todo.org" project-root))
+           ;; Write docs files
+           (write-region "Docs spec content" nil
+                         (expand-file-name ".specflow/units/docs/spec.org" project-root))
+           (write-region "Docs todo content" nil
+                         (expand-file-name ".specflow/units/docs/todo.org" project-root))
            ;; Write hydrate files
            (write-region "Hydrate spec content" nil
                          (expand-file-name ".specflow/units/hydrate/spec.org" project-root))
@@ -164,7 +164,7 @@ Uses new .specflow/ directory structure."
   (specflow-test-with-hydrate-project
     (let ((default-directory project-root))
       (let ((header (specflow-hydrate--generate-header)))
-        (should (string-match-p "Parent chain: core" header))))))
+        (should (string-match-p "Parent chain: docs" header))))))
 
 (ert-deftest specflow-test-hydrate-header-includes-files ()
   "Test that header includes file pointers."
@@ -205,8 +205,8 @@ Uses new .specflow/ directory structure."
   "Test header for unit with no parent."
   (specflow-test-with-hydrate-project
     (let ((default-directory project-root))
-      (let ((header (specflow-hydrate--generate-header "core")))
-        (should (string-match-p "Active unit: core" header))
+      (let ((header (specflow-hydrate--generate-header "docs")))
+        (should (string-match-p "Active unit: docs" header))
         (should (string-match-p "Parent chain: none" header))))))
 
 ;;;; Command Tests
