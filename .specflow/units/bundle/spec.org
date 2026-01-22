@@ -15,7 +15,7 @@ All context reading is done via the org-store API.
 ** Owns
 - Assembling context from control plane, root todo, and unit files
 - Resolving parent chain and including ancestor content
-- Splitting space-separated property values (SPEC, TODO, RULES)
+- Splitting space-separated property values (SPEC, TODO)
 - Formatting output with section delimiters
 - Interactive command for bundling (M-x specflow-bundle)
 - Output to kill-ring and buffer
@@ -34,9 +34,9 @@ The context bundle includes (in order):
 | Content | Source | Notes |
 |-----------------+--------------------------------+-------------------------------|
 | Project state | Control plane | Phase, active unit |
-| NEXT task | Root todo.org | First NEXT heading + bullets |
-| Parent chain | Each ancestor (root-to-leaf) | SPEC, TODO, RULES files |
-| Active unit | Current unit | SPEC, TODO, RULES files |
+| NEXT task | .specflow/todo.org | First NEXT heading + bullets |
+| Parent chain | Each ancestor (root-to-leaf) | SPEC, TODO files |
+| Active unit | Current unit | SPEC, TODO files |
 
 ** Parent Chain Order
 
@@ -46,10 +46,10 @@ then bundle's files.
 
 ** Property Splitting
 
-SPEC, TODO, and RULES properties may contain space-separated paths:
+SPEC and TODO properties may contain space-separated paths:
 
 #+begin_example
-:SPEC: units/core/architecture.org units/core/overview.org
+:SPEC: .specflow/units/core/architecture.org .specflow/units/core/overview.org
 #+end_example
 
 Bundle splits these into a list and reads each file.
@@ -81,15 +81,13 @@ Active Unit: bundle
    <full NEXT task content included - typically short>
 
 ## Parent: core
-- SPEC: units/core/architecture.org
-- SPEC: units/core/overview.org
-- TODO: units/core/todo.org
-- RULES: units/core/CLAUDE.md
+- SPEC: .specflow/units/core/architecture.org
+- SPEC: .specflow/units/core/overview.org
+- TODO: .specflow/units/core/todo.org
 
 ## Unit: bundle
-- SPEC: units/bundle/spec.org
-- TODO: units/bundle/todo.org
-- RULES: units/bundle/CLAUDE.md
+- SPEC: .specflow/units/bundle/spec.org
+- TODO: .specflow/units/bundle/todo.org
 
 Read the files above for full context.
 #+end_example
@@ -107,28 +105,25 @@ Phase: Plan
 Active Unit: bundle
 
 ## NEXT Task
-<content of first NEXT heading from root todo.org>
+<content of first NEXT heading from .specflow/todo.org>
 
 ## Parent: core
 
-### SPEC: units/core/architecture.org
+### SPEC: .specflow/units/core/architecture.org
 <file content>
 
-### SPEC: units/core/overview.org
+### SPEC: .specflow/units/core/overview.org
 <file content>
 
-### RULES: units/core/CLAUDE.md
+### TODO: .specflow/units/core/todo.org
 <file content>
 
 ## Unit: bundle
 
-### SPEC: units/bundle/spec.org
+### SPEC: .specflow/units/bundle/spec.org
 <file content>
 
-### TODO: units/bundle/todo.org
-<file content>
-
-### RULES: units/bundle/CLAUDE.md
+### TODO: .specflow/units/bundle/todo.org
 <file content>
 #+end_example
 
@@ -193,7 +188,7 @@ Use this for gptel, web Claude, and AI tools without file access.
 
 * NEXT Task Extraction
 
-The NEXT task is extracted from the root =todo.org= file:
+The NEXT task is extracted from =.specflow/todo.org=:
 
 1. Find the first heading marked =NEXT= (any level)
 2. Extract the heading title and all content until the next heading
@@ -225,7 +220,7 @@ may be provided that omits the timestamp for determinism tests.
 
 | Condition | Behavior |
 |-------------------------+----------------------------------------|
-| File in SPEC/TODO/RULES | Placeholder in output, log warning |
+| File in SPEC/TODO | Placeholder in output, log warning |
 | not found | |
 | No NEXT task found | Placeholder in output |
 | Empty file | Include empty section |
@@ -256,7 +251,7 @@ Does NOT depend on:
 *** Text Mode
 - Bundle returns full file contents
 - Text mode output includes all file content
-- Bundle with single-file SPEC/TODO/RULES
+- Bundle with single-file SPEC/TODO
 - Bundle with space-separated multi-file SPEC
 - Bundle with parent chain (single parent)
 

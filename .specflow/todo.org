@@ -10,21 +10,17 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** DONE hydrate: Update rules.org discovery for .specflow/
-   CLOSED: [2026-01-22]
-   Updated specflow-hydrate-rules to find .specflow/rules.org via control plane.
-   Removed legacy specflow installation root detection. 35 hydrate tests passing.
+** NEXT compose: Update tests to use .specflow/ structure
+   - Given compose tests use test fixtures with control plane
+   - When the tests run
+   - Then they use .specflow/specflow.org (not docs/specflow.org)
+   Outcomes:
+   - [ ] Update test helper macros to create .specflow/ structure
+   - [ ] Update all compose tests to pass
+   Related files:
+   - units/compose/tests/test-specflow-compose.el
 
-** DONE initiate: Add .specflow/ structure template
-   CLOSED: [2026-01-22]
-   Updated specflow-initiate to create .specflow/ directory structure with docs unit.
-   New projects start with documentation-first workflow. 32 ERT tests passing.
-
-** DONE rules: Document .specflow/ structure
-   CLOSED: [2026-01-22]
-   Updated rules.org with new .specflow/ structure, regenerated CLAUDE.md.
-
-** NEXT docs: Update README with .specflow/ structure
+** TODO docs: Update README with .specflow/ structure
    - Given a user reads the root README
    - When they look at Project Structure section
    - Then they see:
@@ -33,6 +29,17 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    Related files:
    - README.md
    - units/initiate/README.md
+
+** TODO core: Migrate specflow repo to match initiate template
+   - Given specflow defines a template structure in initiate
+   - When a developer looks at the specflow repo
+   - Then it follows its own conventions:
+     - [ ] Move units/<unit>/src/ code to src/specflow/<unit>/
+     - [ ] Move units/<unit>/tests/ to tests/<unit>/
+     - [ ] Update load paths in test files
+     - [ ] Update any hardcoded paths
+     - [ ] Remove empty units/ directories after migration
+   Note: This is a larger refactor - specflow should "eat its own dogfood"
 
 * Backlog (future enhancements)
 ** TODO rules: Lock down expected todo.org structure/formatting
@@ -204,6 +211,21 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    New function specflow-org-store-find-root-todo returns path to .specflow/todo.org.
    5 new ERT tests added, 82 total org-store tests passing.
 
+** DONE hydrate: Update rules.org discovery for .specflow/
+   CLOSED: [2026-01-22]
+   Updated specflow-hydrate-rules to find .specflow/rules.org via control plane.
+   Removed legacy specflow installation root detection. 35 hydrate tests passing.
 
+** DONE initiate: Add .specflow/ structure template
+   CLOSED: [2026-01-22]
+   Updated specflow-initiate to create .specflow/ directory structure with docs unit.
+   New projects start with documentation-first workflow. 32 ERT tests passing.
 
+** DONE rules: Document .specflow/ structure
+   CLOSED: [2026-01-22]
+   Updated rules.org with new .specflow/ structure, regenerated CLAUDE.md.
 
+** DONE bundle: Update tests to use .specflow/ structure
+   CLOSED: [2026-01-22]
+   Updated test fixtures and specflow-bundle--extract-next-task to use
+   .specflow/ structure. All 37 bundle tests passing. README updated.

@@ -41,15 +41,13 @@ Active Unit: bundle
    <full NEXT task content included>
 
 ## Parent: core
-- SPEC: units/core/architecture.org
-- SPEC: units/core/overview.org
-- TODO: units/core/todo.org
-- RULES: units/core/CLAUDE.md
+- SPEC: .specflow/units/core/architecture.org
+- SPEC: .specflow/units/core/overview.org
+- TODO: .specflow/units/core/todo.org
 
 ## Unit: bundle
-- SPEC: units/bundle/spec.org
-- TODO: units/bundle/todo.org
-- RULES: units/bundle/CLAUDE.md
+- SPEC: .specflow/units/bundle/spec.org
+- TODO: .specflow/units/bundle/todo.org
 
 Read the files above for full context.
 ```
@@ -67,28 +65,25 @@ Phase: Implement
 Active Unit: bundle
 
 ## NEXT Task
-<content of first NEXT heading from root todo.org>
+<content of first NEXT heading from .specflow/todo.org>
 
 ## Parent: core
 
-### SPEC: units/core/architecture.org
+### SPEC: .specflow/units/core/architecture.org
 <file content>
 
-### SPEC: units/core/overview.org
+### SPEC: .specflow/units/core/overview.org
 <file content>
 
-### RULES: units/core/CLAUDE.md
+### TODO: .specflow/units/core/todo.org
 <file content>
 
 ## Unit: bundle
 
-### SPEC: units/bundle/spec.org
+### SPEC: .specflow/units/bundle/spec.org
 <file content>
 
-### TODO: units/bundle/todo.org
-<file content>
-
-### RULES: units/bundle/CLAUDE.md
+### TODO: .specflow/units/bundle/todo.org
 <file content>
 ```
 
@@ -100,9 +95,9 @@ Generates a context bundle in **paths mode** (default).
 
 **Behavior:**
 1. Reads project state from control plane
-2. Extracts NEXT task from root `todo.org`
-3. Lists parent chain file paths (SPEC, TODO, RULES)
-4. Lists active unit file paths (SPEC, TODO, RULES)
+2. Extracts NEXT task from `.specflow/todo.org`
+3. Lists parent chain file paths (SPEC, TODO)
+4. Lists active unit file paths (SPEC, TODO)
 5. Copies result to kill-ring
 6. Displays result in `*SpecFlow Bundle*` buffer
 
@@ -112,9 +107,9 @@ Generates a context bundle in **text mode** (full content).
 
 **Behavior:**
 1. Reads project state from control plane
-2. Extracts NEXT task from root `todo.org`
-3. Gathers full parent chain content (SPEC, TODO, RULES files)
-4. Gathers full active unit content (SPEC, TODO, RULES files)
+2. Extracts NEXT task from `.specflow/todo.org`
+3. Gathers full parent chain content (SPEC, TODO files)
+4. Gathers full active unit content (SPEC, TODO files)
 5. Copies result to kill-ring
 6. Displays result in `*SpecFlow Bundle*` buffer
 
@@ -171,16 +166,16 @@ For determinism tests:
 | Section | Source | Description |
 |---------|--------|-------------|
 | Project State | Control plane | Current phase and active unit |
-| NEXT Task | Root `todo.org` | First heading marked NEXT with content |
-| Parent Chain | Each ancestor unit | SPEC, TODO, RULES files (root-to-leaf order) |
-| Active Unit | Current unit | SPEC, TODO, RULES files |
+| NEXT Task | `.specflow/todo.org` | First heading marked NEXT with content |
+| Parent Chain | Each ancestor unit | SPEC, TODO files (root-to-leaf order) |
+| Active Unit | Current unit | SPEC, TODO files |
 
 ### Property Splitting
 
-SPEC, TODO, and RULES properties may contain space-separated paths:
+SPEC and TODO properties may contain space-separated paths:
 
 ```org
-:SPEC: units/core/architecture.org units/core/overview.org
+:SPEC: .specflow/units/core/architecture.org .specflow/units/core/overview.org
 ```
 
 Bundle reads each file and includes them as separate entries.
@@ -192,9 +187,9 @@ Bundle reads each file and includes them as separate entries.
 - Specified unit not in registry
 
 **Soft failures** (continue with placeholder):
-- Missing file in SPEC/TODO/RULES → `<file not found: path/to/file>`
+- Missing file in SPEC/TODO → `<file not found: path/to/file>`
 - No NEXT task found → `<no NEXT task found>`
-- Root `todo.org` missing → `<no root todo.org found>`
+- `.specflow/todo.org` missing → `<no root todo.org found>`
 
 ## Dependencies
 

@@ -7,6 +7,14 @@
 Outcome-based tasks for bundle implementation.
 Derived from =units/bundle/spec.org=.
 
+* Active
+
+** DONE Update tests to use .specflow/ structure
+   CLOSED: [2026-01-22]
+   Updated test fixtures to use .specflow/ structure, fixed
+   specflow-bundle--extract-next-task to use specflow-org-store-find-root-todo.
+   All 37 bundle tests passing. README updated.
+
 * Implement
 
 ** DONE Core: specflow-bundle-context

@@ -5,7 +5,7 @@
 * Project
   :PROPERTIES:
   :SPEC_FLOW_PHASE: Document
-  :SPEC_FLOW_ACTIVE_UNIT: initiate
+  :SPEC_FLOW_ACTIVE_UNIT: bundle
   :END:
 
 This file is the **SpecFlow control plane**.
