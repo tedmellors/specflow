@@ -144,10 +144,10 @@ Each command includes relevant context files:
 
 | Command | Context Files |
 |---------|---------------|
-| new-unit | architecture.org, control plane, root todo.org |
-| edit-spec | unit spec, parent specs, control plane |
+| new-unit | architecture.org, .specflow/specflow.org, .specflow/todo.org |
+| edit-spec | unit spec, parent specs, .specflow/specflow.org |
 | new-feature | unit spec, unit todo, parent specs (if affects parent) |
-| refactor | unit spec, unit rules |
+| refactor | unit spec, unit todo |
 
 ## Phase Enforcement
 

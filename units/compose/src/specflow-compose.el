@@ -162,7 +162,7 @@ Returns an alist of (question . answer)."
     (list
      (cons "units/core/architecture.org" "architecture")
      (cons (file-relative-name cp-path project-root) "control plane")
-     (cons "todo.org" "root tasks"))))
+     (cons ".specflow/todo.org" "root tasks"))))
 
 (defun specflow-compose--context-files-edit-spec (unit-name)
   "Return context files for edit-spec task on UNIT-NAME."
@@ -184,7 +184,7 @@ Returns an alist of (question . answer)."
           (push (cons (file-relative-name cp-path project-root) "control plane") files))
         (nreverse files))
     (error
-     (list (cons "docs/specflow.org" "control plane")))))
+     (list (cons ".specflow/specflow.org" "control plane")))))
 
 (defun specflow-compose--context-files-new-feature (unit-name affects-parent)
   "Return context files for new-feature task.
@@ -207,7 +207,7 @@ AFFECTS-PARENT is \"yes\", \"no\", or \"unsure\"."
                     files))))
         (nreverse files))
     (error
-     (list (cons "docs/specflow.org" "control plane")))))
+     (list (cons ".specflow/specflow.org" "control plane")))))
 
 (defun specflow-compose--context-files-refactor (unit-name)
   "Return context files for refactor task on UNIT-NAME."
@@ -216,9 +216,9 @@ AFFECTS-PARENT is \"yes\", \"no\", or \"unsure\"."
              (unit-entry (specflow-org-store-read-unit unit-name cp-path)))
         (list
          (cons (plist-get unit-entry :spec) "unit spec")
-         (cons (plist-get unit-entry :rules) "unit rules")))
+         (cons (plist-get unit-entry :todo) "unit todo")))
     (error
-     (list (cons "docs/specflow.org" "control plane")))))
+     (list (cons ".specflow/specflow.org" "control plane")))))
 
 ;;;; Prompt Generation
 
@@ -250,11 +250,11 @@ AFFECTS-PARENT is \"yes\", \"no\", or \"unsure\"."
 (defun specflow-compose--instructions-new-unit (unit-name parent)
   "Return instructions for creating UNIT-NAME with PARENT."
   (format "You are in Plan phase. Create this new unit by:
-1. Update units/core/architecture.org with %s unit description
-2. Add %s entry to Units section in control plane (docs/specflow.org)
-3. Create units/%s/ directory
+1. Update .specflow/units/core/architecture.org with %s unit description
+2. Add %s entry to Units section in control plane (.specflow/specflow.org)
+3. Create .specflow/units/%s/ directory
 4. Draft spec.org based on requirements above
-5. Update root todo.org with NEXT task for %s
+5. Update .specflow/todo.org with NEXT task for %s
 
 Phase rules: Do NOT write implementation code. Planning only."
           unit-name unit-name unit-name unit-name))
@@ -262,7 +262,7 @@ Phase rules: Do NOT write implementation code. Planning only."
 (defun specflow-compose--instructions-edit-spec (unit-name)
   "Return instructions for editing spec of UNIT-NAME."
   (format "You are in Plan phase. Edit the specification for %s:
-1. Read the current spec at units/%s/spec.org
+1. Read the current spec at .specflow/units/%s/spec.org
 2. Make the requested changes
 3. Ensure changes are consistent with parent constraints
 4. Update any affected sections
@@ -288,11 +288,11 @@ AFFECTS-PARENT is yes/no/unsure."
 Steps:
 1. Review the relevant specs
 2. Design the feature within scope
-3. Update spec.org with new requirements
-4. Update todo.org with implementation tasks
+3. Update .specflow/units/%s/spec.org with new requirements
+4. Update .specflow/units/%s/todo.org with implementation tasks
 
 Phase rules: Do NOT write implementation code. Planning and spec updates only."
-            unit-name parent-note)))
+            unit-name parent-note unit-name unit-name)))
 
 (defun specflow-compose--instructions-refactor (unit-name)
   "Return instructions for refactoring UNIT-NAME."
@@ -332,11 +332,11 @@ This preserves context across sessions. Delete after official docs are finalized
 
 When this phase is complete:
 
-1. Update root todo.org:
+1. Update .specflow/todo.org:
    - Mark \"** NEXT %s: %s phase\" as DONE with summary
    - Create \"** NEXT %s: %s phase\"%s
 
-2. Update control plane (docs/specflow.org):
+2. Update control plane (.specflow/specflow.org):
    - Change SPEC_FLOW_PHASE to %s
 
 3. Commit: \"%s: complete %s phase\""
@@ -368,7 +368,7 @@ When this phase is complete:
             ('edit-spec (specflow-compose--context-files-edit-spec unit-name))
             ('new-feature (specflow-compose--context-files-new-feature unit-name affects-parent))
             ('refactor (specflow-compose--context-files-refactor unit-name))
-            (_ (list (cons "docs/specflow.org" "control plane")))))
+            (_ (list (cons ".specflow/specflow.org" "control plane")))))
          (instructions
           (pcase task-type
             ('new-unit (specflow-compose--instructions-new-unit unit-name parent))

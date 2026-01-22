@@ -9,7 +9,10 @@ See =spec.org= for requirements, =CLAUDE.md= for constraints.
 
 * Active
 
-(empty)
+** DONE Update compose for .specflow/ structure
+   CLOSED: [2026-01-22]
+   Updated source and tests to use .specflow/ paths, changed refactor context
+   from unit rules to unit todo. All 43 compose tests passing, 254 total.
 
 * Backlog
 

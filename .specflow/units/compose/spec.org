@@ -161,11 +161,11 @@ This preserves context across sessions. Delete after official docs are finalized
 
 When this phase is complete:
 
-1. Update root todo.org:
+1. Update .specflow/todo.org:
    - Mark current NEXT as DONE with summary
    - Create new NEXT for next phase
 
-2. Update control plane:
+2. Update control plane (.specflow/specflow.org):
    - Change SPEC_FLOW_PHASE to next phase
 
 3. Commit: "<unit>: complete <phase> phase"
@@ -176,7 +176,7 @@ When this phase is complete:
 All generated prompts MUST include phase completion instructions.
 
 The instructions are dynamic based on the current phase and unit name:
-- Unit name is interpolated into the todo.org entry format
+- Unit name is interpolated into the .specflow/todo.org entry format
 - Phase name is interpolated into the entry and commit message
 - Next phase is computed from current phase (Plan→Specify, etc.)
 - If current phase is Document, instructions note "unit complete"
@@ -187,8 +187,8 @@ Each command includes relevant context files:
 
 | Command | Context Files |
 |---------+---------------|
-| new-unit | architecture.org, control plane, root todo.org |
-| edit-spec | unit spec.org, parent spec(s), control plane |
+| new-unit | architecture.org, .specflow/specflow.org, .specflow/todo.org |
+| edit-spec | unit spec.org, parent spec(s), .specflow/specflow.org |
 | new-feature | unit spec.org, unit todo.org, parent spec(s) |
 | refactor | unit spec.org, relevant source files |
 

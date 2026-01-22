@@ -10,17 +10,12 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** NEXT compose: Update tests to use .specflow/ structure
-   - Given compose tests use test fixtures with control plane
-   - When the tests run
-   - Then they use .specflow/specflow.org (not docs/specflow.org)
-   Outcomes:
-   - [ ] Update test helper macros to create .specflow/ structure
-   - [ ] Update all compose tests to pass
-   Related files:
-   - units/compose/tests/test-specflow-compose.el
+** DONE compose: Update tests to use .specflow/ structure
+   CLOSED: [2026-01-22]
+   Updated source and tests for .specflow/ paths. Changed refactor context
+   from RULES to TODO. All 43 compose tests, 254 total tests passing.
 
-** TODO docs: Update README with .specflow/ structure
+** NEXT docs: Update README with .specflow/ structure
    - Given a user reads the root README
    - When they look at Project Structure section
    - Then they see:
