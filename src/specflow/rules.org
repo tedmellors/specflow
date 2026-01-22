@@ -610,6 +610,20 @@ This applies to ALL phase transitions:
 - Implement → Validate
 - Validate → Document
 
+* Commit Authorship
+  :PROPERTIES:
+  :RULE_ID: commit-authorship
+  :PRIORITY: mandatory
+  :PHASE: all
+  :TAGS: git commits authorship
+  :END:
+
+Do NOT include Claude attribution in git commits.
+
+- No "Co-Authored-By: Claude" trailers
+- No mention of Claude or AI assistance in commit messages
+- Commits should appear as solely authored by the user
+
 * Current Focus
   :PROPERTIES:
   :RULE_ID: current-focus
