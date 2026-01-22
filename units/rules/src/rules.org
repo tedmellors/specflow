@@ -35,7 +35,7 @@ This repository is intended for **real use**, not demos or throwaway prototypes.
   :END:
 
 The current operational state of this repo is defined by the SpecFlow control plane:
-- =docs/specflow.org= (or the configured control plane path)
+- =.specflow/specflow.org=
 
 Before starting any work, you MUST:
 1) Read the control plane
@@ -53,13 +53,13 @@ the control plane is authoritative for: active unit, phase, and unit pointers.
   :TAGS: todo tasks
   :END:
 
-Canonical NEXT task source is the repo root =todo.org=.
+Canonical NEXT task source is =.specflow/todo.org=.
 
 When asked "what is the NEXT actionable task":
-1) Open =todo.org= at repo root.
+1) Open =.specflow/todo.org=.
 2) Find the first heading marked =NEXT=.
 3) Return that exact heading and its immediate bullets/subtasks as the actionable plan.
-4) Do NOT use unit-level todo files to choose NEXT unless root =todo.org= explicitly points there.
+4) Do NOT use unit-level todo files to choose NEXT unless =.specflow/todo.org= explicitly points there.
 5) If no =NEXT= exists, propose 1–3 candidate NEXT tasks and ask for confirmation.
 
 If the NEXT task explicitly references a unit, treat that unit as the execution target,
@@ -76,7 +76,7 @@ but do NOT change the active unit in the control plane unless explicitly instruc
 Units may declare hierarchy in the control plane (e.g., =PARENT= / =CHILDREN= properties).
 
 When working on a unit:
-1) Read =docs/specflow.org= to identify the active unit and its =PARENT= chain (if any).
+1) Read =.specflow/specflow.org= to identify the active unit and its =PARENT= chain (if any).
 2) Before implementing or changing behavior in the unit, review parent unit specs/docs referenced by the control plane.
 3) Treat parent unit constraints and invariants as authoritative.
 4) If a child unit spec conflicts with a parent constraint, STOP and ask for resolution (do not implement).
@@ -123,16 +123,16 @@ When working on a unit:
   :TAGS: todo bootstrap
   :END:
 
-If the repo does not yet have a root =todo.org=, do **NOT** create one automatically.
+If the repo does not yet have =.specflow/todo.org=, do **NOT** create one automatically.
 
-Only generate an initial root =todo.org= when I explicitly request it
-(e.g., "bootstrap the master todo" / "create root todo.org").
+Only generate an initial =.specflow/todo.org= when I explicitly request it
+(e.g., "bootstrap the master todo" / "create todo.org").
 
 When prompted to bootstrap:
 - Treat this as a Scaffold task.
 - Do NOT write implementation code.
 - Read the highest-level context (overview/architecture and any parent chain docs).
-- Produce a root =todo.org= that:
+- Produce =.specflow/todo.org= that:
   - defines phases (Plan → Specify → Scaffold → Implement → Validate → Document)
   - lists major units/modules in dependency order
   - contains exactly ONE =NEXT= task that is actionable and outcome-based
@@ -148,10 +148,10 @@ When prompted to bootstrap:
 
 This repo uses a top-down documentation pipeline:
 
-1) =overview.org= (intent)
-2) =architecture.org= (structure)
-3) root =todo.org= (execution plan)
-4) unit specs/todos (scoped implementation)
+1) =.specflow/units/core/overview.org= (intent)
+2) =.specflow/units/core/architecture.org= (structure)
+3) =.specflow/todo.org= (execution plan)
+4) unit specs/todos in =.specflow/units/<unit>/= (scoped implementation)
 
 These artifacts are created or updated **only when explicitly requested**.
 Do not generate or modify them "opportunistically."
@@ -185,12 +185,12 @@ When I ask to draft or revise =architecture.org=:
 - keep it implementable (but still high-level)
 - STOP and request review before moving to master todo
 
-** root todo.org (Execution Layer)
+** .specflow/todo.org (Execution Layer)
 
-The root =todo.org= is the canonical task driver.
+The =.specflow/todo.org= file is the canonical task driver.
 It is generated from =overview.org= + =architecture.org= **only when prompted**.
 
-When I ask to bootstrap or revise root =todo.org=:
+When I ask to bootstrap or revise =.specflow/todo.org=:
 - produce a phase-structured roadmap
 - include exactly ONE =NEXT= task
 - keep tasks outcome-based (Given/When/Then style)
@@ -199,11 +199,11 @@ When I ask to bootstrap or revise root =todo.org=:
 
 ** Unit-level work (Child Units)
 
-Child units are created/refined only after root =todo.org= explicitly points to them.
+Child units are created/refined only after =.specflow/todo.org= explicitly points to them.
 
-When root =todo.org= points to a unit:
+When =.specflow/todo.org= points to a unit:
 - consult parent chain specs (if declared) before implementation
-- create/update unit =spec.org= and =todo.org= per phase rules
+- create/update unit =spec.org= and =todo.org= in =.specflow/units/<unit>/= per phase rules
 - do not skip phases or jump to implementation
 
 * Master TODO to Unit Handoff
@@ -214,14 +214,14 @@ When root =todo.org= points to a unit:
   :TAGS: todo units handoff
   :END:
 
-When the root =todo.org= NEXT task points to a specific unit:
+When the =.specflow/todo.org= NEXT task points to a specific unit:
 
 1) Treat that unit as the execution target (do not change control plane unless instructed).
-2) Read parent chain specs/docs first (PARENT), then the unit spec/todo/rules.
+2) Read parent chain specs/docs first (PARENT), then the unit spec/todo.
 3) Perform work only for the current phase:
    - Plan: design/options/questions only
    - Specify: edit unit =spec.org= only
-   - Scaffold: edit unit =CLAUDE.md= + =todo.org= only
+   - Scaffold: edit unit =todo.org= only
    - Implement: code + tests only
    - Validate/Document: no behavior changes
 4) STOP and request approval at the end of each phase deliverable.
@@ -300,10 +300,10 @@ When the root =todo.org= NEXT task points to a specific unit:
   :END:
 
 This repository uses an **Org-mode control plane**
-(e.g. =docs/specflow.org=) to store:
+(=.specflow/specflow.org=) to store:
 - the active unit
 - the current phase
-- canonical pointers to specs, TODOs, and rules
+- canonical pointers to specs and TODOs
 
 Org files (=.org=) are the authoritative source for:
 - specifications
@@ -322,17 +322,33 @@ Markdown (=.md=) files are created **only** when explicitly requested
   :TAGS: units structure
   :END:
 
-Each unit follows this structure (names may vary by project):
+SpecFlow uses a hidden =.specflow/= directory at the project root for all development artifacts:
 
 #+BEGIN_EXAMPLE
-<unit>/
-    CLAUDE.md     # Unit-specific scope, constraints, stop conditions
-    spec.org      # Specification (source of truth)
-    todo.org      # Outcome-based tasks
-    src/          # Implementation
-    tests/        # Tests
-    README.md     # Usage docs (written after validation)
+project/
+├── .specflow/
+│   ├── specflow.org          # Control plane (active unit, phase)
+│   ├── todo.org              # Root task list
+│   ├── rules.org             # Operational rules (generates CLAUDE.md)
+│   └── units/
+│       ├── core/
+│       │   ├── spec.org      # Core specification
+│       │   ├── todo.org      # Core tasks
+│       │   ├── architecture.org
+│       │   └── overview.org
+│       └── <unit>/
+│           ├── spec.org      # Unit specification (includes scope/constraints)
+│           └── todo.org      # Unit tasks
+├── units/
+│   └── <unit>/
+│       ├── src/              # Implementation
+│       ├── tests/            # Tests
+│       └── README.md         # Usage docs (written after validation)
+├── CLAUDE.md                 # Generated from .specflow/rules.org
+└── src/                      # Main source code
 #+END_EXAMPLE
+
+Unit scope and constraints are defined in =spec.org= (no separate CLAUDE.md per unit).
 
 * Operating Procedure
   :PROPERTIES:
@@ -352,9 +368,8 @@ When working on a task:
 
 1. Read:
    - project overview / architecture docs (if relevant)
-   - unit =spec.org=
+   - unit =spec.org= (in =.specflow/units/<unit>/=)
    - unit =todo.org= (active =NEXT=)
-   - unit =CLAUDE.md=
    - unit =README.md= (if it exists)
 
 2. Work **only** within the active unit unless explicitly authorized.
@@ -386,14 +401,14 @@ When working on a task:
 
 When completing a phase within a unit:
 
-1. **Update root todo.org**:
+1. **Update .specflow/todo.org**:
    - Mark current NEXT task as DONE with 1-2 line summary
    - Create new NEXT task for the next phase (if not unit complete)
 
-2. **Update control plane** (docs/specflow.org):
+2. **Update control plane** (.specflow/specflow.org):
    - Change SPEC_FLOW_PHASE property to the next phase
 
-3. **Root todo.org entry format**:
+3. **Entry format in .specflow/todo.org**:
 
    #+BEGIN_EXAMPLE
    ** DONE <unit>: <phase> phase
@@ -444,7 +459,8 @@ Claude MUST obey the following rules:
 - Ask for review before proceeding
 
 ** Scaffold
-- ONLY write =CLAUDE.md= and =todo.org=
+- ONLY write unit =todo.org= (in =.specflow/units/<unit>/=)
+- Update =spec.org= scope/constraints if needed
 - Do NOT write implementation code
 
 ** Implement
@@ -509,5 +525,5 @@ This applies even to "simple" or obvious fixes.
   :TAGS: focus startup
   :END:
 
-Check the control plane (=specflow.org=) or top-level =todo.org=
+Check the control plane (=.specflow/specflow.org=) or =.specflow/todo.org=
 for the active =NEXT= task and current phase.
