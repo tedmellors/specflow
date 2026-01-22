@@ -15,25 +15,16 @@ Implementation order: org-store → core → bundle → hydrate → docs → com
    Updated specflow-hydrate-rules to find .specflow/rules.org via control plane.
    Removed legacy specflow installation root detection. 35 hydrate tests passing.
 
-** NEXT initiate: Add .specflow/ structure template
-   - Given specflow-initiate is run in an empty directory
-   - When user runs M-x specflow-initiate
-   - Then project is created with:
-     - [ ] .specflow/specflow.org (control plane)
-     - [ ] .specflow/todo.org (root tasks)
-     - [ ] .specflow/rules.org (generates CLAUDE.md)
-     - [ ] .specflow/units/core/ directory
-     - [ ] src/<project>/ directory
-     - [ ] tests/ directory
-     - [ ] CLAUDE.md at root (generated)
-   Related files:
-   - units/initiate/src/specflow-initiate.el
+** DONE initiate: Add .specflow/ structure template
+   CLOSED: [2026-01-22]
+   Updated specflow-initiate to create .specflow/ directory structure with docs unit.
+   New projects start with documentation-first workflow. 32 ERT tests passing.
 
 ** DONE rules: Document .specflow/ structure
    CLOSED: [2026-01-22]
    Updated rules.org with new .specflow/ structure, regenerated CLAUDE.md.
 
-** TODO docs: Update README with .specflow/ structure
+** NEXT docs: Update README with .specflow/ structure
    - Given a user reads the root README
    - When they look at Project Structure section
    - Then they see:

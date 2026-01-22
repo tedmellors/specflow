@@ -14,13 +14,34 @@ M-x specflow-initiate
 
 ## What It Creates
 
-| File | Purpose |
+| Path | Purpose |
 |------|---------|
-| `docs/specflow.org` | Control plane (phase, active unit, unit registry) |
-| `CLAUDE.md` | Root AI assistant rules |
-| `todo.org` | Root task driver with example NEXT task |
-| `.specflow` | Project marker file |
-| `units/core/` | Empty directory for core unit |
+| `.specflow/specflow.org` | Control plane (phase, active unit, unit registry) |
+| `.specflow/todo.org` | Root task driver with example NEXT task |
+| `.specflow/rules.org` | Operational rules (generates CLAUDE.md) |
+| `.specflow/units/docs/spec.org` | Docs unit specification |
+| `.specflow/units/docs/todo.org` | Docs unit tasks |
+| `src/<project>/` | Base directory for future unit source code |
+| `tests/` | Test directory |
+| `CLAUDE.md` | Generated from rules.org (if hydrate available) |
+
+## Directory Structure
+
+```
+my-project/
+├── .specflow/
+│   ├── specflow.org           # Control plane
+│   ├── todo.org               # Root tasks
+│   ├── rules.org              # Operational rules
+│   └── units/
+│       └── docs/
+│           ├── spec.org       # Docs unit spec
+│           └── todo.org       # Docs unit tasks
+├── src/
+│   └── my-project/            # Source base (empty)
+├── tests/                     # Test directory (empty)
+└── CLAUDE.md                  # Generated from rules.org
+```
 
 ## Generated Control Plane
 
@@ -30,34 +51,48 @@ M-x specflow-initiate
 * Project
   :PROPERTIES:
   :SPEC_FLOW_PHASE: Plan
-  :SPEC_FLOW_ACTIVE_UNIT: core
+  :SPEC_FLOW_ACTIVE_UNIT: docs
   :END:
 
 * Units
 
-** core
+** docs
    :PROPERTIES:
-   :DIR: src/
-   :SPEC: units/core/spec.org
-   :TODO: units/core/todo.org
-   :RULES: units/core/CLAUDE.md
+   :SPEC: .specflow/units/docs/spec.org
+   :TODO: .specflow/units/docs/todo.org
    :END:
+
+The docs unit defines project-level documentation: overview, architecture,
+and cross-cutting constraints. It has no source directory.
 ```
 
-## Generated CLAUDE.md
+## The Docs Unit
 
-The root `CLAUDE.md` includes:
+New projects start with a `docs` unit that produces project documentation:
+
+- `overview.org` – Project purpose, goals, success criteria, non-goals
+- `architecture.org` – System structure, components, data flow
+
+The docs unit has **no source directory** – it produces Org files, not code.
+This ensures every project begins with clear documentation before implementation.
+
+## Generated rules.org
+
+The `.specflow/rules.org` includes:
 - SpecFlow philosophy summary
-- Phase enforcement rules (Plan → Specify → Scaffold → Implement → Validate → Document)
-- Task discovery instructions
-- Stop conditions
+- Control plane authority
+- Task discovery rules
+- Phase enforcement (Plan → Specify → Scaffold → Implement → Validate → Document)
+- Global rules for AI assistants
+
+Run `M-x specflow-hydrate-rules` to regenerate `CLAUDE.md` from rules.org.
 
 ## Generated todo.org
 
 ```org
 * Active
 
-** NEXT core: Plan phase
+** NEXT docs: Plan phase
    Define the project architecture and initial unit structure.
 
    - Draft overview.org (purpose, constraints, success criteria)
@@ -76,17 +111,16 @@ Example: `My Cool Project` → `my-cool-project`
 ## Preconditions
 
 `specflow-initiate` will refuse to run if:
-- `docs/specflow.org` already exists
-- `.specflow` marker already exists
+- `.specflow/specflow.org` already exists
 
 This prevents accidental overwrites.
 
 ## After Initialization
 
-1. Review `docs/specflow.org`
-2. Start with core: Plan phase
-3. Draft `units/core/overview.org` (purpose, constraints)
-4. Draft `units/core/architecture.org` (components, data flow)
+1. Review `.specflow/specflow.org`
+2. Start with docs: Plan phase
+3. Draft `overview.org` (purpose, constraints)
+4. Draft `architecture.org` (components, data flow)
 5. Use `specflow-compose` to generate prompts for AI assistance
 
 ## Workflow Integration
@@ -94,11 +128,26 @@ This prevents accidental overwrites.
 ```
 specflow-initiate → Start new project
                     ↓
-                Create scaffolding
+                Create .specflow/ scaffolding
                     ↓
-                core: Plan phase
+                docs: Plan phase
                     ↓
 specflow-compose → Generate planning prompts
                     ↓
+                Draft overview.org & architecture.org
+                    ↓
+                Define first implementation unit
+                    ↓
 specflow-hydrate → Continue AI sessions
 ```
+
+## CLAUDE.md Generation
+
+If `specflow-hydrate-rules` is available when `specflow-initiate` runs,
+CLAUDE.md is generated automatically. Otherwise, run it manually:
+
+```elisp
+M-x specflow-hydrate-rules
+```
+
+This generates CLAUDE.md from `.specflow/rules.org`.

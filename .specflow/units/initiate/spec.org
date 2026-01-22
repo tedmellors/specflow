@@ -14,15 +14,18 @@ Target user: Developer starting a new project who wants SpecFlow scaffolding.
 * Scope
 
 **In scope**
-- Create control plane (=docs/specflow.org=) with starter template
-- Create root =CLAUDE.md= with SpecFlow rules for AI assistants
-- Create root =todo.org= with example NEXT task
-- Create =.specflow= marker file for project detection
+- Create =.specflow/= directory with control plane and supporting files
+- Create =.specflow/specflow.org= (control plane)
+- Create =.specflow/todo.org= (root tasks)
+- Create =.specflow/rules.org= (default operational rules)
+- Create =.specflow/units/docs/= with spec.org and todo.org
+- Create =src/<project>/= directory (base for future unit source)
+- Create =tests/= directory
+- Generate root =CLAUDE.md= from rules.org (via specflow-hydrate-rules)
 - Validate directory is appropriate (not already a SpecFlow project)
 
 **Out of scope**
-- Defining unit specifications (user does this later)
-- Creating unit directories beyond core
+- Defining unit specifications beyond docs scaffolding
 - Git initialization
 - Interactive prompts for customization (MVP)
 - Project naming (derives from directory name)
@@ -39,35 +42,50 @@ M-x specflow-initiate
 
 *** Preconditions
 
-1. Current directory must not already contain =docs/specflow.org=
-2. Current directory must not already contain =.specflow= marker
+1. Current directory must not already contain =.specflow/specflow.org=
 
 If preconditions fail, display error and do not create files.
 
-*** Files Created
+*** Directory Structure Created
 
-| File | Purpose |
-|------|---------|
-| =docs/specflow.org= | Control plane |
-| =CLAUDE.md= | Root AI assistant rules |
-| =todo.org= | Root task driver |
-| =.specflow= | Project marker (empty file) |
-| =units/core/= | Core unit directory (empty) |
+#+begin_example
+<project>/
+├── .specflow/
+│   ├── specflow.org           # Control plane
+│   ├── todo.org               # Root tasks
+│   ├── rules.org              # Default rules (generates CLAUDE.md)
+│   └── units/
+│       └── docs/
+│           ├── spec.org       # Docs unit specification
+│           └── todo.org       # Docs unit tasks
+├── src/
+│   └── <project>/             # Base for future unit source code
+├── tests/                     # Test directory
+└── CLAUDE.md                  # Generated from .specflow/rules.org
+#+end_example
+
+Note: The =docs= unit has no source directory - it produces documentation
+(overview.org, architecture.org), not code.
 
 *** Behavior
 
 1. Check preconditions
-2. Create =docs/= directory if not exists
-3. Write =docs/specflow.org= from template
-4. Write root =CLAUDE.md= from template
-5. Write root =todo.org= from template
-6. Create =.specflow= marker file
-7. Create =units/core/= directory
-8. Display success message with next steps
+2. Derive project name from directory
+3. Create =.specflow/= directory
+4. Write =.specflow/specflow.org= from template
+5. Write =.specflow/todo.org= from template
+6. Write =.specflow/rules.org= from default template
+7. Create =.specflow/units/docs/= directory
+8. Write =.specflow/units/docs/spec.org= from template
+9. Write =.specflow/units/docs/todo.org= from template
+10. Create =src/<project>/= directory
+11. Create =tests/= directory
+12. Generate =CLAUDE.md= via =specflow-hydrate-rules=
+13. Display success message with next steps
 
 * File Templates
 
-** docs/specflow.org (Control Plane)
+** .specflow/specflow.org (Control Plane)
 
 #+begin_example
 #+TITLE: <project-name> – Control Plane
@@ -77,70 +95,26 @@ If preconditions fail, display error and do not create files.
 * Project
   :PROPERTIES:
   :SPEC_FLOW_PHASE: Plan
-  :SPEC_FLOW_ACTIVE_UNIT: core
+  :SPEC_FLOW_ACTIVE_UNIT: docs
   :END:
 
 This is the SpecFlow control plane for <project-name>.
 
 * Units
 
-** core
+** docs
    :PROPERTIES:
-   :DIR: src/
-   :SPEC: units/core/spec.org
-   :TODO: units/core/todo.org
-   :RULES: units/core/CLAUDE.md
+   :SPEC: .specflow/units/docs/spec.org
+   :TODO: .specflow/units/docs/todo.org
    :END:
 
-The core unit defines project-level architecture and constraints.
+The docs unit defines project-level documentation: overview, architecture,
+and cross-cutting constraints. It has no source directory.
 #+end_example
 
 Where =<project-name>= is derived from the directory name.
 
-** CLAUDE.md (Root Rules)
-
-#+begin_example
-# <project-name> – AI Assistant Rules
-
-## SpecFlow Project
-
-This repository uses SpecFlow: a spec-driven, phase-gated workflow
-for AI-assisted software development.
-
-## Control Plane
-
-The current operational state is defined in:
-- `docs/specflow.org` (control plane)
-
-Before starting any work:
-1. Read the control plane
-2. Identify the active unit and phase
-3. Follow the phase rules
-
-## Phase Enforcement
-
-Phases: Plan → Specify → Scaffold → Implement → Validate → Document
-
-- **Plan**: Design only. No code, no specs.
-- **Specify**: Edit spec.org only.
-- **Scaffold**: Write CLAUDE.md and todo.org only.
-- **Implement**: Write code and tests per spec.
-- **Validate**: Verify behavior. No changes.
-- **Document**: Write documentation only.
-
-## Task Discovery
-
-The canonical NEXT task is in `todo.org` at the repo root.
-
-## Stop Conditions
-
-STOP and ask for confirmation if:
-- Action would violate the current phase
-- Interface change is required
-- Scope creep is detected
-#+end_example
-
-** todo.org (Root Tasks)
+** .specflow/todo.org (Root Tasks)
 
 #+begin_example
 #+TITLE: <project-name> – Master TODO
@@ -154,7 +128,7 @@ Only ONE task is marked NEXT at a time.
 
 * Active
 
-** NEXT core: Plan phase
+** NEXT docs: Plan phase
    Define the project architecture and initial unit structure.
 
    - Draft overview.org (purpose, constraints, success criteria)
@@ -164,16 +138,94 @@ Only ONE task is marked NEXT at a time.
 * Backlog
 
 (Add future tasks here)
+
+* Completed
+
+(Move completed tasks here)
+#+end_example
+
+** .specflow/rules.org (Default Rules)
+
+A minimal set of operational rules for the new project. Contains:
+- Scope rule explaining SpecFlow philosophy
+- Control plane authority rule
+- Task discovery rule
+- Phase enforcement rules
+- Basic operational guidelines
+
+The default rules provide a starting point; users can customize for their project.
+
+** .specflow/units/docs/spec.org (Docs Unit Spec)
+
+#+begin_example
+#+TITLE: docs – Specification
+#+STARTUP: overview
+
+* Purpose
+
+The docs unit produces project-level documentation that guides all other work.
+This unit has no source code - its deliverables are Org files.
+
+* Scope
+
+**In scope**
+- overview.org: Project purpose, goals, success criteria, non-goals
+- architecture.org: System structure, components, data flow, dependencies
+
+**Out of scope**
+- Implementation code (belongs in implementation units)
+- Unit-specific specifications (belong in each unit's spec.org)
+
+* Deliverables
+
+| File | Purpose |
+|------|---------|
+| overview.org | What the project is, why it exists, what success looks like |
+| architecture.org | How the system is structured, component relationships |
+#+end_example
+
+** .specflow/units/docs/todo.org (Docs Unit Tasks)
+
+#+begin_example
+#+TITLE: docs – Unit TODO
+#+STARTUP: overview
+#+SEQ_TODO: TODO NEXT WAITING | DONE
+
+* About
+
+Tasks for the docs unit. Complete these before starting implementation units.
+
+* Active
+
+** NEXT Draft overview.org
+   Define what this project is and why it exists.
+
+   - Purpose and goals
+   - Target users
+   - Success criteria
+   - Non-goals and scope boundaries
+
+* Backlog
+
+** TODO Draft architecture.org
+   Define how the system will be structured.
+
+   - Components and their responsibilities
+   - Data flow
+   - Dependencies
+   - Implementation order
+
+* Completed
 #+end_example
 
 * Error Handling
 
 | Condition | Behavior |
 |-----------|----------|
-| =docs/specflow.org= exists | Error: "SpecFlow project already exists" |
-| =.specflow= marker exists | Error: "SpecFlow project already exists" |
+| =.specflow/specflow.org= exists | Error: "SpecFlow project already exists" |
 | Cannot create directory | Signal file error |
 | Cannot write file | Signal file error |
+| hydrate-rules fails | Warning but continue (CLAUDE.md can be generated later) |
 
 * Non-Functional Requirements
 
@@ -187,14 +239,17 @@ Only ONE task is marked NEXT at a time.
 Given a developer in a new project directory,
 when they run =specflow-initiate=,
 then:
-- Control plane exists at =docs/specflow.org=
-- Root =CLAUDE.md= contains SpecFlow rules
-- Root =todo.org= contains example NEXT task
-- =.specflow= marker exists
-- =units/core/= directory exists
+- =.specflow/specflow.org= exists (control plane)
+- =.specflow/todo.org= exists (root tasks)
+- =.specflow/rules.org= exists (default rules)
+- =.specflow/units/docs/spec.org= exists
+- =.specflow/units/docs/todo.org= exists
+- =src/<project>/= directory exists (base for future units)
+- =tests/= directory exists
+- =CLAUDE.md= exists at project root (generated)
 - They can immediately use other SpecFlow commands
 
 * Dependencies
 
-- None (initiate is standalone)
-- Uses basic Emacs file operations only
+- =specflow-hydrate= (for generating CLAUDE.md from rules.org)
+- Uses basic Emacs file operations
