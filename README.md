@@ -31,7 +31,7 @@ git clone https://github.com/tedmellors/specflow.git
 
 ### 1. Create a control plane
 
-Create `docs/specflow.org` in your project:
+Create `.specflow/specflow.org` in your project:
 
 ```org
 #+TITLE: My Project – Control Plane
@@ -46,15 +46,14 @@ Create `docs/specflow.org` in your project:
 
 ** my-feature
    :PROPERTIES:
-   :SPEC: units/my-feature/spec.org
-   :TODO: units/my-feature/todo.org
-   :RULES: units/my-feature/CLAUDE.md
+   :SPEC: .specflow/units/my-feature/spec.org
+   :TODO: .specflow/units/my-feature/todo.org
    :END:
 ```
 
 ### 2. Create a root todo.org
 
-Create `todo.org` at your project root with a NEXT task:
+Create `.specflow/todo.org` with a NEXT task:
 
 ```org
 #+TITLE: Project TODO
@@ -102,7 +101,6 @@ Follow the phase rules. When ready to advance, update the control plane manually
 | `specflow-hydrate-open-root-todo` | Open root todo.org |
 | `specflow-hydrate-open-active-unit-spec` | Open active unit's spec |
 | `specflow-hydrate-open-active-unit-todo` | Open active unit's todo |
-| `specflow-hydrate-open-active-unit-rules` | Open active unit's CLAUDE.md |
 | `specflow-hydrate-scan-buffer` | Scan for phase violations |
 | `specflow-hydrate-scan-region` | Scan region for violations |
 | `specflow-hydrate-rules` | Generate CLAUDE.md from rules.org |
@@ -167,7 +165,7 @@ SpecFlow uses a structured `rules.org` file as the source of truth for AI operat
 ### The workflow
 
 ```
-units/rules/src/rules.org   (source of truth - edit this)
+.specflow/rules.org         (source of truth - edit this)
          ↓
     M-x specflow-hydrate-rules
          ↓
@@ -176,7 +174,7 @@ units/rules/src/rules.org   (source of truth - edit this)
 
 ### Editing rules
 
-Rules are defined in `rules.org` as org-mode headings with properties:
+Rules are defined in `.specflow/rules.org` as org-mode headings with properties:
 
 ```org
 * Control Plane Authority
@@ -199,7 +197,7 @@ Each rule has:
 
 ### Regenerating CLAUDE.md
 
-After editing `rules.org`, regenerate `CLAUDE.md`:
+After editing `.specflow/rules.org`, regenerate `CLAUDE.md`:
 
 ```elisp
 M-x specflow-hydrate-rules
@@ -248,24 +246,30 @@ Phase transitions are manual. Update the control plane's `SPEC_FLOW_PHASE` prope
 
 ## Project Structure
 
-SpecFlow expects this structure:
+SpecFlow uses a hidden `.specflow/` directory for all development artifacts:
 
 ```
 your-project/
-├── docs/
-│   └── specflow.org      # Control plane (required)
-├── todo.org              # Root tasks with NEXT (required)
-└── units/
-    └── <unit-name>/
-        ├── spec.org      # Unit specification
-        ├── todo.org      # Unit tasks
-        ├── CLAUDE.md     # Unit rules for AI
-        ├── src/          # Implementation
-        ├── tests/        # Tests
-        └── README.md     # Usage docs
+├── .specflow/                    # Development artifacts (gitignored)
+│   ├── specflow.org              # Control plane (required)
+│   ├── todo.org                  # Root tasks with NEXT (required)
+│   ├── rules.org                 # AI rules (generates CLAUDE.md)
+│   └── units/
+│       └── <unit-name>/
+│           ├── spec.org          # Unit specification
+│           └── todo.org          # Unit tasks
+├── units/
+│   └── <unit-name>/
+│       ├── src/                  # Implementation
+│       ├── tests/                # Tests
+│       └── README.md             # Usage docs
+├── CLAUDE.md                     # Generated from .specflow/rules.org
+└── src/                          # Main source code
 ```
 
-The control plane registers units with pointers to their spec, todo, and rules files.
+The `.specflow/` directory contains specifications, tasks, and rules—everything an AI assistant needs to understand project state. The generated `CLAUDE.md` at the project root provides Claude Code with operational rules.
+
+The control plane registers units with pointers to their spec and todo files.
 
 ## Running Tests
 
@@ -284,7 +288,7 @@ emacs --batch \
   -f ert-run-tests-batch-and-exit
 ```
 
-239 tests covering org-store (79), bundle (37), hydrate (34), compose (43), initiate (21), and rules (25).
+254 tests covering org-store (82), bundle (37), hydrate (35), compose (43), initiate (32), and rules (25).
 
 ## License
 
