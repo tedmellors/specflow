@@ -20,16 +20,16 @@
 
 (defmacro specflow-test-with-hydrate-project (&rest body)
   "Create a complete hydrate test project and execute BODY.
-Sets up control plane, units, and files for hydrate testing."
+Sets up control plane, units, and files for hydrate testing.
+Uses new .specflow/ directory structure."
   (declare (indent 0))
   `(let ((project-root (make-temp-file "specflow-test-" t)))
      (unwind-protect
          (progn
            ;; Create directory structure
            (make-directory (expand-file-name ".git" project-root) t)
-           (make-directory (expand-file-name "docs" project-root) t)
-           (make-directory (expand-file-name "units/core" project-root) t)
-           (make-directory (expand-file-name "units/hydrate" project-root) t)
+           (make-directory (expand-file-name ".specflow/units/core" project-root) t)
+           (make-directory (expand-file-name ".specflow/units/hydrate" project-root) t)
            ;; Write control plane
            (write-region
             "#+TITLE: Test Control Plane
@@ -44,21 +44,19 @@ Sets up control plane, units, and files for hydrate testing."
 
 ** core
    :PROPERTIES:
-   :SPEC: units/core/spec.org
-   :TODO: units/core/todo.org
-   :RULES: units/core/CLAUDE.md
+   :SPEC: .specflow/units/core/spec.org
+   :TODO: .specflow/units/core/todo.org
    :CHILDREN: hydrate
    :END:
 
 ** hydrate
    :PROPERTIES:
    :PARENT: core
-   :SPEC: units/hydrate/spec.org
-   :TODO: units/hydrate/todo.org
-   :RULES: units/hydrate/CLAUDE.md
+   :SPEC: .specflow/units/hydrate/spec.org
+   :TODO: .specflow/units/hydrate/todo.org
    :END:
 "
-            nil (expand-file-name "docs/specflow.org" project-root))
+            nil (expand-file-name ".specflow/specflow.org" project-root))
            ;; Write root todo.org with NEXT task
            (write-region
             "#+TITLE: Test TODO
@@ -74,21 +72,17 @@ Sets up control plane, units, and files for hydrate testing."
 ** TODO Another task
    Not the next one.
 "
-            nil (expand-file-name "todo.org" project-root))
+            nil (expand-file-name ".specflow/todo.org" project-root))
            ;; Write core files
            (write-region "Core spec content" nil
-                         (expand-file-name "units/core/spec.org" project-root))
+                         (expand-file-name ".specflow/units/core/spec.org" project-root))
            (write-region "Core todo content" nil
-                         (expand-file-name "units/core/todo.org" project-root))
-           (write-region "Core CLAUDE.md content" nil
-                         (expand-file-name "units/core/CLAUDE.md" project-root))
+                         (expand-file-name ".specflow/units/core/todo.org" project-root))
            ;; Write hydrate files
            (write-region "Hydrate spec content" nil
-                         (expand-file-name "units/hydrate/spec.org" project-root))
+                         (expand-file-name ".specflow/units/hydrate/spec.org" project-root))
            (write-region "Hydrate todo content" nil
-                         (expand-file-name "units/hydrate/todo.org" project-root))
-           (write-region "Hydrate CLAUDE.md content" nil
-                         (expand-file-name "units/hydrate/CLAUDE.md" project-root))
+                         (expand-file-name ".specflow/units/hydrate/todo.org" project-root))
            ,@body)
        ;; Cleanup
        (delete-directory project-root t))))
@@ -118,7 +112,7 @@ Sets up control plane, units, and files for hydrate testing."
   "Test extracting NEXT task when present."
   (specflow-test-with-hydrate-project
     (let ((default-directory project-root))
-      (let ((result (specflow-hydrate--extract-next-task "todo.org" project-root)))
+      (let ((result (specflow-hydrate--extract-next-task ".specflow/todo.org" project-root)))
         (should (string-match-p "NEXT hydrate: Implement phase" result))
         (should (string-match-p "This is the next task" result))
         (should (string-match-p "Sub-item 1" result))))))
@@ -135,18 +129,18 @@ Sets up control plane, units, and files for hydrate testing."
 ** TODO First task
 ** TODO Second task
 "
-     nil (expand-file-name "todo.org" project-root))
+     nil (expand-file-name ".specflow/todo.org" project-root))
     (let ((default-directory project-root))
-      (let ((result (specflow-hydrate--extract-next-task "todo.org" project-root)))
+      (let ((result (specflow-hydrate--extract-next-task ".specflow/todo.org" project-root)))
         (should (string-match-p "<no NEXT task found>" result))))))
 
 (ert-deftest specflow-test-hydrate-extract-next-no-file ()
   "Test placeholder when todo.org doesn't exist."
   (specflow-test-with-hydrate-project
     ;; Delete the todo.org
-    (delete-file (expand-file-name "todo.org" project-root))
+    (delete-file (expand-file-name ".specflow/todo.org" project-root))
     (let ((default-directory project-root))
-      (let ((result (specflow-hydrate--extract-next-task "todo.org" project-root)))
+      (let ((result (specflow-hydrate--extract-next-task ".specflow/todo.org" project-root)))
         (should (string-match-p "<no root todo.org found>" result))))))
 
 ;;;; Header Generation Tests
@@ -180,8 +174,7 @@ Sets up control plane, units, and files for hydrate testing."
         (should (string-match-p "control plane" header))
         (should (string-match-p "root todo" header))
         (should (string-match-p "unit SPEC" header))
-        (should (string-match-p "unit TODO" header))
-        (should (string-match-p "unit RULES" header))))))
+        (should (string-match-p "unit TODO" header))))))
 
 (ert-deftest specflow-test-hydrate-header-includes-phase-actions ()
   "Test that header includes phase-specific actions."
@@ -374,15 +367,13 @@ Sets up control plane, units, and files for hydrate testing."
       (should-not (string-match-p "\\[all\\]" result)))))
 
 (ert-deftest specflow-test-hydrate-rules-writes-file ()
-  "Test that hydrate-rules writes CLAUDE.md."
-  ;; Save the specflow root before we change default-directory
-  (let* ((specflow-root default-directory)
-         (project-root (make-temp-file "specflow-hydrate-rules-test-" t)))
+  "Test that hydrate-rules writes CLAUDE.md from .specflow/rules.org."
+  (let ((project-root (make-temp-file "specflow-hydrate-rules-test-" t)))
     (unwind-protect
         (let ((default-directory project-root))
-          ;; Create minimal project structure
+          ;; Create minimal project structure with .specflow/
           (make-directory (expand-file-name ".git" project-root) t)
-          (make-directory (expand-file-name "docs" project-root) t)
+          (make-directory (expand-file-name ".specflow" project-root) t)
           ;; Write control plane
           (write-region
            "#+TITLE: Test
@@ -392,9 +383,33 @@ Sets up control plane, units, and files for hydrate testing."
   :SPEC_FLOW_ACTIVE_UNIT: test
   :END:
 "
-           nil (expand-file-name "docs/specflow.org" project-root))
-          ;; Call hydrate-rules with explicit specflow-root
-          (specflow-hydrate-rules project-root specflow-root)
+           nil (expand-file-name ".specflow/specflow.org" project-root))
+          ;; Write rules.org with test rules
+          (write-region
+           "#+TITLE: Test Rules
+
+* Test Rule
+  :PROPERTIES:
+  :RULE_ID: test-rule
+  :PRIORITY: mandatory
+  :PHASE: all
+  :END:
+
+This is a test rule for CLAUDE.md generation.
+
+* Another Rule
+  :PROPERTIES:
+  :RULE_ID: another-rule
+  :PRIORITY: recommended
+  :PHASE: implement
+  :TAGS: testing
+  :END:
+
+This is another test rule.
+"
+           nil (expand-file-name ".specflow/rules.org" project-root))
+          ;; Call hydrate-rules
+          (specflow-hydrate-rules)
           ;; Check file exists
           (should (file-exists-p (expand-file-name "CLAUDE.md" project-root)))
           ;; Check content
@@ -403,7 +418,32 @@ Sets up control plane, units, and files for hydrate testing."
                             (expand-file-name "CLAUDE.md" project-root))
                            (buffer-string))))
             (should (string-match-p "SpecFlow – AI Assistant Rules" content))
-            (should (string-match-p "AUTO-GENERATED" content))))
+            (should (string-match-p "AUTO-GENERATED" content))
+            (should (string-match-p "Test Rule" content))
+            (should (string-match-p "test rule for CLAUDE.md" content))))
+      (delete-directory project-root t))))
+
+(ert-deftest specflow-test-hydrate-rules-signals-error-when-missing ()
+  "Test that hydrate-rules signals error when .specflow/rules.org is missing."
+  (let ((project-root (make-temp-file "specflow-hydrate-rules-test-" t)))
+    (unwind-protect
+        (let ((default-directory project-root))
+          ;; Create project without rules.org
+          (make-directory (expand-file-name ".git" project-root) t)
+          (make-directory (expand-file-name ".specflow" project-root) t)
+          ;; Write control plane only (no rules.org)
+          (write-region
+           "#+TITLE: Test
+* Project
+  :PROPERTIES:
+  :SPEC_FLOW_PHASE: Implement
+  :SPEC_FLOW_ACTIVE_UNIT: test
+  :END:
+"
+           nil (expand-file-name ".specflow/specflow.org" project-root))
+          ;; Should signal error
+          (should-error (specflow-hydrate-rules)
+                        :type 'specflow-rules-file-not-found))
       (delete-directory project-root t))))
 
 (provide 'test-specflow-hydrate)

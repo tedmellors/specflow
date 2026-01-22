@@ -154,11 +154,20 @@ All other buffers prompt for confirmation before insertion.
 
 ** Behavior
 
-1. Load all rules from =units/rules/src/rules.org= via =specflow-rules-load=
-2. Format each rule as markdown (title as =##= heading, content as body)
-3. Prepend generation header with timestamp and regeneration instructions
-4. Write to =CLAUDE.md= in target directory (default: project root)
-5. Display message: "CLAUDE.md regenerated (N rules)"
+1. Find project root via control plane discovery
+2. Load all rules from =.specflow/rules.org= via =specflow-rules-load=
+3. Format each rule as markdown (title as =##= heading, content as body)
+4. Prepend generation header with timestamp and regeneration instructions
+5. Write to =CLAUDE.md= in target directory (default: project root)
+6. Display message: "CLAUDE.md regenerated (N rules)"
+
+** Discovery
+
+Rules are loaded from the project's =.specflow/rules.org= file:
+1. Find control plane via =specflow-org-store-find-control-plane=
+2. Derive project root from control plane location
+3. Look for =.specflow/rules.org= in project root
+4. Signal =specflow-rules-file-not-found= if not found (no fallback)
 
 ** Output Format
 

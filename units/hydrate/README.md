@@ -9,6 +9,9 @@ Generate conversation headers for AI-assisted development sessions.
 M-x specflow-hydrate-copy-header
 
 ;; Paste into your AI chat
+
+;; Regenerate CLAUDE.md from rules
+M-x specflow-hydrate-rules
 ```
 
 ## Commands
@@ -26,11 +29,22 @@ M-x specflow-hydrate-copy-header
 
 | Command | Description |
 |---------|-------------|
-| `specflow-hydrate-open-control-plane` | Open control plane |
-| `specflow-hydrate-open-root-todo` | Open root todo.org |
+| `specflow-hydrate-open-control-plane` | Open `.specflow/specflow.org` |
+| `specflow-hydrate-open-root-todo` | Open `.specflow/todo.org` |
 | `specflow-hydrate-open-active-unit-spec` | Open unit spec.org |
 | `specflow-hydrate-open-active-unit-todo` | Open unit todo.org |
-| `specflow-hydrate-open-active-unit-rules` | Open unit CLAUDE.md |
+
+### CLAUDE.md Generation
+
+| Command | Description |
+|---------|-------------|
+| `specflow-hydrate-rules` | Generate CLAUDE.md from `.specflow/rules.org` |
+
+The `specflow-hydrate-rules` command:
+1. Finds the project root via control plane discovery
+2. Loads rules from `.specflow/rules.org`
+3. Formats them as markdown with clean headings
+4. Writes `CLAUDE.md` at the project root
 
 ### Scan Commands
 
@@ -49,11 +63,10 @@ Phase: <phase>
 Parent chain: <parents or "none">
 
 Files to consult:
-- <control-plane> (control plane)
-- <root-todo> (root todo)
+- .specflow/specflow.org (control plane)
+- .specflow/todo.org (root todo)
 - <unit-spec> (unit SPEC)
 - <unit-todo> (unit TODO)
-- <unit-rules> (unit RULES)
 - <parent-specs> (parent: <name>)
 
 Allowed actions in this phase:

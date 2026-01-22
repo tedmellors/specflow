@@ -9,6 +9,24 @@ See =spec.org= for requirements, =CLAUDE.md= for constraints.
 
 * Active
 
+** DONE Update rules.org discovery for .specflow/ structure
+   CLOSED: [2026-01-22]
+   Given a project with =.specflow/rules.org=,
+   when =specflow-hydrate-rules= is called,
+   then it finds and processes =.specflow/rules.org= from the project root.
+
+   Outcomes:
+   - [X] Remove =specflow-hydrate--rules-path= constant
+   - [X] Remove =specflow-hydrate--install-root= variable
+   - [X] Remove =specflow-hydrate--find-specflow-root= function
+   - [X] Remove initialization block that caches install root
+   - [X] Update =specflow-hydrate-rules= to find project root via control plane
+   - [X] Look for =.specflow/rules.org= in project root (no fallback)
+   - [X] Signal =specflow-rules-file-not-found= if not found
+   - [X] Update tests to use =.specflow/rules.org= structure
+   - [X] All hydrate tests pass (35 tests)
+   - [X] Also updated all todo.org references to =.specflow/todo.org=
+
 ** DONE Implement: specflow-hydrate-rules command
    CLOSED: [2026-01-20]
    Given rules.org as source of truth for operational rules,

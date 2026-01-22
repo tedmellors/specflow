@@ -10,18 +10,12 @@ Only ONE task is marked NEXT at a time.
 Implementation order: org-store → core → bundle → hydrate → docs → compose → initiate
 
 * Active
-** NEXT hydrate: Update rules.org discovery for .specflow/
-   - Given a project with .specflow/rules.org
-   - When specflow-hydrate-rules is called
-   - Then it finds and processes .specflow/rules.org
-   Outcomes:
-   - [ ] Looks for .specflow/rules.org only
-   - [ ] Remove units/rules/src/rules.org fallback
-   - [ ] Generates CLAUDE.md at project root
-   Related files:
-   - units/hydrate/src/specflow-hydrate.el
+** DONE hydrate: Update rules.org discovery for .specflow/
+   CLOSED: [2026-01-22]
+   Updated specflow-hydrate-rules to find .specflow/rules.org via control plane.
+   Removed legacy specflow installation root detection. 35 hydrate tests passing.
 
-** TODO initiate: Add .specflow/ structure template
+** NEXT initiate: Add .specflow/ structure template
    - Given specflow-initiate is run in an empty directory
    - When user runs M-x specflow-initiate
    - Then project is created with:
