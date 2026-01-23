@@ -147,6 +147,26 @@ Follow the phase rules. When ready to advance, update the control plane manually
 |---------|-------------|
 | `specflow-initiate` | Bootstrap new SpecFlow project in current directory |
 
+### pulse – Visual Indicators
+
+| Command | Description |
+|---------|-------------|
+| `specflow-pulse-mode` | Enable/disable tab-bar status indicators |
+| `specflow-pulse-refresh` | Force refresh of status display |
+| `specflow-pulse-status` | Get status plist for a directory |
+
+When `specflow-pulse-mode` is enabled, the tab-bar shows:
+- **Phase** with color coding (Plan=blue, Implement=green, etc.)
+- **Active unit** name
+- **Claude status** icon (●=working, ○=idle, ✕=disconnected, ?=unknown)
+
+Each tab shows its own project's status. Indicators update automatically via file-watch when the control plane or `.claude-status` file changes.
+
+**Customization:**
+- `specflow-pulse-refresh-interval` – Polling fallback interval (default: 10s)
+- `specflow-pulse-stale-threshold` – Claude status staleness (default: 300s)
+- `specflow-pulse-show-unit` – Show unit name (default: t)
+
 ## Operational Rules Workflow
 
 SpecFlow uses a structured `rules.org` file as the source of truth for AI operational rules. The root `CLAUDE.md` is auto-generated from this file.
@@ -267,10 +287,11 @@ emacs --batch \
   -l tests/test-specflow-compose.el \
   -l tests/test-specflow-initiate.el \
   -l tests/test-specflow-rules.el \
+  -l tests/test-specflow-pulse.el \
   -f ert-run-tests-batch-and-exit
 ```
 
-253 tests covering org-store (82), bundle (36), hydrate (35), compose (43), initiate (32), and rules (25).
+284 tests covering org-store (82), bundle (36), hydrate (35), compose (43), initiate (32), rules (25), and pulse (31).
 
 ## License
 

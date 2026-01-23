@@ -22,6 +22,7 @@
 ;; - specflow-compose: Task-specific prompt generation
 ;; - specflow-initiate: Project bootstrapping
 ;; - specflow-rules: Operational rules management
+;; - specflow-pulse: Real-time visual indicators in tab-bar
 
 ;;; Code:
 
@@ -31,6 +32,7 @@
 (require 'specflow-compose)
 (require 'specflow-initiate)
 (require 'specflow-rules)
+(require 'specflow-pulse)
 
 (provide 'specflow)
 ;;; specflow.el ends here
