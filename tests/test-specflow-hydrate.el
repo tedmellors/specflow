@@ -9,9 +9,7 @@
 ;;;; Load Path Setup
 
 (let ((dir (file-name-directory (or load-file-name buffer-file-name))))
-  (add-to-list 'load-path (expand-file-name "../src" dir))
-  (add-to-list 'load-path (expand-file-name "../../org-store/src" dir))
-  (add-to-list 'load-path (expand-file-name "../../rules/src" dir)))
+  (add-to-list 'load-path (expand-file-name "../src" dir)))
 
 (require 'ert)
 (require 'specflow-hydrate)

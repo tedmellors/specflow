@@ -8,8 +8,7 @@
 
 ;; Load-path setup for standalone test execution
 (let ((dir (file-name-directory (or load-file-name buffer-file-name))))
-  (add-to-list 'load-path (expand-file-name "../src" dir))
-  (add-to-list 'load-path (expand-file-name "../../org-store/src" dir)))
+  (add-to-list 'load-path (expand-file-name "../src" dir)))
 
 (require 'ert)
 (require 'specflow-bundle)

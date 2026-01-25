@@ -23,7 +23,7 @@ git clone https://github.com/tedmellors/specflow.git
 
 ```elisp
 ;; In your init.el
-(add-to-list 'load-path "/path/to/specflow/src/specflow")
+(add-to-list 'load-path "/path/to/specflow/src")
 (require 'specflow)
 ```
 
@@ -259,7 +259,7 @@ The `.specflow/` directory contains specifications, tasks, and rules—everythin
 
 ```bash
 emacs --batch \
-  -L src/specflow \
+  -L src \
   -l specflow.el \
   -l tests/test-specflow-org-store.el \
   -l tests/test-specflow-bundle.el \
