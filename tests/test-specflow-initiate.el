@@ -167,11 +167,10 @@
     (should (file-exists-p ".specflow/units/docs/todo.org"))))
 
 (ert-deftest specflow-test-initiate-creates-src-dir ()
-  "Test that initiate creates src/<project>/ directory."
+  "Test that initiate creates src/ directory."
   (specflow-test-with-empty-dir
     (specflow-initiate)
-    (let ((project-name (specflow-initiate--derive-project-name)))
-      (should (file-directory-p (format "src/%s" project-name))))))
+    (should (file-directory-p "src"))))
 
 (ert-deftest specflow-test-initiate-creates-tests-dir ()
   "Test that initiate creates tests/ directory."

@@ -303,7 +303,11 @@ Markdown (=.md=) files are created **only** when explicitly requested
   :TAGS: units structure
   :END:
 
-SpecFlow uses a hidden =.specflow/= directory at the project root for all development artifacts:
+SpecFlow uses a hidden =.specflow/= directory at the project root for all development artifacts.
+
+** Fixed Structure (Required)
+
+The =.specflow/= directory and =CLAUDE.md= are required and have a fixed structure:
 
 #+BEGIN_EXAMPLE
 project/
@@ -316,18 +320,67 @@ project/
 │       │   ├── spec.org      # Parent unit specification
 │       │   └── todo.org      # Parent unit tasks
 │       └── <unit>/
-│           ├── spec.org      # Unit specification (includes scope/constraints)
+│           ├── spec.org      # Unit specification
 │           └── todo.org      # Unit tasks
-├── units/
-│   └── <unit>/
-│       ├── src/              # Implementation
-│       ├── tests/            # Tests
-│       └── README.md         # Usage docs (written after validation)
 ├── CLAUDE.md                 # Generated from .specflow/rules.org
-└── src/                      # Main source code
+└── ...                       # Project source (see suggested layouts below)
 #+END_EXAMPLE
 
 Unit scope and constraints are defined in =spec.org= (no separate CLAUDE.md per unit).
+
+** Suggested Layouts
+
+Project source structure is flexible. Choose a layout that fits your project:
+
+*** Template A: Simple
+
+For libraries, CLI tools, single services, Emacs packages.
+
+#+BEGIN_EXAMPLE
+project/
+├── .specflow/
+├── src/                      # All source code
+├── tests/                    # All tests
+├── CLAUDE.md
+└── README.md
+#+END_EXAMPLE
+
+*** Template B: Frontend + Backend
+
+For web apps and full-stack projects (often polyglot).
+
+#+BEGIN_EXAMPLE
+project/
+├── .specflow/
+├── frontend/
+│   ├── src/
+│   ├── tests/
+│   └── package.json
+├── backend/
+│   ├── src/
+│   ├── tests/
+│   └── pyproject.toml        # or go.mod, Cargo.toml, etc.
+├── CLAUDE.md
+└── README.md
+#+END_EXAMPLE
+
+*** Template C: Monorepo
+
+For large projects, microservices, or multiple related apps.
+
+#+BEGIN_EXAMPLE
+project/
+├── .specflow/
+├── apps/
+│   ├── web/
+│   └── api/
+├── packages/                 # or libs/
+│   └── shared/
+├── CLAUDE.md
+└── README.md
+#+END_EXAMPLE
+
+Adapt these templates to your project's needs. The =.specflow/= structure is fixed; source layout is guidance.
 
 * Specification Structure
   :PROPERTIES:

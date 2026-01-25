@@ -21,7 +21,7 @@
 ;;       docs/
 ;;         spec.org          - Docs unit specification
 ;;         todo.org          - Docs unit tasks
-;;   src/<project>/          - Base for future unit source
+;;   src/                    - Source code directory
 ;;   tests/                  - Test directory
 ;;   CLAUDE.md               - Generated from .specflow/rules.org
 
@@ -168,7 +168,7 @@ rules, and a docs unit for project documentation."
   (let ((project-name (specflow-initiate--derive-project-name)))
     ;; Create directories
     (make-directory (expand-file-name ".specflow/units/docs") t)
-    (make-directory (expand-file-name (format "src/%s" project-name)) t)
+    (make-directory (expand-file-name "src") t)
     (make-directory (expand-file-name "tests") t)
     ;; Write .specflow/specflow.org (control plane)
     (write-region (specflow-initiate--control-plane-template project-name)
@@ -199,14 +199,14 @@ Created:
   .specflow/todo.org           (root tasks)
   .specflow/rules.org          (operational rules)
   .specflow/units/docs/        (docs unit)
-  src/%s/                      (source base)
+  src/                         (source directory)
   tests/                       (test directory)
   CLAUDE.md                    (generated from rules.org)
 
 Next steps:
   1. Review .specflow/specflow.org
   2. Start with root: Plan phase
-  3. Draft spec.org" project-name project-name))
+  3. Draft spec.org" project-name))
           (error
            (message "SpecFlow project \"%s\" initialized (CLAUDE.md not generated: %s).
 
@@ -215,7 +215,7 @@ Created:
   .specflow/todo.org           (root tasks)
   .specflow/rules.org          (operational rules)
   .specflow/units/docs/        (docs unit)
-  src/%s/                      (source base)
+  src/                         (source directory)
   tests/                       (test directory)
 
 Run M-x specflow-hydrate-rules to generate CLAUDE.md.
@@ -223,7 +223,7 @@ Run M-x specflow-hydrate-rules to generate CLAUDE.md.
 Next steps:
   1. Review .specflow/specflow.org
   2. Start with root: Plan phase
-  3. Draft spec.org" project-name (error-message-string err) project-name)))
+  3. Draft spec.org" project-name (error-message-string err))))
       ;; specflow-hydrate-rules not available
       (message "SpecFlow project \"%s\" initialized (CLAUDE.md not generated).
 
@@ -232,7 +232,7 @@ Created:
   .specflow/todo.org           (root tasks)
   .specflow/rules.org          (operational rules)
   .specflow/units/docs/        (docs unit)
-  src/%s/                      (source base)
+  src/                         (source directory)
   tests/                       (test directory)
 
 Run M-x specflow-hydrate-rules to generate CLAUDE.md.
@@ -240,7 +240,7 @@ Run M-x specflow-hydrate-rules to generate CLAUDE.md.
 Next steps:
   1. Review .specflow/specflow.org
   2. Start with root: Plan phase
-  3. Draft spec.org" project-name project-name))))
+  3. Draft spec.org" project-name))))
 
 (provide 'specflow-initiate)
 ;;; specflow-initiate.el ends here

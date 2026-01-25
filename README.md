@@ -190,7 +190,7 @@ After editing `.specflow/rules.org`, regenerate `CLAUDE.md`:
 
 ```elisp
 M-x specflow-hydrate-rules
-;; => "CLAUDE.md regenerated (24 rules)"
+;; => "CLAUDE.md regenerated (26 rules)"
 ```
 
 The generated file includes a header warning not to edit directly:
@@ -247,7 +247,7 @@ your-project/
 │       └── <unit-name>/
 │           ├── spec.org          # Unit specification
 │           └── todo.org          # Unit tasks
-├── src/<project>/                # All source files (flat)
+├── src/                          # All source files
 ├── tests/                        # All test files (flat)
 ├── CLAUDE.md                     # Generated from .specflow/rules.org
 └── README.md                     # Project documentation
