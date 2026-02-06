@@ -218,6 +218,36 @@ The generated file includes a header warning not to edit directly:
 (specflow-rules-by-tag "control-plane" "/path/to/rules.org")
 ```
 
+## Claude Code Integration
+
+SpecFlow includes Claude Code configuration for runtime phase enforcement. The `.claude/` directory (gitignored, created by tooling) contains:
+
+### Phase Guard Hook
+
+A `PreToolUse` hook that blocks `Edit` and `Write` operations that violate the current phase. The hook reads `.specflow/specflow.org` on every invocation and applies phase-specific rules:
+
+| Phase | Edit/Write Allowed | Blocked |
+|-------|-------------------|---------|
+| Plan | Nothing | All files |
+| Specify | `spec.org` files | Everything else |
+| Scaffold | `todo.org` files | Everything else |
+| Implement | All files | Nothing |
+| Validate | Test files | Source and spec files |
+| Document | Docs, specs, todos | Source code |
+
+The hook fails open: if the control plane is missing or malformed, operations are allowed.
+
+### Custom Agents
+
+Phase-specific sub-agents with restricted tool access:
+
+| Agent | Tools | Model | Purpose |
+|-------|-------|-------|---------|
+| `plan-researcher` | Read, Glob, Grep, WebSearch, WebFetch | haiku | Read-only codebase exploration |
+| `spec-reviewer` | Read, Glob, Grep | sonnet | Spec validation against parent chain |
+| `test-validator` | Read, Glob, Grep, Bash | sonnet | Run tests, report results, no edits |
+| `scaffold-writer` | Read, Glob, Grep, Edit, Write | sonnet | Write todo.org files only |
+
 ## The SpecFlow Workflow
 
 Work proceeds through six phases:
@@ -247,13 +277,17 @@ your-project/
 │       └── <unit-name>/
 │           ├── spec.org          # Unit specification
 │           └── todo.org          # Unit tasks
+├── .claude/                      # Claude Code config (gitignored)
+│   ├── settings.json             # Hooks configuration
+│   ├── agents/                   # Phase-specific sub-agents
+│   └── hooks/                    # Phase enforcement scripts
 ├── src/                          # All source files
 ├── tests/                        # All test files (flat)
 ├── CLAUDE.md                     # Generated from .specflow/rules.org
 └── README.md                     # Project documentation
 ```
 
-The `.specflow/` directory contains specifications, tasks, and rules—everything an AI assistant needs to understand project state. The generated `CLAUDE.md` at the project root provides Claude Code with operational rules.
+The `.specflow/` directory contains specifications, tasks, and rules—everything an AI assistant needs to understand project state. The generated `CLAUDE.md` at the project root provides Claude Code with operational rules. The `.claude/` directory provides runtime enforcement via custom agents and hooks.
 
 ## Running Tests
 
