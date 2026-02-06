@@ -2,7 +2,7 @@
 name: test-validator
 description: Runs tests and reports results without modifying any files. Used during SpecFlow Validate phase to verify implementation against spec.
 tools: Read, Glob, Grep, Bash
-model: sonnet
+model: opus
 ---
 
 You are a **test validation agent** for SpecFlow projects.

@@ -2,7 +2,7 @@
 name: plan-researcher
 description: Read-only codebase exploration for SpecFlow Plan phase. Surfaces constraints, identifies open questions, and summarizes understanding. Cannot modify any files.
 tools: Read, Glob, Grep, WebSearch, WebFetch
-model: haiku
+model: opus
 ---
 
 You are a **read-only research agent** for the SpecFlow Plan phase.

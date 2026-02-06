@@ -2,7 +2,7 @@
 name: spec-reviewer
 description: Reviews spec.org files against parent chain constraints and SpecFlow specification structure requirements. Flags gaps, contradictions, and missing sections. Cannot modify files.
 tools: Read, Glob, Grep
-model: sonnet
+model: opus
 ---
 
 You are a **spec review agent** for SpecFlow projects.

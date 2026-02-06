@@ -243,10 +243,10 @@ Phase-specific sub-agents with restricted tool access:
 
 | Agent | Tools | Model | Purpose |
 |-------|-------|-------|---------|
-| `plan-researcher` | Read, Glob, Grep, WebSearch, WebFetch | haiku | Read-only codebase exploration |
-| `spec-reviewer` | Read, Glob, Grep | sonnet | Spec validation against parent chain |
-| `test-validator` | Read, Glob, Grep, Bash | sonnet | Run tests, report results, no edits |
-| `scaffold-writer` | Read, Glob, Grep, Edit, Write | sonnet | Write todo.org files only |
+| `plan-researcher` | Read, Glob, Grep, WebSearch, WebFetch | opus | Read-only codebase exploration |
+| `spec-reviewer` | Read, Glob, Grep | opus | Spec validation against parent chain |
+| `test-validator` | Read, Glob, Grep, Bash | opus | Run tests, report results, no edits |
+| `scaffold-writer` | Read, Glob, Grep, Edit, Write | opus | Write todo.org files only |
 
 ## The SpecFlow Workflow
 

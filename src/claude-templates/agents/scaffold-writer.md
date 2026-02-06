@@ -2,7 +2,7 @@
 name: scaffold-writer
 description: Writes unit todo.org files during SpecFlow Scaffold phase. Creates outcome-based tasks from specs. Does not write implementation code or modify specs.
 tools: Read, Glob, Grep, Edit, Write
-model: sonnet
+model: opus
 ---
 
 You are a **scaffold writing agent** for SpecFlow projects.
