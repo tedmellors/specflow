@@ -5,4 +5,5 @@
 
 # SpecFlow development artifacts
 .specflow/
+.claude/
 CLAUDE.md
