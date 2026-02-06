@@ -274,5 +274,93 @@
     (should (file-directory-p ".specflow"))
     (should-not (file-regular-p ".specflow"))))
 
+;;;; Claude Code Configuration Tests
+
+(ert-deftest specflow-test-initiate-finds-claude-templates ()
+  "Test that find-claude-templates-dir locates the templates directory."
+  (let ((templates-dir (specflow-initiate--find-claude-templates-dir)))
+    (should templates-dir)
+    (should (file-directory-p templates-dir))
+    (should (string-match-p "claude-templates" templates-dir))))
+
+(ert-deftest specflow-test-initiate-creates-claude-dir ()
+  "Test that initiate creates .claude/ directory."
+  (specflow-test-with-empty-dir
+    (specflow-initiate)
+    (should (file-directory-p ".claude"))))
+
+(ert-deftest specflow-test-initiate-creates-claude-agents-dir ()
+  "Test that initiate creates .claude/agents/ directory."
+  (specflow-test-with-empty-dir
+    (specflow-initiate)
+    (should (file-directory-p ".claude/agents"))))
+
+(ert-deftest specflow-test-initiate-creates-claude-hooks-dir ()
+  "Test that initiate creates .claude/hooks/ directory."
+  (specflow-test-with-empty-dir
+    (specflow-initiate)
+    (should (file-directory-p ".claude/hooks"))))
+
+(ert-deftest specflow-test-initiate-creates-settings-json ()
+  "Test that initiate creates .claude/settings.json."
+  (specflow-test-with-empty-dir
+    (specflow-initiate)
+    (should (file-exists-p ".claude/settings.json"))))
+
+(ert-deftest specflow-test-initiate-creates-phase-guard ()
+  "Test that initiate creates .claude/hooks/phase-guard.sh."
+  (specflow-test-with-empty-dir
+    (specflow-initiate)
+    (should (file-exists-p ".claude/hooks/phase-guard.sh"))))
+
+(ert-deftest specflow-test-initiate-creates-agents ()
+  "Test that initiate creates all 4 agent definition files."
+  (specflow-test-with-empty-dir
+    (specflow-initiate)
+    (should (file-exists-p ".claude/agents/plan-researcher.md"))
+    (should (file-exists-p ".claude/agents/spec-reviewer.md"))
+    (should (file-exists-p ".claude/agents/test-validator.md"))
+    (should (file-exists-p ".claude/agents/scaffold-writer.md"))))
+
+(ert-deftest specflow-test-initiate-settings-content ()
+  "Test that settings.json contains hook configuration."
+  (specflow-test-with-empty-dir
+    (specflow-initiate)
+    (let ((content (with-temp-buffer
+                     (insert-file-contents ".claude/settings.json")
+                     (buffer-string))))
+      (should (string-match-p "PreToolUse" content))
+      (should (string-match-p "Edit|Write" content)))))
+
+(ert-deftest specflow-test-initiate-phase-guard-content ()
+  "Test that phase-guard.sh contains phase enforcement logic."
+  (specflow-test-with-empty-dir
+    (specflow-initiate)
+    (let ((content (with-temp-buffer
+                     (insert-file-contents ".claude/hooks/phase-guard.sh")
+                     (buffer-string))))
+      (should (string-match-p "SPEC_FLOW_PHASE" content))
+      (should (string-match-p "phase-guard" content)))))
+
+(ert-deftest specflow-test-initiate-phase-guard-executable ()
+  "Test that phase-guard.sh has executable permission."
+  (specflow-test-with-empty-dir
+    (specflow-initiate)
+    (let ((modes (file-modes ".claude/hooks/phase-guard.sh")))
+      ;; Check owner execute bit (mode #o100)
+      (should (not (zerop (logand modes #o100)))))))
+
+(ert-deftest specflow-test-initiate-agent-content ()
+  "Test that agent files contain tools frontmatter."
+  (specflow-test-with-empty-dir
+    (specflow-initiate)
+    (dolist (agent '("plan-researcher.md" "spec-reviewer.md"
+                     "test-validator.md" "scaffold-writer.md"))
+      (let ((content (with-temp-buffer
+                       (insert-file-contents (concat ".claude/agents/" agent))
+                       (buffer-string))))
+        (should (string-match-p "tools:" content))
+        (should (string-match-p "name:" content))))))
+
 (provide 'test-specflow-initiate)
 ;;; test-specflow-initiate.el ends here

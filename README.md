@@ -145,7 +145,7 @@ Follow the phase rules. When ready to advance, update the control plane manually
 
 | Command | Description |
 |---------|-------------|
-| `specflow-initiate` | Bootstrap new SpecFlow project in current directory |
+| `specflow-initiate` | Bootstrap new SpecFlow project with phase enforcement |
 
 ## Operational Rules Workflow
 
@@ -304,7 +304,7 @@ emacs --batch \
   -f ert-run-tests-batch-and-exit
 ```
 
-253 tests covering org-store (82), bundle (36), hydrate (35), compose (43), initiate (32), and rules (25).
+264 tests covering org-store (82), bundle (36), hydrate (35), compose (43), initiate (43), and rules (25).
 
 ## License
 

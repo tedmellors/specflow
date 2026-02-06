@@ -21,6 +21,11 @@
 ;;       docs/
 ;;         spec.org          - Docs unit specification
 ;;         todo.org          - Docs unit tasks
+;;   .claude/
+;;     settings.json         - Hook configuration
+;;     agents/               - Phase-specific sub-agents
+;;     hooks/
+;;       phase-guard.sh      - Phase enforcement script
 ;;   src/                    - Source code directory
 ;;   tests/                  - Test directory
 ;;   CLAUDE.md               - Generated from .specflow/rules.org
@@ -106,6 +111,41 @@ Returns the path to rules.org, or nil if not found."
     (when (and rules-path (file-exists-p rules-path))
       rules-path)))
 
+(defun specflow-initiate--find-claude-templates-dir ()
+  "Find the claude-templates directory in the specflow installation.
+Returns the path to claude-templates/, or nil if not found."
+  (let* ((lib-file (locate-library "specflow-initiate"))
+         (install-dir (and lib-file (file-name-directory lib-file)))
+         (templates-dir (and install-dir
+                             (expand-file-name "claude-templates/" install-dir))))
+    (when (and templates-dir (file-directory-p templates-dir))
+      templates-dir)))
+
+(defun specflow-initiate--copy-claude-config ()
+  "Copy Claude Code configuration from templates to .claude/ directory.
+Creates .claude/agents/ and .claude/hooks/, copies all template files.
+Sets phase-guard.sh as executable.  Returns t on success, nil if
+templates directory not found."
+  (let ((templates-dir (specflow-initiate--find-claude-templates-dir)))
+    (when templates-dir
+      ;; Create directories
+      (make-directory (expand-file-name ".claude/agents") t)
+      (make-directory (expand-file-name ".claude/hooks") t)
+      ;; Copy settings.json
+      (copy-file (expand-file-name "settings.json" templates-dir)
+                 (expand-file-name ".claude/settings.json"))
+      ;; Copy agents
+      (dolist (agent '("plan-researcher.md" "spec-reviewer.md"
+                       "test-validator.md" "scaffold-writer.md"))
+        (copy-file (expand-file-name (concat "agents/" agent) templates-dir)
+                   (expand-file-name (concat ".claude/agents/" agent))))
+      ;; Copy phase-guard hook and set executable
+      (let ((hook-target (expand-file-name ".claude/hooks/phase-guard.sh")))
+        (copy-file (expand-file-name "hooks/phase-guard.sh" templates-dir)
+                   hook-target)
+        (set-file-modes hook-target #o755))
+      t)))
+
 (defun specflow-initiate--docs-spec-template ()
   "Return docs unit spec.org template."
   "#+TITLE: docs – Specification
@@ -181,6 +221,12 @@ rules, and a docs unit for project documentation."
       (if source-rules
           (copy-file source-rules (expand-file-name ".specflow/rules.org"))
         (user-error "Cannot find rules.org in specflow installation")))
+    ;; Copy Claude Code configuration (.claude/ directory)
+    (condition-case nil
+        (unless (specflow-initiate--copy-claude-config)
+          (message "Note: Claude Code templates not found; .claude/ not created"))
+      (error
+       (message "Warning: Failed to create .claude/ configuration")))
     ;; Write .specflow/units/docs/spec.org
     (write-region (specflow-initiate--docs-spec-template)
                   nil (expand-file-name ".specflow/units/docs/spec.org"))
@@ -199,6 +245,7 @@ Created:
   .specflow/todo.org           (root tasks)
   .specflow/rules.org          (operational rules)
   .specflow/units/docs/        (docs unit)
+  .claude/                     (Claude Code phase enforcement)
   src/                         (source directory)
   tests/                       (test directory)
   CLAUDE.md                    (generated from rules.org)
@@ -215,6 +262,7 @@ Created:
   .specflow/todo.org           (root tasks)
   .specflow/rules.org          (operational rules)
   .specflow/units/docs/        (docs unit)
+  .claude/                     (Claude Code phase enforcement)
   src/                         (source directory)
   tests/                       (test directory)
 
@@ -232,6 +280,7 @@ Created:
   .specflow/todo.org           (root tasks)
   .specflow/rules.org          (operational rules)
   .specflow/units/docs/        (docs unit)
+  .claude/                     (Claude Code phase enforcement)
   src/                         (source directory)
   tests/                       (test directory)
 
