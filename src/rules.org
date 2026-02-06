@@ -390,52 +390,10 @@ Adapt these templates to your project's needs. The =.specflow/= structure is fix
   :TAGS: spec template structure
   :END:
 
-Unit specifications (=spec.org=) should follow a consistent structure.
+Required sections: Purpose, Scope (In Scope / Out of Scope), Public Interface, Testing Requirements.
+Recommended sections (when relevant): Invariants, Error Handling, Dependencies, Non-Goals, Open Questions, Plan Notes.
 
-** Required Sections
-
-Every =spec.org= MUST include:
-
-- *Purpose* – Why this unit exists, what problem it solves. 1–3 paragraphs, no implementation detail.
-
-- *Scope* – In Scope/Owns (bullet list of responsibilities) and Out of Scope/Does Not Own (explicit non-goals). Anything not listed under "In Scope" is forbidden.
-
-- *Public Interface* – What other units may rely on: inputs (types, shape, semantics), outputs (types, guarantees), commands or API functions. Changes trigger the interface-change protocol.
-
-- *Testing Requirements* – Minimum required test coverage. Claude must refuse to implement without tests for each item.
-
-** Recommended Sections
-
-Include these when relevant:
-
-- *Invariants* – Statements that must ALWAYS hold (testable truths): deterministic output, idempotency, ordering guarantees, etc.
-
-- *Error Handling* – Hard failures (signal error, abort) vs soft failures (warn, continue with fallback).
-
-- *Dependencies* – Upstream (what this unit depends on) and downstream (who depends on this unit).
-
-- *Non-Goals* – Explicit things this unit will NOT do (clarifies scope boundaries).
-
-- *Open Questions* – Unresolved design decisions. Must be empty or acknowledged before implementation.
-
-- *Plan Notes* – Dated decisions and rationale. Captures the "why" behind spec choices.
-
-** Section Order
-
-Recommended order in =spec.org= files:
-
-1. Purpose
-2. Scope (In Scope / Out of Scope)
-3. Public Interface
-4. Invariants
-5. Error Handling
-6. Dependencies
-7. Testing Requirements
-8. Non-Goals
-9. Open Questions
-10. Plan Notes
-
-See existing unit specs (e.g., =.specflow/units/org-store/spec.org=) for examples.
+The =spec-reviewer= agent carries the full checklist with descriptions, quality checks, and section ordering.
 
 * Operating Procedure
   :PROPERTIES:
@@ -528,41 +486,17 @@ Each unit progresses strictly through:
 
 **Plan → Specify → Scaffold → Implement → Validate → Document**
 
-Claude MUST obey the following rules:
+| Phase     | May Edit                | Must NOT Edit            |
+|-----------+-------------------------+--------------------------|
+| Plan      | nothing (read-only)     | all files                |
+| Specify   | spec.org                | code, todo.org           |
+| Scaffold  | unit todo.org           | code, spec.org           |
+| Implement | all files               | nothing                  |
+| Validate  | test files              | source, specs            |
+| Document  | docs, specs, todos      | source code              |
 
-** Plan
-- Do NOT write or modify code
-- Do NOT write specs or TODOs
-- ONLY:
-  - summarize understanding
-  - identify constraints
-  - list open design questions
-  - propose options
-  - request confirmation
-
-** Specify
-- ONLY edit =spec.org=
-- Do NOT write code
-- Ask for review before proceeding
-
-** Scaffold
-- ONLY write unit =todo.org= (in =.specflow/units/<unit>/=)
-- Update =spec.org= scope/constraints if needed
-- Do NOT write implementation code
-
-** Implement
-- Write code and tests strictly per spec and TODOs
-
-** Validate
-- Do NOT change behavior
-- ONLY validate and test existing behavior
-
-** Document
-- Do NOT change behavior
-- Update documentation to reflect implemented behavior
-- Verify =spec.org= contains all Required Sections (Purpose, Scope, Public Interface, Testing Requirements)
-- Add any missing Recommended Sections that emerged during implementation
-- Ensure spec accurately reflects what was built (not what was planned)
+The =.claude/hooks/phase-guard.sh= hook enforces these rules at runtime.
+Phase-specific agents carry detailed guidance for their phase.
 
 * Patch Protocol
   :PROPERTIES:
@@ -633,13 +567,10 @@ If a patch grows in scope during execution, STOP and convert to full workflow.
   :TAGS: plan output
   :END:
 
-When in **Plan** phase, output must include:
+Plan phase output must include: summary of unit responsibility, known constraints,
+open design questions, proposed next actions, and explicit request for confirmation.
 
-1. Summary of unit responsibility (1–2 paragraphs)
-2. Known constraints (from spec / architecture)
-3. Open design questions
-4. Proposed next actions
-5. Explicit request for confirmation before proceeding
+The =plan-researcher= agent carries the full output structure.
 
 * Bug Protocol
   :PROPERTIES:
@@ -680,36 +611,13 @@ This applies even to "simple" or obvious fixes.
   :TAGS: todo format structure
   :END:
 
-The =.specflow/todo.org= file uses three sections:
+=.specflow/todo.org= uses three sections: Active, Backlog, Completed.
+- Exactly ONE =NEXT= task in Active (the current focus)
+- Tasks are outcome-based (Given/When/Then), not action-based
+- =DONE= tasks move to Completed with =CLOSED: [YYYY-MM-DD]= and brief summary
+- Do NOT leave DONE tasks in Active
 
-** Active
-
-Contains tasks currently being worked on:
-- Exactly ONE =NEXT= task at the top (the current focus)
-- Followed by ranked =TODO= tasks (well-defined, high priority)
-- Tasks should be outcome-based (Given/When/Then style)
-
-** Backlog
-
-Contains tasks that are:
-- Less immediate or lower priority
-- Less well-defined (may need refinement before activation)
-- Candidates for future NEXT tasks
-
-** Completed
-
-Contains =DONE= tasks with:
-- =CLOSED: [YYYY-MM-DD]= timestamp
-- 1-2 line summary of what was accomplished
-
-When a task is completed:
-1. Change =NEXT= or =TODO= to =DONE=
-2. Add =CLOSED: [YYYY-MM-DD]= timestamp
-3. Add brief summary
-4. Move the entire entry from Active to Completed section
-
-Do NOT leave DONE tasks in the Active section.
-Avoid excessive whitespace between tasks and headers.
+The =scaffold-writer= agent carries the full format specification.
 
 * Checkpoint Commits
   :PROPERTIES:
