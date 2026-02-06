@@ -9,28 +9,15 @@
 #   0 — allow the operation
 #   2 — deny (stderr message fed to Claude)
 #
-# Fail-open: missing control plane, missing phase, or parse errors → exit 0
+# Fail-closed: missing control plane, missing phase, or parse errors → exit 2
+# Exception: control plane (specflow.org) is always editable.
 
 set -euo pipefail
 
 CONTROL_PLANE="${CLAUDE_PROJECT_DIR:-.}/.specflow/specflow.org"
 
-# --- Fail open if control plane missing ---
-if [[ ! -f "$CONTROL_PLANE" ]]; then
-  exit 0
-fi
-
-# --- Read stdin JSON ---
+# --- Read stdin JSON (before control plane check so we can identify file) ---
 INPUT=$(cat)
-
-# --- Extract phase from control plane ---
-# Portable: no grep -P on macOS. Use sed to extract the phase value.
-PHASE=$(sed -n 's/^[[:space:]]*:SPEC_FLOW_PHASE:[[:space:]]*\([^[:space:]]*\).*/\1/p' "$CONTROL_PLANE" 2>/dev/null | head -1)
-
-# Fail open if phase not found or empty
-if [[ -z "$PHASE" ]]; then
-  exit 0
-fi
 
 # --- Extract file path and tool name from stdin JSON ---
 # Use python3 for reliable JSON parsing (available on macOS)
@@ -54,23 +41,42 @@ except:
     print('')
 " 2>/dev/null || true)
 
-# Fail open if we couldn't parse the file path
+# Fail closed if we couldn't parse the file path
 if [[ -z "$FILE_PATH" ]]; then
+  echo "Phase guard: could not parse file path from tool input. Blocking edit." >&2
+  exit 2
+fi
+
+# --- Check if target is the control plane (always allowed) ---
+FILE_BASENAME=$(basename "$FILE_PATH")
+if [[ "$FILE_BASENAME" == "specflow.org" ]] && [[ "$FILE_PATH" == */.specflow/* ]]; then
   exit 0
 fi
 
+# --- Fail closed if control plane missing ---
+if [[ ! -f "$CONTROL_PLANE" ]]; then
+  echo "Phase guard: control plane not found at $CONTROL_PLANE. Blocking edit." >&2
+  echo "Create .specflow/specflow.org with SPEC_FLOW_PHASE property to proceed." >&2
+  exit 2
+fi
+
+# --- Extract phase from control plane ---
+# Portable: no grep -P on macOS. Use sed to extract the phase value.
+PHASE=$(sed -n 's/^[[:space:]]*:SPEC_FLOW_PHASE:[[:space:]]*\([^[:space:]]*\).*/\1/p' "$CONTROL_PLANE" 2>/dev/null | head -1)
+
+# Fail closed if phase not found or empty
+if [[ -z "$PHASE" ]]; then
+  echo "Phase guard: SPEC_FLOW_PHASE not found in control plane. Blocking edit." >&2
+  echo "Set SPEC_FLOW_PHASE in .specflow/specflow.org to proceed." >&2
+  exit 2
+fi
+
 # --- Classify file path ---
-# Returns: control-plane, spec, todo, test, source, doc, unknown
+# Returns: spec, todo, test, source, doc, unknown
 classify_file() {
   local path="$1"
   local basename
   basename=$(basename "$path")
-
-  # Control plane: always editable (phase transitions happen in any phase)
-  if [[ "$basename" == "specflow.org" ]] && [[ "$path" == */.specflow/* ]]; then
-    echo "control-plane"
-    return
-  fi
 
   # Spec files
   if [[ "$basename" == "spec.org" ]]; then
@@ -114,11 +120,6 @@ classify_file() {
 }
 
 FILE_TYPE=$(classify_file "$FILE_PATH")
-
-# --- Control plane is always editable (phase transitions) ---
-if [[ "$FILE_TYPE" == "control-plane" ]]; then
-  exit 0
-fi
 
 # --- Apply phase rules ---
 deny() {
@@ -167,7 +168,9 @@ case "$PHASE" in
     ;;
 
   *)
-    # Unrecognized phase — fail open
-    exit 0
+    # Unrecognized phase — fail closed
+    echo "Phase guard: unrecognized phase \"$PHASE\". Blocking edit." >&2
+    echo "Valid phases: Plan, Specify, Scaffold, Implement, Validate, Document." >&2
+    exit 2
     ;;
 esac
