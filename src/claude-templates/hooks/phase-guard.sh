@@ -60,11 +60,17 @@ if [[ -z "$FILE_PATH" ]]; then
 fi
 
 # --- Classify file path ---
-# Returns: spec, todo, test, source, doc, unknown
+# Returns: control-plane, spec, todo, test, source, doc, unknown
 classify_file() {
   local path="$1"
   local basename
   basename=$(basename "$path")
+
+  # Control plane: always editable (phase transitions happen in any phase)
+  if [[ "$basename" == "specflow.org" ]] && [[ "$path" == */.specflow/* ]]; then
+    echo "control-plane"
+    return
+  fi
 
   # Spec files
   if [[ "$basename" == "spec.org" ]]; then
@@ -108,6 +114,11 @@ classify_file() {
 }
 
 FILE_TYPE=$(classify_file "$FILE_PATH")
+
+# --- Control plane is always editable (phase transitions) ---
+if [[ "$FILE_TYPE" == "control-plane" ]]; then
+  exit 0
+fi
 
 # --- Apply phase rules ---
 deny() {
