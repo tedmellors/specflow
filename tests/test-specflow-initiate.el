@@ -314,13 +314,11 @@
     (should (file-exists-p ".claude/hooks/phase-guard.sh"))))
 
 (ert-deftest specflow-test-initiate-creates-agents ()
-  "Test that initiate creates all 4 agent definition files."
+  "Test that initiate creates agent definition files."
   (specflow-test-with-empty-dir
     (specflow-initiate)
     (should (file-exists-p ".claude/agents/plan-researcher.md"))
-    (should (file-exists-p ".claude/agents/spec-reviewer.md"))
-    (should (file-exists-p ".claude/agents/test-validator.md"))
-    (should (file-exists-p ".claude/agents/scaffold-writer.md"))))
+    (should (file-exists-p ".claude/agents/test-validator.md"))))
 
 (ert-deftest specflow-test-initiate-settings-content ()
   "Test that settings.json contains hook configuration."
@@ -354,8 +352,7 @@
   "Test that agent files contain tools frontmatter."
   (specflow-test-with-empty-dir
     (specflow-initiate)
-    (dolist (agent '("plan-researcher.md" "spec-reviewer.md"
-                     "test-validator.md" "scaffold-writer.md"))
+    (dolist (agent '("plan-researcher.md" "test-validator.md"))
       (let ((content (with-temp-buffer
                        (insert-file-contents (concat ".claude/agents/" agent))
                        (buffer-string))))

@@ -390,10 +390,34 @@ Adapt these templates to your project's needs. The =.specflow/= structure is fix
   :TAGS: spec template structure
   :END:
 
-Required sections: Purpose, Scope (In Scope / Out of Scope), Public Interface, Testing Requirements.
-Recommended sections (when relevant): Invariants, Error Handling, Dependencies, Non-Goals, Open Questions, Plan Notes.
+** Required Sections
 
-The =spec-reviewer= agent carries the full checklist with descriptions, quality checks, and section ordering.
+- **Purpose** — Why this unit exists, what problem it solves. 1–3 paragraphs, no implementation detail.
+- **Scope** — Must have In Scope/Owns (bullet list) and Out of Scope/Does Not Own. Anything not listed under In Scope is forbidden.
+- **Public Interface** — Inputs, outputs, commands or API functions. Changes trigger the interface-change protocol.
+- **Testing Requirements** — Minimum required test coverage with Given/When/Then format. Implementation refused without tests for each item.
+
+** Recommended Sections (when relevant)
+
+- **Invariants** — Testable truths: determinism, idempotency, ordering guarantees.
+- **Error Handling** — Hard failures (signal error, abort) vs soft failures (warn, fallback).
+- **Dependencies** — Upstream (what this unit depends on) and downstream (who depends on it).
+- **Non-Goals** — What this unit will NOT do.
+- **Open Questions** — Must be empty or acknowledged before implementation.
+- **Plan Notes** — Dated decisions and rationale.
+
+** Section Order
+
+Purpose → Scope → Public Interface → Invariants → Error Handling → Dependencies → Testing Requirements → Non-Goals → Open Questions → Plan Notes
+
+** Quality Checks
+
+When reviewing or writing a spec:
+- Scope boundaries are explicit (not vague)
+- Public interface is specific enough to implement against
+- Testing requirements use Given/When/Then format
+- No implementation details leak into the spec
+- Open questions are acknowledged (not silently deferred)
 
 * Operating Procedure
   :PROPERTIES:
@@ -617,7 +641,50 @@ This applies even to "simple" or obvious fixes.
 - =DONE= tasks move to Completed with =CLOSED: [YYYY-MM-DD]= and brief summary
 - Do NOT leave DONE tasks in Active
 
-The =scaffold-writer= agent carries the full format specification.
+** File Template
+
+#+BEGIN_EXAMPLE
+  #+TITLE: <unit> – Tasks
+  #+STARTUP: overview
+  #+SEQ_TODO: TODO NEXT WAITING | DONE
+
+  * Active
+
+  ** NEXT <first task>
+     Given ..., When ..., Then ...
+
+     Acceptance criteria:
+     - ...
+
+  ** TODO <second task>
+     ...
+
+  * Backlog
+
+  * Completed
+#+END_EXAMPLE
+
+** Section Rules
+
+- **Active**: Exactly ONE =NEXT= task. Remaining ranked by dependency as =TODO=. Each task has Given/When/Then and acceptance criteria.
+- **Backlog**: Less immediate or lower priority. May need refinement before activation.
+- **Completed**: =DONE= tasks with =CLOSED: [YYYY-MM-DD]= and 1-2 line summary.
+
+** Completing a Task
+
+1. Change =NEXT= or =TODO= to =DONE=
+2. Add =CLOSED: [YYYY-MM-DD]= timestamp
+3. Add brief summary (1-2 lines)
+4. Move the entry from Active to Completed section
+
+** Scaffold Process
+
+When creating a unit todo.org from its spec:
+1. Read spec.org and parent spec (if PARENT declared)
+2. Identify all behaviors, interfaces, and testing requirements
+3. Break into implementable tasks with clear acceptance criteria
+4. Order by dependency (foundations first)
+5. Mark the first task as NEXT
 
 * Checkpoint Commits
   :PROPERTIES:
@@ -639,6 +706,8 @@ This ensures:
 
 Format: =git commit -m "<unit>: <phase> phase complete"= then =git push=
 
+This is a workflow convention for Claude to follow, not system-enforced.
+
 * Phase Transition Stops
   :PROPERTIES:
   :RULE_ID: phase-transition-stops
@@ -646,6 +715,8 @@ Format: =git commit -m "<unit>: <phase> phase complete"= then =git push=
   :PHASE: all
   :TAGS: phase transition workflow
   :END:
+
+This directive governs Claude behavior and cannot be system-enforced.
 
 At EVERY phase transition, Claude MUST:
 

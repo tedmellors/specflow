@@ -135,8 +135,7 @@ templates directory not found."
       (copy-file (expand-file-name "settings.json" templates-dir)
                  (expand-file-name ".claude/settings.json"))
       ;; Copy agents
-      (dolist (agent '("plan-researcher.md" "spec-reviewer.md"
-                       "test-validator.md" "scaffold-writer.md"))
+      (dolist (agent '("plan-researcher.md" "test-validator.md"))
         (copy-file (expand-file-name (concat "agents/" agent) templates-dir)
                    (expand-file-name (concat ".claude/agents/" agent))))
       ;; Copy phase-guard hook and set executable
