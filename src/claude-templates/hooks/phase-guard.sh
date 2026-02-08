@@ -53,6 +53,13 @@ if [[ "$FILE_BASENAME" == "specflow.org" ]] && [[ "$FILE_PATH" == */.specflow/* 
   exit 0
 fi
 
+# --- Allow writes to Claude Code operational directory (~/.claude/) ---
+# Plan files, auto-memory, and session data live here.
+# These are not project files and should not be phase-guarded.
+if [[ -n "$HOME" ]] && [[ "$FILE_PATH" == "$HOME/.claude/"* ]]; then
+  exit 0
+fi
+
 # --- Fail closed if control plane missing ---
 if [[ ! -f "$CONTROL_PLANE" ]]; then
   echo "Phase guard: control plane not found at $CONTROL_PLANE. Blocking edit." >&2
