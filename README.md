@@ -235,7 +235,7 @@ A `PreToolUse` hook that blocks `Edit` and `Write` operations that violate the c
 | Validate | Test files | Source and spec files |
 | Document | Docs, specs, todos | Source code |
 
-The hook fails open: if the control plane is missing or malformed, operations are allowed.
+The hook fails closed: if the control plane is missing or malformed, operations are blocked (except edits to the control plane itself, which are always allowed as an escape hatch).
 
 ### Custom Agents
 
@@ -254,7 +254,7 @@ Work proceeds through six phases:
 |-------|-----------------|
 | **Plan** | Summarize understanding, identify constraints, propose options. No code or specs. |
 | **Specify** | Edit spec.org only. Define outcomes and requirements. |
-| **Scaffold** | Write CLAUDE.md and todo.org. No implementation code. |
+| **Scaffold** | Write todo.org. No implementation code. |
 | **Implement** | Write code and tests strictly per spec. |
 | **Validate** | Run tests, verify behavior. No code changes. |
 | **Document** | Write documentation only. No code changes. |

@@ -81,6 +81,9 @@ Uses new .specflow/ directory structure."
                          (expand-file-name ".specflow/units/hydrate/spec.org" project-root))
            (write-region "Hydrate todo content" nil
                          (expand-file-name ".specflow/units/hydrate/todo.org" project-root))
+           ;; Write CLAUDE.md at project root
+           (write-region "# Test Rules" nil
+                         (expand-file-name "CLAUDE.md" project-root))
            ,@body)
        ;; Cleanup
        (delete-directory project-root t))))
@@ -165,14 +168,29 @@ Uses new .specflow/ directory structure."
         (should (string-match-p "Parent chain: docs" header))))))
 
 (ert-deftest specflow-test-hydrate-header-includes-files ()
-  "Test that header includes file pointers."
+  "Test that header includes file pointers in correct order."
   (specflow-test-with-hydrate-project
     (let ((default-directory project-root))
       (let ((header (specflow-hydrate--generate-header)))
+        ;; All expected pointers present
+        (should (string-match-p "project rules" header))
+        (should (string-match-p "parent: docs" header))
         (should (string-match-p "control plane" header))
-        (should (string-match-p "root todo" header))
         (should (string-match-p "unit SPEC" header))
-        (should (string-match-p "unit TODO" header))))))
+        (should (string-match-p "unit TODO" header))
+        (should (string-match-p "root todo" header))
+        ;; No unit RULES pointer
+        (should-not (string-match-p "unit RULES" header))
+        ;; Ordering: project rules before control plane, control plane before root todo
+        (let ((rules-pos (string-match "project rules" header))
+              (parent-pos (string-match "parent: docs" header))
+              (cp-pos (string-match "control plane" header))
+              (spec-pos (string-match "unit SPEC" header))
+              (todo-pos (string-match "root todo" header)))
+          (should (< rules-pos parent-pos))
+          (should (< parent-pos cp-pos))
+          (should (< cp-pos spec-pos))
+          (should (< spec-pos todo-pos)))))))
 
 (ert-deftest specflow-test-hydrate-header-includes-phase-actions ()
   "Test that header includes phase-specific actions."

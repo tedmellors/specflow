@@ -47,8 +47,7 @@ Returns a list of path strings, or nil if VALUE is nil or empty."
 - Define outcomes and requirements
 - DO NOT write implementation code")
      ((string= phase-lower "scaffold")
-      "- Write CLAUDE.md (unit rules)
-- Write todo.org (outcome-based tasks)
+      "- Write todo.org (outcome-based tasks)
 - DO NOT write implementation code")
      ((string= phase-lower "implement")
       "- Write code and tests strictly per spec
@@ -101,29 +100,30 @@ Returns the heading and its immediate body, or a placeholder if not found."
 PROJECT-ROOT is the project root directory.
 CP-PATH is the control plane path."
   (let ((pointers nil))
-    ;; Control plane (always include)
-    (push (format "- %s (control plane)" cp-path) pointers)
-    ;; Root todo.org (in .specflow/)
-    (let ((root-todo (expand-file-name ".specflow/todo.org" project-root)))
-      (push (format "- %s (root todo)" root-todo) pointers))
-    ;; Unit files
-    (when unit-entry
-      (let ((spec (plist-get unit-entry :spec))
-            (todo (plist-get unit-entry :todo))
-            (rules (plist-get unit-entry :rules)))
-        (when spec
-          (push (format "- %s (unit SPEC)" spec) pointers))
-        (when todo
-          (push (format "- %s (unit TODO)" todo) pointers))
-        (when rules
-          (push (format "- %s (unit RULES)" rules) pointers))))
-    ;; Parent specs
+    ;; 1. CLAUDE.md (project rules)
+    (let ((claude-md (expand-file-name "CLAUDE.md" project-root)))
+      (when (file-exists-p claude-md)
+        (push (format "- %s (project rules)" claude-md) pointers)))
+    ;; 2. Parent specs (authoritative constraints)
     (dolist (parent parent-chain)
       (let* ((parent-entry (specflow-org-store-read-unit parent cp-path))
              (parent-spec (plist-get parent-entry :spec)))
         (when parent-spec
           (dolist (spec-path (specflow-hydrate--split-paths parent-spec))
             (push (format "- %s (parent: %s)" spec-path parent) pointers)))))
+    ;; 3. Control plane
+    (push (format "- %s (control plane)" cp-path) pointers)
+    ;; 4-5. Unit files
+    (when unit-entry
+      (let ((spec (plist-get unit-entry :spec))
+            (todo (plist-get unit-entry :todo)))
+        (when spec
+          (push (format "- %s (unit SPEC)" spec) pointers))
+        (when todo
+          (push (format "- %s (unit TODO)" todo) pointers))))
+    ;; 6. Root todo.org
+    (let ((root-todo (expand-file-name ".specflow/todo.org" project-root)))
+      (push (format "- %s (root todo)" root-todo) pointers))
     (nreverse pointers)))
 
 ;;;; Header Generation
@@ -268,19 +268,6 @@ Safe buffers: *scratch*, buffers with gptel/claude/chat in name."
       (user-error "No TODO found for unit: %s" active-unit))
     (find-file (expand-file-name todo (file-name-directory cp-path)))
     (message "Opened unit todo: %s" todo)))
-
-(defun specflow-hydrate-open-active-unit-rules ()
-  "Open the active unit's rules file (CLAUDE.md)."
-  (interactive)
-  (let* ((cp-path (specflow-org-store-find-control-plane))
-         (state (and cp-path (specflow-org-store-read-project-state cp-path)))
-         (active-unit (plist-get state :active-unit))
-         (unit-entry (and active-unit (specflow-org-store-read-unit active-unit cp-path)))
-         (rules (plist-get unit-entry :rules)))
-    (unless rules
-      (user-error "No RULES found for unit: %s" active-unit))
-    (find-file (expand-file-name rules (file-name-directory cp-path)))
-    (message "Opened unit rules: %s" rules)))
 
 ;;;; Violation Patterns
 
