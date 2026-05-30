@@ -235,11 +235,13 @@ Phase transitions are manual. Update the control plane's `SPEC_FLOW_PHASE` prope
 
 ## Project Structure
 
-SpecFlow uses a hidden `.specflow/` directory for development artifacts:
+SpecFlow runs from a **control directory** that sits outside the repository.
+The `.specflow/` artifacts and the generated `CLAUDE.md` live at the control-directory
+root, while the actual repository lives one level down in a `REPO/` sub-directory:
 
 ```
-your-project/
-├── .specflow/                    # Development artifacts (gitignored)
+control-dir/                      # SpecFlow control directory (NOT the repo)
+├── .specflow/                    # Development artifacts
 │   ├── specflow.org              # Control plane (required)
 │   ├── todo.org                  # Root unit task list / master TODO (required)
 │   ├── rules.org                 # AI rules (generates CLAUDE.md)
@@ -249,13 +251,14 @@ your-project/
 │       └── <unit-name>/
 │           ├── spec.org          # Unit specification
 │           └── todo.org          # Unit tasks
-├── src/                          # All source files
-├── tests/                        # All test files (flat)
 ├── CLAUDE.md                     # Generated from .specflow/rules.org
-└── README.md                     # Project documentation
+└── REPO/                         # The repository (git root); existing or new
+    ├── src/                      # All source files
+    ├── tests/                    # All test files (flat)
+    └── README.md                 # Project documentation
 ```
 
-The `.specflow/` directory contains specifications, tasks, and rules—everything an AI assistant needs to understand project state. The generated `CLAUDE.md` at the project root provides Claude Code with operational rules.
+The `.specflow/` directory contains specifications, tasks, and rules—everything an AI assistant needs to understand project state, kept **outside** the repository so SpecFlow artifacts are never committed to it. The generated `CLAUDE.md` at the control-directory root provides Claude Code with operational rules. The `REPO/` sub-directory name is configurable via `specflow-initiate-repo-dirname`; point it at an existing repository to bring SpecFlow to a project that already exists.
 
 ## Running Tests
 

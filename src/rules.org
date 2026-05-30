@@ -305,14 +305,19 @@ Markdown (=.md=) files are created **only** when explicitly requested
   :TAGS: units structure
   :END:
 
-SpecFlow uses a hidden =.specflow/= directory at the project root for all development artifacts.
+SpecFlow runs from a **control directory** that sits OUTSIDE the repository.
+The hidden =.specflow/= directory and the generated =CLAUDE.md= live at the
+control-directory root, while the actual repository lives one level down in a
+=REPO/= sub-directory. This keeps SpecFlow artifacts out of the repository and
+lets you drive development from the outside — including for repositories that
+already exist (place the existing repo at =REPO/= before initializing).
 
 ** Fixed Structure (Required)
 
 The =.specflow/= directory and =CLAUDE.md= are required and have a fixed structure:
 
 #+BEGIN_EXAMPLE
-project/
+control-dir/                  # SpecFlow control directory (NOT the repo)
 ├── .specflow/
 │   ├── specflow.org          # Control plane (active unit, phase)
 │   ├── todo.org              # Root unit task list (master TODO)
@@ -324,8 +329,15 @@ project/
 │           ├── spec.org      # Unit specification
 │           └── todo.org      # Unit tasks
 ├── CLAUDE.md                 # Generated from .specflow/rules.org
-└── ...                       # Project source (see suggested layouts below)
+└── REPO/                     # The repository (git root); existing or new
+    └── ...                   # Project source (see suggested layouts below)
 #+END_EXAMPLE
+
+The =REPO/= directory is the repository itself (its git root). SpecFlow never
+writes its control artifacts inside =REPO/=; commits, branches, and source
+changes all target =REPO/=, while =.specflow/= and =CLAUDE.md= stay outside it.
+The sub-directory name defaults to =REPO= and is configurable via
+=specflow-initiate-repo-dirname=.
 
 The =root= unit is the project-level parent unit and is special-cased:
 its spec lives at =.specflow/units/root/spec.org=, but its task list is the
@@ -336,19 +348,22 @@ Unit scope and constraints are defined in =spec.org= (no separate CLAUDE.md per 
 
 ** Suggested Layouts
 
-Project source structure is flexible. Choose a layout that fits your project:
+Structure INSIDE =REPO/= is flexible. Choose a layout that fits your project.
+The =.specflow/= control plane and =CLAUDE.md= always remain in the control
+directory, one level above =REPO/=.
 
 *** Template A: Simple
 
 For libraries, CLI tools, single services, Emacs packages.
 
 #+BEGIN_EXAMPLE
-project/
+control-dir/
 ├── .specflow/
-├── src/                      # All source code
-├── tests/                    # All tests
 ├── CLAUDE.md
-└── README.md
+└── REPO/
+    ├── src/                  # All source code
+    ├── tests/                # All tests
+    └── README.md
 #+END_EXAMPLE
 
 *** Template B: Frontend + Backend
@@ -356,18 +371,19 @@ project/
 For web apps and full-stack projects (often polyglot).
 
 #+BEGIN_EXAMPLE
-project/
+control-dir/
 ├── .specflow/
-├── frontend/
-│   ├── src/
-│   ├── tests/
-│   └── package.json
-├── backend/
-│   ├── src/
-│   ├── tests/
-│   └── pyproject.toml        # or go.mod, Cargo.toml, etc.
 ├── CLAUDE.md
-└── README.md
+└── REPO/
+    ├── frontend/
+    │   ├── src/
+    │   ├── tests/
+    │   └── package.json
+    ├── backend/
+    │   ├── src/
+    │   ├── tests/
+    │   └── pyproject.toml    # or go.mod, Cargo.toml, etc.
+    └── README.md
 #+END_EXAMPLE
 
 *** Template C: Monorepo
@@ -375,18 +391,19 @@ project/
 For large projects, microservices, or multiple related apps.
 
 #+BEGIN_EXAMPLE
-project/
+control-dir/
 ├── .specflow/
-├── apps/
-│   ├── web/
-│   └── api/
-├── packages/                 # or libs/
-│   └── shared/
 ├── CLAUDE.md
-└── README.md
+└── REPO/
+    ├── apps/
+    │   ├── web/
+    │   └── api/
+    ├── packages/             # or libs/
+    │   └── shared/
+    └── README.md
 #+END_EXAMPLE
 
-Adapt these templates to your project's needs. The =.specflow/= structure is fixed; source layout is guidance.
+Adapt these templates to your project's needs. The =.specflow/= structure and the =REPO/= boundary are fixed; the layout inside =REPO/= is guidance.
 
 * Specification Structure
   :PROPERTIES:

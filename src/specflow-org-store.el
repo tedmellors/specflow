@@ -285,7 +285,7 @@ CONTROL-PLANE-PATH is optional; if nil, discovered via
 
 Returns a plist:
   (:name \"org-store\"
-   :dir \"src/my_project/org-store/\"
+   :dir \"REPO/src/my_project/org-store/\"
    :spec \".specflow/units/org-store/spec.org\"
    :todo \".specflow/units/org-store/todo.org\"
    :parent \"core\"

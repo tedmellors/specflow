@@ -162,16 +162,39 @@ The root unit's task list is the master TODO at .specflow/todo.org."
     (should-not (file-exists-p ".specflow/units/root/todo.org"))))
 
 (ert-deftest specflow-test-initiate-creates-src-dir ()
-  "Test that initiate creates src/ directory."
+  "Test that initiate creates REPO/src/ directory."
   (specflow-test-with-empty-dir
     (specflow-initiate)
-    (should (file-directory-p "src"))))
+    (should (file-directory-p "REPO/src"))))
 
 (ert-deftest specflow-test-initiate-creates-tests-dir ()
-  "Test that initiate creates tests/ directory."
+  "Test that initiate creates REPO/tests/ directory."
   (specflow-test-with-empty-dir
     (specflow-initiate)
-    (should (file-directory-p "tests"))))
+    (should (file-directory-p "REPO/tests"))))
+
+(ert-deftest specflow-test-initiate-no-src-at-control-root ()
+  "Test that src/ and tests/ are NOT created at the control-directory root.
+SpecFlow artifacts (.specflow/, CLAUDE.md) stay outside the repository."
+  (specflow-test-with-empty-dir
+    (specflow-initiate)
+    (should-not (file-directory-p "src"))
+    (should-not (file-directory-p "tests"))
+    ;; Control plane stays at the control-directory root, outside REPO/.
+    (should (file-exists-p ".specflow/specflow.org"))
+    (should-not (file-exists-p "REPO/.specflow/specflow.org"))))
+
+(ert-deftest specflow-test-initiate-preserves-existing-repo ()
+  "Test that initiate leaves an existing REPO/ directory untouched.
+This supports bringing SpecFlow to a repository that already exists."
+  (specflow-test-with-empty-dir
+    (make-directory "REPO" t)
+    (write-region "existing content" nil "REPO/existing-file.txt")
+    (specflow-initiate)
+    ;; Existing repo contents are preserved and not overwritten with scaffolding.
+    (should (file-exists-p "REPO/existing-file.txt"))
+    (should-not (file-directory-p "REPO/src"))
+    (should-not (file-directory-p "REPO/tests"))))
 
 ;;;; Full Initialization Tests - Content Verification
 

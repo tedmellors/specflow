@@ -12,19 +12,40 @@
 ;; It creates the minimal file structure needed to begin
 ;; SpecFlow-driven development in a new project directory.
 ;;
+;; SpecFlow runs from a control directory that sits OUTSIDE the repository.
+;; The .specflow/ control plane and generated CLAUDE.md live at the control
+;; directory root, while the actual repository lives one level down in a
+;; REPO/ sub-directory (configurable via `specflow-initiate-repo-dirname').
+;; This keeps SpecFlow artifacts out of the repository and lets you drive
+;; development from the outside, including for repositories that already exist
+;; (place the existing repo at REPO/ before running initiate).
+;;
 ;; Structure created:
-;;   .specflow/
-;;     specflow.org          - Control plane
-;;     todo.org              - Root unit tasks (the master TODO)
-;;     rules.org             - Full rules (copied from specflow installation)
-;;     units/
-;;       root/
-;;         spec.org          - Root unit specification (parent unit)
-;;   src/                    - Source code directory
-;;   tests/                  - Test directory
-;;   CLAUDE.md               - Generated from .specflow/rules.org
+;;   control-dir/              - Where you run specflow-initiate (NOT the repo)
+;;     .specflow/
+;;       specflow.org          - Control plane
+;;       todo.org              - Root unit tasks (the master TODO)
+;;       rules.org             - Full rules (copied from specflow installation)
+;;       units/
+;;         root/
+;;           spec.org          - Root unit specification (parent unit)
+;;     CLAUDE.md               - Generated from .specflow/rules.org
+;;     REPO/                   - The repository (git root); existing or new
+;;       src/                  - Source code directory
+;;       tests/                - Test directory
 
 ;;; Code:
+
+(defcustom specflow-initiate-repo-dirname "REPO"
+  "Name of the repository sub-directory created by `specflow-initiate'.
+SpecFlow's control plane (.specflow/) and the generated CLAUDE.md stay at the
+control-directory root, while source and tests live inside this sub-directory.
+This keeps SpecFlow artifacts outside the repository itself.  If a directory
+with this name already exists (e.g. an existing repository placed there),
+`specflow-initiate' leaves its contents untouched instead of scaffolding
+src/ and tests/."
+  :type 'string
+  :group 'specflow)
 
 (defun specflow-initiate--derive-project-name ()
   "Derive project name from current directory.
@@ -139,10 +160,16 @@ rules, and a root unit for project documentation."
       (user-error "%s" error-msg)))
   ;; Derive project name
   (let ((project-name (specflow-initiate--derive-project-name)))
-    ;; Create directories
+    ;; Create directories. The control plane (.specflow/) stays at the
+    ;; control-directory root; source/tests live inside the REPO/ sub-directory
+    ;; so SpecFlow artifacts remain outside the repository itself.
     (make-directory (expand-file-name ".specflow/units/root") t)
-    (make-directory (expand-file-name "src") t)
-    (make-directory (expand-file-name "tests") t)
+    ;; Scaffold src/ and tests/ inside the repo dir, but leave an existing
+    ;; repository (already placed at REPO/) untouched.
+    (let ((repo-dir (expand-file-name specflow-initiate-repo-dirname)))
+      (unless (file-directory-p repo-dir)
+        (make-directory (expand-file-name "src" repo-dir) t)
+        (make-directory (expand-file-name "tests" repo-dir) t)))
     ;; Write .specflow/specflow.org (control plane)
     (write-region (specflow-initiate--control-plane-template project-name)
                   nil (expand-file-name ".specflow/specflow.org"))
@@ -159,60 +186,40 @@ rules, and a root unit for project documentation."
     ;; so no separate unit todo.org is created here.
     (write-region (specflow-initiate--root-spec-template)
                   nil (expand-file-name ".specflow/units/root/spec.org"))
-    ;; Generate CLAUDE.md via specflow-hydrate-rules if available
-    (if (fboundp 'specflow-hydrate-rules)
-        (condition-case err
-            (progn
-              (specflow-hydrate-rules)
-              (message "SpecFlow project \"%s\" initialized.
+    ;; Generate CLAUDE.md via specflow-hydrate-rules if available, then report.
+    (let* ((repo specflow-initiate-repo-dirname)
+           (claude-status
+            (if (fboundp 'specflow-hydrate-rules)
+                (condition-case err
+                    (progn (specflow-hydrate-rules) 'ok)
+                  (error (cons 'failed (error-message-string err))))
+              'unavailable)))
+      (message "SpecFlow project \"%s\" initialized%s.
 
 Created:
   .specflow/specflow.org       (control plane)
   .specflow/todo.org           (root tasks)
   .specflow/rules.org          (operational rules)
   .specflow/units/root/        (root unit)
-  src/                         (source directory)
-  tests/                       (test directory)
-  CLAUDE.md                    (generated from rules.org)
+  %s/src/                      (source directory)
+  %s/tests/                    (test directory)%s
 
-Next steps:
+%sNext steps:
   1. Review .specflow/specflow.org
   2. Start with root: Plan phase
-  3. Draft spec.org" project-name))
-          (error
-           (message "SpecFlow project \"%s\" initialized (CLAUDE.md not generated: %s).
-
-Created:
-  .specflow/specflow.org       (control plane)
-  .specflow/todo.org           (root tasks)
-  .specflow/rules.org          (operational rules)
-  .specflow/units/root/        (root unit)
-  src/                         (source directory)
-  tests/                       (test directory)
-
-Run M-x specflow-hydrate-rules to generate CLAUDE.md.
-
-Next steps:
-  1. Review .specflow/specflow.org
-  2. Start with root: Plan phase
-  3. Draft spec.org" project-name (error-message-string err))))
-      ;; specflow-hydrate-rules not available
-      (message "SpecFlow project \"%s\" initialized (CLAUDE.md not generated).
-
-Created:
-  .specflow/specflow.org       (control plane)
-  .specflow/todo.org           (root tasks)
-  .specflow/rules.org          (operational rules)
-  .specflow/units/root/        (root unit)
-  src/                         (source directory)
-  tests/                       (test directory)
-
-Run M-x specflow-hydrate-rules to generate CLAUDE.md.
-
-Next steps:
-  1. Review .specflow/specflow.org
-  2. Start with root: Plan phase
-  3. Draft spec.org" project-name))))
+  3. Draft spec.org"
+               project-name
+               (pcase claude-status
+                 ('ok "")
+                 ('unavailable " (CLAUDE.md not generated)")
+                 (_ (format " (CLAUDE.md not generated: %s)" (cdr claude-status))))
+               repo repo
+               (if (eq claude-status 'ok)
+                   "\n  CLAUDE.md                    (generated from rules.org)"
+                 "")
+               (if (eq claude-status 'ok)
+                   ""
+                 "Run M-x specflow-hydrate-rules to generate CLAUDE.md.\n\n")))))
 
 (provide 'specflow-initiate)
 ;;; specflow-initiate.el ends here
