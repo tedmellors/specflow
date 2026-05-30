@@ -15,12 +15,11 @@
 ;; Structure created:
 ;;   .specflow/
 ;;     specflow.org          - Control plane
-;;     todo.org              - Root tasks
+;;     todo.org              - Root unit tasks (the master TODO)
 ;;     rules.org             - Full rules (copied from specflow installation)
 ;;     units/
-;;       docs/
-;;         spec.org          - Docs unit specification
-;;         todo.org          - Docs unit tasks
+;;       root/
+;;         spec.org          - Root unit specification (parent unit)
 ;;   src/                    - Source code directory
 ;;   tests/                  - Test directory
 ;;   CLAUDE.md               - Generated from .specflow/rules.org
@@ -58,14 +57,15 @@ This is the SpecFlow control plane for %s.
 
 * Units
 
-** docs
+** root
    :PROPERTIES:
-   :SPEC: .specflow/units/docs/spec.org
-   :TODO: .specflow/units/docs/todo.org
+   :SPEC: .specflow/units/root/spec.org
+   :TODO: .specflow/todo.org
    :END:
 
-The docs unit defines project-level documentation: overview, architecture,
-and cross-cutting constraints. It has no source directory.
+The root unit is the project-level parent unit. It owns the project
+specification, architecture, and cross-cutting constraints. Its task list is
+the master TODO at .specflow/todo.org. It has no source directory.
 " project-name project-name))
 
 (defun specflow-initiate--todo-template (project-name)
@@ -106,16 +106,17 @@ Returns the path to rules.org, or nil if not found."
     (when (and rules-path (file-exists-p rules-path))
       rules-path)))
 
-(defun specflow-initiate--docs-spec-template ()
-  "Return docs unit spec.org template."
-  "#+TITLE: docs – Specification
+(defun specflow-initiate--root-spec-template ()
+  "Return root unit spec.org template."
+  "#+TITLE: root – Specification
 #+STARTUP: overview
 
 * Purpose
 
-The docs unit is the parent unit for this project.
+The root unit is the parent unit for this project.
 It owns project-level documentation that guides all other work.
-This unit has no source code - its deliverable is spec.org.
+This unit has no source code - its deliverables are this spec and the
+master TODO at .specflow/todo.org.
 
 * Scope
 
@@ -127,38 +128,10 @@ This unit has no source code - its deliverable is spec.org.
 - Unit-specific specifications (belong in each unit's spec.org)
 ")
 
-(defun specflow-initiate--docs-todo-template ()
-  "Return docs unit todo.org template."
-  "#+TITLE: docs – Unit TODO
-#+STARTUP: overview
-#+SEQ_TODO: TODO NEXT WAITING | DONE
-
-* About
-
-Tasks for the docs unit. Complete these before starting implementation units.
-
-* Active
-
-** NEXT Draft spec.org
-   Define project intent and architecture.
-
-   - Purpose and goals
-   - Target users
-   - System structure and components
-   - Success criteria
-   - Non-goals and scope boundaries
-
-* Backlog
-
-(Add future tasks here)
-
-* Completed
-")
-
 (defun specflow-initiate ()
   "Initialize a new SpecFlow project in the current directory.
 Creates scaffolding in .specflow/ directory with control plane, todos,
-rules, and a docs unit for project documentation."
+rules, and a root unit for project documentation."
   (interactive)
   ;; Check preconditions
   (let ((error-msg (specflow-initiate--check-preconditions)))
@@ -167,7 +140,7 @@ rules, and a docs unit for project documentation."
   ;; Derive project name
   (let ((project-name (specflow-initiate--derive-project-name)))
     ;; Create directories
-    (make-directory (expand-file-name ".specflow/units/docs") t)
+    (make-directory (expand-file-name ".specflow/units/root") t)
     (make-directory (expand-file-name "src") t)
     (make-directory (expand-file-name "tests") t)
     ;; Write .specflow/specflow.org (control plane)
@@ -181,12 +154,11 @@ rules, and a docs unit for project documentation."
       (if source-rules
           (copy-file source-rules (expand-file-name ".specflow/rules.org"))
         (user-error "Cannot find rules.org in specflow installation")))
-    ;; Write .specflow/units/docs/spec.org
-    (write-region (specflow-initiate--docs-spec-template)
-                  nil (expand-file-name ".specflow/units/docs/spec.org"))
-    ;; Write .specflow/units/docs/todo.org
-    (write-region (specflow-initiate--docs-todo-template)
-                  nil (expand-file-name ".specflow/units/docs/todo.org"))
+    ;; Write .specflow/units/root/spec.org
+    ;; The root unit's task list is the master TODO at .specflow/todo.org,
+    ;; so no separate unit todo.org is created here.
+    (write-region (specflow-initiate--root-spec-template)
+                  nil (expand-file-name ".specflow/units/root/spec.org"))
     ;; Generate CLAUDE.md via specflow-hydrate-rules if available
     (if (fboundp 'specflow-hydrate-rules)
         (condition-case err
@@ -198,7 +170,7 @@ Created:
   .specflow/specflow.org       (control plane)
   .specflow/todo.org           (root tasks)
   .specflow/rules.org          (operational rules)
-  .specflow/units/docs/        (docs unit)
+  .specflow/units/root/        (root unit)
   src/                         (source directory)
   tests/                       (test directory)
   CLAUDE.md                    (generated from rules.org)
@@ -214,7 +186,7 @@ Created:
   .specflow/specflow.org       (control plane)
   .specflow/todo.org           (root tasks)
   .specflow/rules.org          (operational rules)
-  .specflow/units/docs/        (docs unit)
+  .specflow/units/root/        (root unit)
   src/                         (source directory)
   tests/                       (test directory)
 
@@ -231,7 +203,7 @@ Created:
   .specflow/specflow.org       (control plane)
   .specflow/todo.org           (root tasks)
   .specflow/rules.org          (operational rules)
-  .specflow/units/docs/        (docs unit)
+  .specflow/units/root/        (root unit)
   src/                         (source directory)
   tests/                       (test directory)
 

@@ -160,7 +160,7 @@ Returns an alist of (question . answer)."
   (let* ((cp-path (specflow-org-store-find-control-plane))
          (project-root (specflow-org-store--project-root-from-control-plane cp-path)))
     (list
-     (cons ".specflow/units/docs/spec.org" "parent unit spec")
+     (cons ".specflow/units/root/spec.org" "parent unit spec")
      (cons (file-relative-name cp-path project-root) "control plane")
      (cons ".specflow/todo.org" "root tasks"))))
 
@@ -250,7 +250,7 @@ AFFECTS-PARENT is \"yes\", \"no\", or \"unsure\"."
 (defun specflow-compose--instructions-new-unit (unit-name parent)
   "Return instructions for creating UNIT-NAME with PARENT."
   (format "You are in Plan phase. Create this new unit by:
-1. Update parent unit spec (.specflow/units/docs/spec.org) with %s unit description
+1. Update parent unit spec (.specflow/units/root/spec.org) with %s unit description
 2. Add %s entry to Units section in control plane (.specflow/specflow.org)
 3. Create .specflow/units/%s/ directory
 4. Draft spec.org based on requirements above
@@ -358,7 +358,7 @@ When this phase is complete:
          (unit-name (or (cdr (assoc "Unit Name" answers))
                         (cdr (assoc "Which Unit" answers))
                         active-unit))
-         (parent (or (cdr (assoc "Parent" answers)) "docs"))
+         (parent (or (cdr (assoc "Parent" answers)) "root"))
          (affects-parent (or (cdr (assoc "Affects Parent Architecture? (yes/no/unsure)" answers))
                              "unsure"))
          ;; Get context files and instructions based on task type

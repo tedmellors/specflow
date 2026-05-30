@@ -148,8 +148,8 @@ When prompted to bootstrap:
 
 This repo uses a top-down documentation pipeline:
 
-1) Parent unit spec (=.specflow/units/docs/spec.org=) - project intent and architecture
-2) =.specflow/todo.org= - execution plan
+1) Parent unit spec (=.specflow/units/root/spec.org=) - project intent and architecture
+2) =.specflow/todo.org= - root unit task list / execution plan
 3) Unit specs/todos in =.specflow/units/<unit>/= - scoped implementation
 
 These artifacts are created or updated **only when explicitly requested**.
@@ -157,8 +157,10 @@ Do not generate or modify them "opportunistically."
 
 ** Parent Unit Spec
 
-The parent unit (typically =docs=) owns the project-level specification.
-This spec defines project intent, architecture, and cross-cutting constraints.
+The parent unit (=root=) owns the project-level specification at
+=.specflow/units/root/spec.org=. This spec defines project intent,
+architecture, and cross-cutting constraints. The root unit's task list is the
+master TODO at =.specflow/todo.org= (not a unit-level todo.org).
 
 When I ask to draft or revise the parent unit spec:
 - stay high-level (no module internals)
@@ -313,18 +315,22 @@ The =.specflow/= directory and =CLAUDE.md= are required and have a fixed structu
 project/
 ├── .specflow/
 │   ├── specflow.org          # Control plane (active unit, phase)
-│   ├── todo.org              # Root task list
+│   ├── todo.org              # Root unit task list (master TODO)
 │   ├── rules.org             # Operational rules (generates CLAUDE.md)
 │   └── units/
-│       ├── docs/
-│       │   ├── spec.org      # Parent unit specification
-│       │   └── todo.org      # Parent unit tasks
+│       ├── root/
+│       │   └── spec.org      # Root (parent) unit specification
 │       └── <unit>/
 │           ├── spec.org      # Unit specification
 │           └── todo.org      # Unit tasks
 ├── CLAUDE.md                 # Generated from .specflow/rules.org
 └── ...                       # Project source (see suggested layouts below)
 #+END_EXAMPLE
+
+The =root= unit is the project-level parent unit and is special-cased:
+its spec lives at =.specflow/units/root/spec.org=, but its task list is the
+master TODO at =.specflow/todo.org= (it has no =units/root/todo.org=). Every
+other unit keeps both =spec.org= and =todo.org= in its own =units/<unit>/= directory.
 
 Unit scope and constraints are defined in =spec.org= (no separate CLAUDE.md per unit).
 
@@ -792,8 +798,11 @@ Use =root= as the active unit when:
 - Planning cross-unit work
 - Between unit work (no specific unit in progress)
 
-=root= is a pseudo-unit indicating project-level focus, not a registered unit.
-When starting work on a specific unit, update the active unit accordingly.
+=root= is the project-level parent unit registered in the control plane. Its
+spec is =.specflow/units/root/spec.org= and its task list is the master TODO
+at =.specflow/todo.org=. All other units declare =root= (directly or transitively)
+in their =PARENT= chain. When starting work on a specific unit, update the
+active unit accordingly.
 
 * Current Focus
   :PROPERTIES:

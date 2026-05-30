@@ -241,9 +241,11 @@ SpecFlow uses a hidden `.specflow/` directory for development artifacts:
 your-project/
 ├── .specflow/                    # Development artifacts (gitignored)
 │   ├── specflow.org              # Control plane (required)
-│   ├── todo.org                  # Root tasks with NEXT (required)
+│   ├── todo.org                  # Root unit task list / master TODO (required)
 │   ├── rules.org                 # AI rules (generates CLAUDE.md)
 │   └── units/
+│       ├── root/
+│       │   └── spec.org          # Root (parent) unit spec; todo is .specflow/todo.org
 │       └── <unit-name>/
 │           ├── spec.org          # Unit specification
 │           └── todo.org          # Unit tasks

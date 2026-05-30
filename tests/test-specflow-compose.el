@@ -237,7 +237,7 @@ Sets up control plane in Plan phase for compose commands."
   (specflow-test-with-compose-project
     (let ((default-directory project-root))
       (let ((files (specflow-compose--context-files-new-unit)))
-        (should (cl-some (lambda (f) (string-match-p "docs/spec.org" (car f))) files))
+        (should (cl-some (lambda (f) (string-match-p "root/spec.org" (car f))) files))
         (should (cl-some (lambda (f) (string-match-p "specflow.org" (car f))) files))
         (should (cl-some (lambda (f) (string-match-p "todo.org" (car f))) files))))))
 

@@ -3,7 +3,7 @@
 ;;; Commentary:
 
 ;; ERT tests for specflow-initiate functions.
-;; Tests verify .specflow/ directory structure with docs unit.
+;; Tests verify .specflow/ directory structure with root unit.
 
 ;;; Code:
 
@@ -77,20 +77,21 @@
 ;;;; Template Tests
 
 (ert-deftest specflow-test-initiate-control-plane-template ()
-  "Test control plane template includes project name and docs unit."
+  "Test control plane template includes project name and root unit."
   (let ((template (specflow-initiate--control-plane-template "test-project")))
     (should (string-match-p "test-project" template))
     (should (string-match-p "SPEC_FLOW_PHASE: Plan" template))
     (should (string-match-p "SPEC_FLOW_ACTIVE_UNIT: root" template))
     (should (string-match-p "\\* Units" template))
-    (should (string-match-p "\\*\\* docs" template))
-    (should (string-match-p ".specflow/units/docs/spec.org" template))
-    (should (string-match-p ".specflow/units/docs/todo.org" template))))
+    (should (string-match-p "\\*\\* root" template))
+    (should (string-match-p ".specflow/units/root/spec.org" template))
+    ;; Root unit's task list is the master TODO at .specflow/todo.org
+    (should (string-match-p ":TODO: .specflow/todo.org" template))))
 
-(ert-deftest specflow-test-initiate-control-plane-no-dir-for-docs ()
-  "Test control plane docs unit has no DIR property."
+(ert-deftest specflow-test-initiate-control-plane-no-dir-for-root ()
+  "Test control plane root unit has no DIR property."
   (let ((template (specflow-initiate--control-plane-template "test-project")))
-    ;; docs unit should NOT have a DIR property
+    ;; root unit should NOT have a DIR property
     (should-not (string-match-p ":DIR:" template))))
 
 (ert-deftest specflow-test-initiate-todo-template ()
@@ -108,19 +109,12 @@
     (should (file-exists-p rules-path))
     (should (string-match-p "rules\\.org$" rules-path))))
 
-(ert-deftest specflow-test-initiate-docs-spec-template ()
-  "Test docs spec.org template describes documentation deliverables."
-  (let ((template (specflow-initiate--docs-spec-template)))
-    (should (string-match-p "docs – Specification" template))
+(ert-deftest specflow-test-initiate-root-spec-template ()
+  "Test root spec.org template describes documentation deliverables."
+  (let ((template (specflow-initiate--root-spec-template)))
+    (should (string-match-p "root – Specification" template))
     (should (string-match-p "spec.org" template))
     (should (string-match-p "no source code" template))))
-
-(ert-deftest specflow-test-initiate-docs-todo-template ()
-  "Test docs todo.org template has NEXT task for spec.org."
-  (let ((template (specflow-initiate--docs-todo-template)))
-    (should (string-match-p "docs – Unit TODO" template))
-    (should (string-match-p "NEXT" template))
-    (should (string-match-p "Draft spec.org" template))))
 
 ;;;; Full Initialization Tests - Directory Structure
 
@@ -148,23 +142,24 @@
     (specflow-initiate)
     (should (file-exists-p ".specflow/rules.org"))))
 
-(ert-deftest specflow-test-initiate-creates-docs-unit-dir ()
-  "Test that initiate creates .specflow/units/docs/ directory."
+(ert-deftest specflow-test-initiate-creates-root-unit-dir ()
+  "Test that initiate creates .specflow/units/root/ directory."
   (specflow-test-with-empty-dir
     (specflow-initiate)
-    (should (file-directory-p ".specflow/units/docs"))))
+    (should (file-directory-p ".specflow/units/root"))))
 
-(ert-deftest specflow-test-initiate-creates-docs-spec ()
-  "Test that initiate creates .specflow/units/docs/spec.org."
+(ert-deftest specflow-test-initiate-creates-root-spec ()
+  "Test that initiate creates .specflow/units/root/spec.org."
   (specflow-test-with-empty-dir
     (specflow-initiate)
-    (should (file-exists-p ".specflow/units/docs/spec.org"))))
+    (should (file-exists-p ".specflow/units/root/spec.org"))))
 
-(ert-deftest specflow-test-initiate-creates-docs-todo ()
-  "Test that initiate creates .specflow/units/docs/todo.org."
+(ert-deftest specflow-test-initiate-no-root-unit-todo ()
+  "Test that initiate does NOT create .specflow/units/root/todo.org.
+The root unit's task list is the master TODO at .specflow/todo.org."
   (specflow-test-with-empty-dir
     (specflow-initiate)
-    (should (file-exists-p ".specflow/units/docs/todo.org"))))
+    (should-not (file-exists-p ".specflow/units/root/todo.org"))))
 
 (ert-deftest specflow-test-initiate-creates-src-dir ()
   "Test that initiate creates src/ directory."
@@ -189,7 +184,7 @@
                      (buffer-string))))
       (should (string-match-p "SPEC_FLOW_PHASE: Plan" content))
       (should (string-match-p "SPEC_FLOW_ACTIVE_UNIT: root" content))
-      (should (string-match-p ".specflow/units/docs/spec.org" content)))))
+      (should (string-match-p ".specflow/units/root/spec.org" content)))))
 
 (ert-deftest specflow-test-initiate-todo-content ()
   "Test that created todo.org has correct content."
@@ -211,25 +206,15 @@
       (should (string-match-p "Control Plane Authority" content))
       (should (string-match-p ".specflow/specflow.org" content)))))
 
-(ert-deftest specflow-test-initiate-docs-spec-content ()
-  "Test that created docs spec.org has correct content."
+(ert-deftest specflow-test-initiate-root-spec-content ()
+  "Test that created root spec.org has correct content."
   (specflow-test-with-empty-dir
     (specflow-initiate)
     (let ((content (with-temp-buffer
-                     (insert-file-contents ".specflow/units/docs/spec.org")
+                     (insert-file-contents ".specflow/units/root/spec.org")
                      (buffer-string))))
       (should (string-match-p "spec.org" content))
       (should (string-match-p "no source code" content)))))
-
-(ert-deftest specflow-test-initiate-docs-todo-content ()
-  "Test that created docs todo.org has correct content."
-  (specflow-test-with-empty-dir
-    (specflow-initiate)
-    (let ((content (with-temp-buffer
-                     (insert-file-contents ".specflow/units/docs/todo.org")
-                     (buffer-string))))
-      (should (string-match-p "NEXT" content))
-      (should (string-match-p "Draft spec.org" content)))))
 
 ;;;; Error Case Tests
 
