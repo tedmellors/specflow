@@ -89,6 +89,17 @@ Returns absolute path to rules file (string)."
               (list (format "rules.org not found searching from %s"
                             (or start-dir default-directory)))))))
 
+(defun specflow-rules-source-file ()
+  "Return the absolute path to the installed (source) rules.org.
+This is the rules.org shipped alongside the SpecFlow Emacs sources, located
+via `locate-library'.  It is the single source used to generate CLAUDE.md, so
+projects do not keep their own copy.  Returns nil if it cannot be located."
+  (let* ((lib (locate-library "specflow-rules"))
+         (dir (and lib (file-name-directory lib)))
+         (path (and dir (expand-file-name specflow-rules-filename dir))))
+    (when (and path (file-exists-p path))
+      path)))
+
 ;;;; Parsing
 
 (defun specflow-rules--get-heading-content ()

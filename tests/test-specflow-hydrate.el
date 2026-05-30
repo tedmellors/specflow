@@ -365,11 +365,13 @@ Uses new .specflow/ directory structure."
       (should-not (string-match-p "\\[all\\]" result)))))
 
 (ert-deftest specflow-test-hydrate-rules-writes-file ()
-  "Test that hydrate-rules writes CLAUDE.md from .specflow/rules.org."
+  "Test that hydrate-rules writes CLAUDE.md from the installed rules.org.
+rules.org is source code in the installation; it is not copied into the
+project, so the project needs only a control plane."
   (let ((project-root (make-temp-file "specflow-hydrate-rules-test-" t)))
     (unwind-protect
         (let ((default-directory project-root))
-          ;; Create minimal project structure with .specflow/
+          ;; Create minimal project structure with .specflow/ (no rules.org)
           (make-directory (expand-file-name ".git" project-root) t)
           (make-directory (expand-file-name ".specflow" project-root) t)
           ;; Write control plane
@@ -382,54 +384,34 @@ Uses new .specflow/ directory structure."
   :END:
 "
            nil (expand-file-name ".specflow/specflow.org" project-root))
-          ;; Write rules.org with test rules
-          (write-region
-           "#+TITLE: Test Rules
-
-* Test Rule
-  :PROPERTIES:
-  :RULE_ID: test-rule
-  :PRIORITY: mandatory
-  :PHASE: all
-  :END:
-
-This is a test rule for CLAUDE.md generation.
-
-* Another Rule
-  :PROPERTIES:
-  :RULE_ID: another-rule
-  :PRIORITY: recommended
-  :PHASE: implement
-  :TAGS: testing
-  :END:
-
-This is another test rule.
-"
-           nil (expand-file-name ".specflow/rules.org" project-root))
           ;; Call hydrate-rules
           (specflow-hydrate-rules)
           ;; Check file exists
           (should (file-exists-p (expand-file-name "CLAUDE.md" project-root)))
-          ;; Check content
+          ;; rules.org is NOT copied into the project
+          (should-not (file-exists-p (expand-file-name ".specflow/rules.org"
+                                                       project-root)))
+          ;; Check content comes from the installed rules.org
           (let ((content (with-temp-buffer
                            (insert-file-contents
                             (expand-file-name "CLAUDE.md" project-root))
                            (buffer-string))))
             (should (string-match-p "SpecFlow – AI Assistant Rules" content))
             (should (string-match-p "AUTO-GENERATED" content))
-            (should (string-match-p "Test Rule" content))
-            (should (string-match-p "test rule for CLAUDE.md" content))))
+            ;; A distinctive rule from the real rules.org
+            (should (string-match-p "Control Plane Authority" content))))
       (delete-directory project-root t))))
 
-(ert-deftest specflow-test-hydrate-rules-signals-error-when-missing ()
-  "Test that hydrate-rules signals error when .specflow/rules.org is missing."
+(ert-deftest specflow-test-hydrate-rules-no-project-rules-org ()
+  "Test that hydrate-rules succeeds even without a project-local rules.org.
+The installed rules.org is the single source, so a project that has only a
+control plane still generates CLAUDE.md."
   (let ((project-root (make-temp-file "specflow-hydrate-rules-test-" t)))
     (unwind-protect
         (let ((default-directory project-root))
-          ;; Create project without rules.org
           (make-directory (expand-file-name ".git" project-root) t)
           (make-directory (expand-file-name ".specflow" project-root) t)
-          ;; Write control plane only (no rules.org)
+          ;; Write control plane only (no rules.org in the project)
           (write-region
            "#+TITLE: Test
 * Project
@@ -439,9 +421,9 @@ This is another test rule.
   :END:
 "
            nil (expand-file-name ".specflow/specflow.org" project-root))
-          ;; Should signal error
-          (should-error (specflow-hydrate-rules)
-                        :type 'specflow-rules-file-not-found))
+          ;; Generates CLAUDE.md from the installed rules.org, no error
+          (specflow-hydrate-rules)
+          (should (file-exists-p (expand-file-name "CLAUDE.md" project-root))))
       (delete-directory project-root t))))
 
 (provide 'test-specflow-hydrate)

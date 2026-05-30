@@ -379,24 +379,26 @@ Returns a complete markdown string with header and all rules."
     (concat header "\n" body "\n")))
 
 (defun specflow-hydrate-rules (&optional target-dir)
-  "Generate CLAUDE.md from .specflow/rules.org.
+  "Generate CLAUDE.md from the installed SpecFlow rules.org.
 
 TARGET-DIR is the directory to write CLAUDE.md to.
 Defaults to the project root (from control plane).
 
-Finds the project root via control plane discovery, loads all rules
-from .specflow/rules.org, formats them as markdown, and writes to
-CLAUDE.md in the target directory.
+Finds the project root via control plane discovery, loads all rules from the
+rules.org shipped with SpecFlow (located via `specflow-rules-source-file'),
+formats them as markdown, and writes to CLAUDE.md in the target directory.
+The rules.org is treated as source code; it is not copied into the project.
 
-Signals `specflow-rules-file-not-found' if .specflow/rules.org does not exist."
+Signals `specflow-rules-file-not-found' if the installed rules.org cannot be
+located."
   (interactive)
   (let* ((project-root (specflow-org-store--project-root-from-control-plane))
          (_ (unless project-root
               (user-error "Cannot determine project root")))
-         (rules-path (expand-file-name ".specflow/rules.org" project-root))
-         (_ (unless (file-exists-p rules-path)
+         (rules-path (specflow-rules-source-file))
+         (_ (unless rules-path
               (signal 'specflow-rules-file-not-found
-                      (list (format "rules.org not found: %s" rules-path)))))
+                      (list "Installed rules.org not found in SpecFlow load-path"))))
          (rules (specflow-rules-load rules-path))
          (markdown (specflow-hydrate--format-rules-as-markdown rules))
          (target (or target-dir project-root))

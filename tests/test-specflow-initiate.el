@@ -102,13 +102,6 @@
     (should (string-match-p "root: Plan phase" template))
     (should (string-match-p "Backlog" template))))
 
-(ert-deftest specflow-test-initiate-find-rules-org ()
-  "Test find-rules-org locates rules.org in specflow installation."
-  (let ((rules-path (specflow-initiate--find-rules-org)))
-    (should rules-path)
-    (should (file-exists-p rules-path))
-    (should (string-match-p "rules\\.org$" rules-path))))
-
 (ert-deftest specflow-test-initiate-root-spec-template ()
   "Test root spec.org template describes documentation deliverables."
   (let ((template (specflow-initiate--root-spec-template)))
@@ -136,11 +129,13 @@
     (specflow-initiate)
     (should (file-exists-p ".specflow/todo.org"))))
 
-(ert-deftest specflow-test-initiate-creates-rules ()
-  "Test that initiate creates .specflow/rules.org."
+(ert-deftest specflow-test-initiate-no-project-rules-org ()
+  "Test that initiate does NOT copy rules.org into the project.
+rules.org is treated as source code in the installation; CLAUDE.md is
+generated from it directly."
   (specflow-test-with-empty-dir
     (specflow-initiate)
-    (should (file-exists-p ".specflow/rules.org"))))
+    (should-not (file-exists-p ".specflow/rules.org"))))
 
 (ert-deftest specflow-test-initiate-creates-root-unit-dir ()
   "Test that initiate creates .specflow/units/root/ directory."
@@ -218,16 +213,6 @@ This supports bringing SpecFlow to a repository that already exists."
                      (buffer-string))))
       (should (string-match-p "NEXT" content))
       (should (string-match-p "root: Plan phase" content)))))
-
-(ert-deftest specflow-test-initiate-rules-content ()
-  "Test that created rules.org has correct content."
-  (specflow-test-with-empty-dir
-    (specflow-initiate)
-    (let ((content (with-temp-buffer
-                     (insert-file-contents ".specflow/rules.org")
-                     (buffer-string))))
-      (should (string-match-p "Control Plane Authority" content))
-      (should (string-match-p ".specflow/specflow.org" content)))))
 
 (ert-deftest specflow-test-initiate-root-spec-content ()
   "Test that created root spec.org has correct content."

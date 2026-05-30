@@ -25,14 +25,16 @@
 ;;     .specflow/
 ;;       specflow.org          - Control plane
 ;;       todo.org              - Root unit tasks (the master TODO)
-;;       rules.org             - Full rules (copied from specflow installation)
 ;;       units/
 ;;         root/
 ;;           spec.org          - Root unit specification (parent unit)
-;;     CLAUDE.md               - Generated from .specflow/rules.org
+;;     CLAUDE.md               - Generated from the installed rules.org
 ;;     REPO/                   - The repository (git root); existing or new
 ;;       src/                  - Source code directory
 ;;       tests/                - Test directory
+;;
+;; rules.org is treated as source code in the SpecFlow installation; it is
+;; never copied into the project.  CLAUDE.md is generated from it directly.
 
 ;;; Code:
 
@@ -118,15 +120,6 @@ Only ONE task is marked NEXT at a time.
 (Move completed tasks here)
 " project-name project-name))
 
-(defun specflow-initiate--find-rules-org ()
-  "Find the full rules.org in the specflow installation directory.
-Returns the path to rules.org, or nil if not found."
-  (let* ((lib-file (locate-library "specflow-initiate"))
-         (install-dir (and lib-file (file-name-directory lib-file)))
-         (rules-path (and install-dir (expand-file-name "rules.org" install-dir))))
-    (when (and rules-path (file-exists-p rules-path))
-      rules-path)))
-
 (defun specflow-initiate--root-spec-template ()
   "Return root unit spec.org template."
   "#+TITLE: root – Specification
@@ -176,11 +169,8 @@ rules, and a root unit for project documentation."
     ;; Write .specflow/todo.org (root tasks)
     (write-region (specflow-initiate--todo-template project-name)
                   nil (expand-file-name ".specflow/todo.org"))
-    ;; Copy full rules.org from specflow installation
-    (let ((source-rules (specflow-initiate--find-rules-org)))
-      (if source-rules
-          (copy-file source-rules (expand-file-name ".specflow/rules.org"))
-        (user-error "Cannot find rules.org in specflow installation")))
+    ;; Note: rules.org is NOT copied into the project. It is treated as source
+    ;; code in the SpecFlow installation and used directly to generate CLAUDE.md.
     ;; Write .specflow/units/root/spec.org
     ;; The root unit's task list is the master TODO at .specflow/todo.org,
     ;; so no separate unit todo.org is created here.
@@ -199,7 +189,6 @@ rules, and a root unit for project documentation."
 Created:
   .specflow/specflow.org       (control plane)
   .specflow/todo.org           (root tasks)
-  .specflow/rules.org          (operational rules)
   .specflow/units/root/        (root unit)
   %s/src/                      (source directory)
   %s/tests/                    (test directory)%s
