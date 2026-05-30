@@ -264,7 +264,7 @@ Case-insensitive matching."
     (cl-remove-if-not
      (lambda (rule)
        (let ((rule-tags (plist-get rule :tags)))
-         (cl-some (lambda (t) (string= (downcase t) tag-lower))
+         (cl-some (lambda (rule-tag) (string= (downcase rule-tag) tag-lower))
                   rule-tags)))
      all-rules)))
 
