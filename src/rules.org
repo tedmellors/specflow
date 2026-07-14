@@ -35,9 +35,10 @@ This repository is intended for **real use**, not demos or throwaway prototypes.
   :END:
 
 A SpecFlow project may also be registered as a **sub-sheet of an external org task
-board**: its =.specflow/todo.org= tasks are projected up into a project task sheet
-and a master board, and work may be dispatched to this session from that board (e.g.
-via smac). When a task arrives that way, obey these rules — they take precedence over
+board**: its =.specflow/todo.org= tasks are projected up into an external project task
+sheet and a master board (you never need their paths), and work may be dispatched to
+this session from that board (e.g. via smac). When a task arrives that way, obey these
+rules — they take precedence over
 any conflicting completion instruction elsewhere in this document. A project that is
 NOT board-integrated is unaffected: follow the normal =DONE=-based completion in
 "Operating Procedure" and "Phase Transition Protocol".
@@ -47,11 +48,15 @@ NOT board-integrated is unaffected: follow the normal =DONE=-based completion in
    tags such as =:SUBSHEET:MONDAY:SYNCED:=. The authoritative task always lives in
    =.specflow/todo.org=; that decoration is the board's, not part of the task.
 
-2) **Never edit the board files.** The project task sheet and the master board are
-   **generated views** — regenerated from =.specflow/todo.org= on every sync, so any
-   state, log, or note written into them is silently overwritten. **All task state and
-   all work logs go into =.specflow/todo.org=** (the normal SpecFlow source), never the
-   board.
+2) **Never edit board files — and you never need to know which files they are.** The
+   board projects this task into external generated views (typically a project task
+   sheet plus a master board) that live OUTSIDE this control directory and are rebuilt
+   from =.specflow/todo.org= on every sync, so anything written into them is silently
+   overwritten. Do not go looking for them and do not try to name them: **all task
+   state and all work logs go into =.specflow/todo.org=** (the normal SpecFlow source).
+   Any org task file outside this project's own =.specflow/= tree is off-limits for
+   recording task state or logs — e.g. a =*_TASKS.org= project sheet or the master
+   board file, whatever their names turn out to be.
 
 3) **Do the work per the normal SpecFlow phase rules.** Board dispatch changes only
    *where status is recorded*, not *how the work is built* — control plane, phase
