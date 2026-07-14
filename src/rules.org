@@ -71,8 +71,17 @@ NOT board-integrated is unaffected: follow the normal =DONE=-based completion in
      body.
    A human reviews and flips =NEEDS-REVIEW → DONE=; only then does it move to
    =Complete= and drop off the board. This makes SpecFlow's phase-transition STOP and
-   the board's human sign-off the same gate. Register =NEEDS-REVIEW= in the project's
-   =#+SEQ_TODO= (e.g. =TODO NEXT WAITING NEEDS-REVIEW | DONE=).
+   the board's human sign-off the same gate.
+
+5) **Declare the board lifecycle states in =#+SEQ_TODO=.** A board-integrated project's
+   =.specflow/todo.org= (and control plane) MUST include =IN-PROGRESS= and =NEEDS-REVIEW=
+   alongside SpecFlow's own keywords, e.g.
+   =#+SEQ_TODO: TODO NEXT IN-PROGRESS WAITING NEEDS-REVIEW | DONE=. The board flips these
+   automatically as the worker runs and idles — =IN-PROGRESS= on start / re-engage,
+   =NEEDS-REVIEW= on every stop (SpecFlow stops a lot: each phase gate and "proceed?"
+   confirmation). A keyword the file's =#+SEQ_TODO= does not declare cannot be written,
+   so an undeclared state silently breaks the stop/start sync to the board. You never set
+   these yourself — the board's hooks do — but the vocabulary must be present.
 
 5) **Do not hand-manage board tags.** =:SUBSHEET:=, =:SYNCED:=, and day tags
    (=:MONDAY:= …) are owned by the board tooling. Leave the source heading's tags

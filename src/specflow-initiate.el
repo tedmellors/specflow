@@ -68,7 +68,7 @@ Returns nil if OK, or an error message string."
   "Return control plane template for PROJECT-NAME."
   (format "#+TITLE: %s – Control Plane
 #+STARTUP: overview
-#+SEQ_TODO: TODO NEXT WAITING | DONE
+#+SEQ_TODO: TODO NEXT IN-PROGRESS WAITING NEEDS-REVIEW | DONE
 
 * Project
   :PROPERTIES:
@@ -95,7 +95,7 @@ the master TODO at .specflow/todo.org. It has no source directory.
   "Return root todo.org template for PROJECT-NAME."
   (format "#+TITLE: %s – Master TODO
 #+STARTUP: overview
-#+SEQ_TODO: TODO NEXT WAITING | DONE
+#+SEQ_TODO: TODO NEXT IN-PROGRESS WAITING NEEDS-REVIEW | DONE
 
 * About
 
