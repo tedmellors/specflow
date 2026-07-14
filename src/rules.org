@@ -26,6 +26,54 @@ This repository is intended for **real use**, not demos or throwaway prototypes.
 - auditable where reasoning or decisions occur
 —not feature-complete or infrastructure-final.
 
+* Board Integration (smac / org-weekly)
+  :PROPERTIES:
+  :RULE_ID: board-integration
+  :PRIORITY: mandatory
+  :PHASE: all
+  :TAGS: board smac org-weekly completion
+  :END:
+
+A SpecFlow project may also be registered as a **sub-sheet of an external org task
+board**: its =.specflow/todo.org= tasks are projected up into a project task sheet
+and a master board, and work may be dispatched to this session from that board (e.g.
+via smac). When a task arrives that way, obey these rules — they take precedence over
+any conflicting completion instruction elsewhere in this document. A project that is
+NOT board-integrated is unaffected: follow the normal =DONE=-based completion in
+"Operating Procedure" and "Phase Transition Protocol".
+
+1) **The dispatched task text is a projection, not the source.** It may arrive
+   decorated by the board — a =[[file:…][…]]= lead link, a session link, and trailing
+   tags such as =:SUBSHEET:MONDAY:SYNCED:=. The authoritative task always lives in
+   =.specflow/todo.org=; that decoration is the board's, not part of the task.
+
+2) **Never edit the board files.** The project task sheet and the master board are
+   **generated views** — regenerated from =.specflow/todo.org= on every sync, so any
+   state, log, or note written into them is silently overwritten. **All task state and
+   all work logs go into =.specflow/todo.org=** (the normal SpecFlow source), never the
+   board.
+
+3) **Do the work per the normal SpecFlow phase rules.** Board dispatch changes only
+   *where status is recorded*, not *how the work is built* — control plane, phase
+   gates, spec discipline, and tests all still apply.
+
+4) **Completion is human-gated (this OVERRIDES "mark the NEXT task as DONE").** When
+   the phase work on a board-dispatched task is finished, do **not** mark it =DONE=.
+   Instead:
+   - set the source task to =NEEDS-REVIEW= in =.specflow/todo.org=,
+   - leave it in the =Active= section (do **not** move it to =Completed=),
+   - append one compact dated log line plus a few =- did:= / =- verify:= bullets to its
+     body.
+   A human reviews and flips =NEEDS-REVIEW → DONE=; only then does it move to
+   =Completed= and drop off the board. This makes SpecFlow's phase-transition STOP and
+   the board's human sign-off the same gate. Register =NEEDS-REVIEW= in the project's
+   =#+SEQ_TODO= (e.g. =TODO NEXT WAITING NEEDS-REVIEW | DONE=).
+
+5) **Do not hand-manage board tags.** =:SUBSHEET:=, =:SYNCED:=, and day tags
+   (=:MONDAY:= …) are owned by the board tooling. Leave the source heading's tags
+   intact. A "re-tag this for <day>" instruction is a scheduling action applied by the
+   board tooling (which writes the tag back into the source), not a manual edit.
+
 * Control Plane Authority
   :PROPERTIES:
   :RULE_ID: control-plane-authority
