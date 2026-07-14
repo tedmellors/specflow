@@ -115,7 +115,7 @@ Only ONE task is marked NEXT at a time.
 
 (Add future tasks here)
 
-* Completed
+* Complete
 
 (Move completed tasks here)
 " project-name project-name))

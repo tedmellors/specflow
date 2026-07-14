@@ -66,11 +66,11 @@ NOT board-integrated is unaffected: follow the normal =DONE=-based completion in
    the phase work on a board-dispatched task is finished, do **not** mark it =DONE=.
    Instead:
    - set the source task to =NEEDS-REVIEW= in =.specflow/todo.org=,
-   - leave it in the =Active= section (do **not** move it to =Completed=),
+   - leave it in the =Active= section (do **not** move it to =Complete=),
    - append one compact dated log line plus a few =- did:= / =- verify:= bullets to its
      body.
    A human reviews and flips =NEEDS-REVIEW → DONE=; only then does it move to
-   =Completed= and drop off the board. This makes SpecFlow's phase-transition STOP and
+   =Complete= and drop off the board. This makes SpecFlow's phase-transition STOP and
    the board's human sign-off the same gate. Register =NEEDS-REVIEW= in the project's
    =#+SEQ_TODO= (e.g. =TODO NEXT WAITING NEEDS-REVIEW | DONE=).
 
@@ -772,7 +772,7 @@ Contains tasks that are:
 - Less well-defined (may need refinement before activation)
 - Candidates for future NEXT tasks
 
-** Completed
+** Complete
 
 Contains =DONE= tasks with:
 - =CLOSED: [YYYY-MM-DD]= timestamp
@@ -782,7 +782,7 @@ When a task is completed:
 1. Change =NEXT= or =TODO= to =DONE=
 2. Add =CLOSED: [YYYY-MM-DD]= timestamp
 3. Add brief summary
-4. Move the entire entry from Active to Completed section
+4. Move the entire entry from Active to the =* Complete= section
 
 Do NOT leave DONE tasks in the Active section.
 Avoid excessive whitespace between tasks and headers.
