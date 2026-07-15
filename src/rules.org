@@ -62,18 +62,21 @@ NOT board-integrated is unaffected: follow the normal =DONE=-based completion in
    *where status is recorded*, not *how the work is built* — control plane, phase
    gates, spec discipline, and tests all still apply.
 
-4) **Completion is human-gated (this OVERRIDES "mark the NEXT task as DONE").** A unit
-   is ONE task moving through its declared span (see Phase Transition Protocol). At each
-   phase gate, do **not** mark it =DONE=. Instead:
-   - set the source task to =NEEDS-REVIEW= in =.specflow/todo.org=,
-   - leave it in the =Active= section (do **not** move it to =Complete=),
-   - append one compact dated log line plus a few =- did:= / =- verify:= bullets to its
-     body.
-   The human then either **proceeds** — re-engaging the SAME task into the next phase —
-   or, only when the unit has finished the last phase of its span, **approves** it to
-   =DONE= (the board's =approve_task= sign-off), at which point it moves to =Complete=
-   and drops off the board. Intermediate phase gates never produce =DONE=. This makes
-   SpecFlow's phase-transition STOP and the board's human sign-off the same gate.
+4) **Completion is human-gated, and you never set state yourself (this OVERRIDES "mark
+   the NEXT task as DONE").** A unit is ONE task moving through its declared span (see
+   Phase Transition Protocol). At each phase gate: do the phase's work, append one
+   compact dated log line (a few =- did:= / =- verify:= bullets) to the task body in
+   =.specflow/todo.org=, leave it in =* Active=, and STOP. Do **NOT** touch the task's
+   state keyword by any means — not =org-scribe set_state=, not a hand-edit of the
+   =TODO= / =NEXT= / =NEEDS-REVIEW= / =DONE= word in the file. The board's hooks own
+   state: the Stop hook flips the task to =NEEDS-REVIEW= when you idle, and re-engaging
+   it flips it back to =IN-PROGRESS=. Hand-editing the keyword bypasses the hooks and
+   breaks the sync to the board. A human then either **proceeds** — re-engaging the SAME
+   task into the next phase — or, only when the unit has finished the last phase of its
+   span, **approves** it to =DONE= (the board's =approve_task= sign-off), at which point
+   it moves to =* Complete= and drops off the board. Intermediate phase gates never
+   produce =DONE=, and you never mark it =DONE= yourself. This makes SpecFlow's
+   phase-transition STOP and the board's human sign-off the same gate.
 
 5) **Declare the board lifecycle states in =#+SEQ_TODO=.** A board-integrated project's
    =.specflow/todo.org= (and control plane) MUST include =IN-PROGRESS= and =NEEDS-REVIEW=
