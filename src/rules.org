@@ -77,25 +77,38 @@ NOT board-integrated is unaffected: follow the normal =DONE=-based completion in
    body in =.specflow/todo.org=; do NOT hand-rotate older entries, log_update
    self-heals rotation on its next run. Do **NOT** touch the task's
    state keyword by any means — not =org-scribe set_state=, not a hand-edit of the
-   =TODO= / =NEXT= / =NEEDS-REVIEW= / =DONE= word in the file. The board's hooks own
-   state: the Stop hook flips the task to =NEEDS-REVIEW= when you idle, and re-engaging
-   it flips it back to =IN-PROGRESS=. Hand-editing the keyword bypasses the hooks and
-   breaks the sync to the board. A human then either **proceeds** — re-engaging the SAME
-   task into the next phase — or, only when the unit has finished the last phase of its
-   span, **approves** it to =DONE= (the board's =approve_task= sign-off), at which point
-   it moves to =* Complete= and drops off the board. Intermediate phase gates never
-   produce =DONE=, and you never mark it =DONE= yourself. This makes SpecFlow's
-   phase-transition STOP and the board's human sign-off the same gate.
+   =TODO= / =NEXT= / =NEEDS-REVIEW= / =DONE= word in the file — with ONE exception,
+   =SIGNOFF=, below. The board's hooks own state: the Stop hook flips the task to
+   =NEEDS-REVIEW= when you idle, and re-engaging it flips it back to =IN-PROGRESS=.
+   Hand-editing the keyword bypasses the hooks and breaks the sync to the board.
+   The two stopped states mean different things to the human scanning the board:
+   =NEEDS-REVIEW= is "answer me" (a phase gate, a question, a blocker — the task
+   RESUMES); =SIGNOFF= is "clear me" (the worker claims the whole declared span is
+   finished — the human TERMINATES it with =approve_task=). Intermediate phase
+   gates are always =NEEDS-REVIEW=: just log and STOP, the hook does the rest.
+   Only at the END of the unit's declared span — last phase done, nothing left to
+   ask — declare the claim with
+   =org-scribe set_active_state(task, project, state="SIGNOFF")= after the final
+   =log_update=, then STOP. That is the ONLY state you ever set on your own
+   initiative, and it is a CLAIM, not a completion: =DONE= still comes only from
+   the human's =approve_task= sign-off, at which point the task moves to
+   =* Complete= and drops off the board. If you forget to declare =SIGNOFF=, the
+   Stop hook parks the task at =NEEDS-REVIEW= — today's behavior, nothing breaks.
+   A human answering a =NEEDS-REVIEW= gate (or sending back a =SIGNOFF= claim)
+   re-engages the SAME task into its next phase. You never mark anything =DONE=
+   yourself. This makes SpecFlow's phase-transition STOP and the board's human
+   sign-off the same gate.
 
 5) **Declare the board lifecycle states in =#+SEQ_TODO=.** A board-integrated project's
-   =.specflow/todo.org= (and control plane) MUST include =IN-PROGRESS= and =NEEDS-REVIEW=
-   alongside SpecFlow's own keywords, e.g.
-   =#+SEQ_TODO: TODO NEXT IN-PROGRESS WAITING NEEDS-REVIEW | DONE=. The board flips these
-   automatically as the worker runs and idles — =IN-PROGRESS= on start / re-engage,
-   =NEEDS-REVIEW= on every stop (SpecFlow stops a lot: each phase gate and "proceed?"
-   confirmation). A keyword the file's =#+SEQ_TODO= does not declare cannot be written,
-   so an undeclared state silently breaks the stop/start sync to the board. You never set
-   these yourself — the board's hooks do — but the vocabulary must be present.
+   =.specflow/todo.org= (and control plane) MUST include =IN-PROGRESS=, =NEEDS-REVIEW=
+   and =SIGNOFF= alongside SpecFlow's own keywords, e.g.
+   =#+SEQ_TODO: TODO NEXT IN-PROGRESS WAITING NEEDS-REVIEW SIGNOFF | DONE=. The board
+   flips these automatically as the worker runs and idles — =IN-PROGRESS= on start /
+   re-engage, =NEEDS-REVIEW= on every stop (SpecFlow stops a lot: each phase gate and
+   "proceed?" confirmation) — and the worker declares =SIGNOFF= itself at the end of
+   the unit's declared span (rule 4). A keyword the file's =#+SEQ_TODO= does not
+   declare cannot be written, so an undeclared state silently breaks the stop/start
+   sync to the board.
 
 6) **Do not hand-manage board tags.** =:SUBSHEET:=, =:SYNCED:=, and day tags
    (=:MONDAY:= …) are owned by the board tooling. Leave the source heading's tags
@@ -602,7 +615,10 @@ At a phase gate (a phase within the unit is complete):
    - record what the phase produced with ONE =org-scribe log_update= call (or the
      prepend-only fallback from Board Integration rule 4)
    - do NOT touch the state keyword — the board's hooks flip =NEEDS-REVIEW= /
-     =IN-PROGRESS= as you stop and re-engage (the task stays in =* Active=)
+     =IN-PROGRESS= as you stop and re-engage (the task stays in =* Active=).
+     EXCEPTION — the LAST gate of the declared span: after the final log_update,
+     declare =SIGNOFF= via =org-scribe set_active_state= (Board Integration
+     rule 4) so the board says "clear me", not "answer me"
 
 2. **Update the control plane** (=.specflow/specflow.org=): set =SPEC_FLOW_PHASE= to the
    next phase.
@@ -835,9 +851,9 @@ The =.specflow/todo.org= file uses three sections:
 
 Contains tasks currently being worked on:
 - At most ONE =NEXT= task at the top (the active unit). ZERO is valid: while that unit
-  is =IN-PROGRESS= or =NEEDS-REVIEW= (mid phase-cycle) there is no =NEXT=, and nothing
-  new is dispatchable until it reaches =DONE= (the end of its span) and the next unit
-  becomes =NEXT=.
+  is =IN-PROGRESS=, =NEEDS-REVIEW= or =SIGNOFF= (mid phase-cycle / awaiting the human's
+  sign-off) there is no =NEXT=, and nothing new is dispatchable until it reaches =DONE=
+  (the end of its span) and the next unit becomes =NEXT=.
 - Followed by ranked =TODO= tasks (well-defined, high priority)
 - Tasks should be outcome-based (Given/When/Then style)
 
@@ -860,6 +876,10 @@ phase gate does NOT complete it. When that happens:
 2. Add =CLOSED: [YYYY-MM-DD]= timestamp
 3. Add brief summary
 4. Move the entire entry from Active to the =* Complete= section
+
+On a BOARD-INTEGRATED project the worker never performs these steps: it declares the
+claim with =SIGNOFF= (Board Integration rule 4) and the human's =approve_task= then
+does all four via org-scribe.
 
 Do NOT leave DONE tasks in the Active section.
 Avoid excessive whitespace between tasks and headers.
@@ -885,7 +905,8 @@ This ensures:
 Format: =git commit -m "<unit>: <phase> phase complete"= then =git push=
 
 These are commit checkpoints, not task completion — the unit task is not marked DONE
-here; it stays in =* Active= at =NEEDS-REVIEW= until the end of its declared span.
+here; it stays in =* Active= at =NEEDS-REVIEW= (or =SIGNOFF= once the final phase of
+its declared span is done) until the human signs off.
 
 * Phase Transition Stops
   :PROPERTIES:
@@ -901,8 +922,10 @@ At EVERY phase transition, Claude MUST:
 2. **Summarize** what was accomplished in the phase
 3. **Wait** for explicit confirmation before proceeding
 
-The unit's task stays in =* Active= as =NEEDS-REVIEW= across the stop — it is not marked
-DONE and no new task is created; "proceed" re-engages the SAME task into the next phase.
+The unit's task stays in =* Active= across the stop — =NEEDS-REVIEW= at an intermediate
+gate, =SIGNOFF= after the LAST phase of the declared span (Board Integration rule 4).
+It is not marked DONE and no new task is created; "proceed" re-engages the SAME task
+into the next phase.
 
 Do NOT auto-advance through phases. Even if the next phase seems obvious,
 wait for the user to say "proceed to <phase>" or equivalent.
