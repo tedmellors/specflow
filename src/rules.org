@@ -62,16 +62,18 @@ NOT board-integrated is unaffected: follow the normal =DONE=-based completion in
    *where status is recorded*, not *how the work is built* — control plane, phase
    gates, spec discipline, and tests all still apply.
 
-4) **Completion is human-gated (this OVERRIDES "mark the NEXT task as DONE").** When
-   the phase work on a board-dispatched task is finished, do **not** mark it =DONE=.
-   Instead:
+4) **Completion is human-gated (this OVERRIDES "mark the NEXT task as DONE").** A unit
+   is ONE task moving through its declared span (see Phase Transition Protocol). At each
+   phase gate, do **not** mark it =DONE=. Instead:
    - set the source task to =NEEDS-REVIEW= in =.specflow/todo.org=,
    - leave it in the =Active= section (do **not** move it to =Complete=),
    - append one compact dated log line plus a few =- did:= / =- verify:= bullets to its
      body.
-   A human reviews and flips =NEEDS-REVIEW → DONE=; only then does it move to
-   =Complete= and drop off the board. This makes SpecFlow's phase-transition STOP and
-   the board's human sign-off the same gate.
+   The human then either **proceeds** — re-engaging the SAME task into the next phase —
+   or, only when the unit has finished the last phase of its span, **approves** it to
+   =DONE= (the board's =approve_task= sign-off), at which point it moves to =Complete=
+   and drops off the board. Intermediate phase gates never produce =DONE=. This makes
+   SpecFlow's phase-transition STOP and the board's human sign-off the same gate.
 
 5) **Declare the board lifecycle states in =#+SEQ_TODO=.** A board-integrated project's
    =.specflow/todo.org= (and control plane) MUST include =IN-PROGRESS= and =NEEDS-REVIEW=
@@ -83,7 +85,7 @@ NOT board-integrated is unaffected: follow the normal =DONE=-based completion in
    so an undeclared state silently breaks the stop/start sync to the board. You never set
    these yourself — the board's hooks do — but the vocabulary must be present.
 
-5) **Do not hand-manage board tags.** =:SUBSHEET:=, =:SYNCED:=, and day tags
+6) **Do not hand-manage board tags.** =:SUBSHEET:=, =:SYNCED:=, and day tags
    (=:MONDAY:= …) are owned by the board tooling. Leave the source heading's tags
    intact. A "re-tag this for <day>" instruction is a scheduling action applied by the
    board tooling (which writes the tag back into the source), not a manual edit.
@@ -197,7 +199,8 @@ When prompted to bootstrap:
 - Produce =.specflow/todo.org= that:
   - defines phases (Plan → Specify → Scaffold → Implement → Validate → Document)
   - lists major units/modules in dependency order
-  - contains exactly ONE =NEXT= task that is actionable and outcome-based
+  - contains exactly ONE =NEXT= task to start (thereafter at most one — see TODO File
+    Format), actionable and outcome-based
 - STOP and request approval before making any other project changes.
 
 * Documentation Pipeline
@@ -237,7 +240,7 @@ It is generated from the parent unit spec **only when prompted**.
 
 When I ask to bootstrap or revise =.specflow/todo.org=:
 - produce a phase-structured roadmap
-- include exactly ONE =NEXT= task
+- include exactly ONE =NEXT= task to start (thereafter at most one — see TODO File Format)
 - keep tasks outcome-based (Given/When/Then style)
 - preserve DONE history if updating an existing file
 - STOP and request approval before proceeding to unit work
@@ -552,16 +555,18 @@ When working on a task:
    - Draft an ADR
    - **STOP and wait for approval**
 
-4. When finished:
+4. At a phase gate (or when the unit reaches the end of its span):
    - Update tests
    - Update specs/docs if behavior changed
    - Commit changes (or provide exact git commands)
-   - Mark the =NEXT= task as DONE
+   - Append a compact log entry to the unit task and set it =NEEDS-REVIEW= — do NOT
+     mark it DONE (DONE only at the end of the declared span; see Phase Transition
+     Protocol)
    - Summarize:
      - what changed and why
      - files touched
      - tests run and results
-   - Propose the next =NEXT= task
+   - Name the next phase and STOP for confirmation — do NOT create a new task
 
 * Phase Transition Protocol
   :PROPERTIES:
@@ -571,35 +576,74 @@ When working on a task:
   :TAGS: phase transition
   :END:
 
-When completing a phase within a unit:
+A unit is ONE task that moves through its whole declared phase span — it is NOT split
+into one task per phase. The heading names the unit + a well-defined outcome-based task
++ the declared span, e.g. =** literature-mcp: semantic search over the corpus
+(Plan → Document)=. The span is the lifecycle this task will traverse; the CURRENT
+phase lives in the control plane (=SPEC_FLOW_PHASE=), never in the heading.
 
-1. **Update .specflow/todo.org**:
-   - Mark current NEXT task as DONE with 1-2 line summary
-   - Create new NEXT task for the next phase (if not unit complete)
+At a phase gate (a phase within the unit is complete):
 
-2. **Update control plane** (.specflow/specflow.org):
-   - Change SPEC_FLOW_PHASE property to the next phase
+1. **Append to the unit task in =.specflow/todo.org=** — do NOT mark it DONE and do
+   NOT create a new task:
+   - append one compact dated log entry recording what the phase produced
+   - set the task to =NEEDS-REVIEW= (it stays in =* Active=)
 
-3. **Entry format in .specflow/todo.org**:
+2. **Update the control plane** (=.specflow/specflow.org=): set =SPEC_FLOW_PHASE= to the
+   next phase.
+
+3. **Unit task shape**:
 
    #+BEGIN_EXAMPLE
-   ** DONE <unit>: <phase> phase
-      CLOSED: [YYYY-MM-DD]
-      <1-2 line summary: what was accomplished, key decisions>
-
-   ** NEXT <unit>: <next-phase> phase
-      <brief: what this phase will produce>
+   ** NEEDS-REVIEW <unit>: <well-defined task> (Plan → Document)
+      - [YYYY-MM-DD] Specify: <what this phase produced> (proceed → Scaffold)
+      - [YYYY-MM-DD] Plan: <what this phase produced>
    #+END_EXAMPLE
 
-4. **Phase progression**:
-   - Plan → Specify
-   - Specify → Scaffold
-   - Scaffold → Implement
-   - Implement → Validate
-   - Validate → Document
-   - Document → unit complete (mark DONE, no new NEXT unless backlog)
+   Body = one compact log entry appended per completed phase (newest first). The
+   granular work items produced during Scaffold live in the unit's own
+   =.specflow/units/<unit>/todo.org=, not here.
 
-This creates an audit trail and allows resumption at exact phase.
+4. **Phase progression** — the phases the single task moves through, up to its declared
+   span: Plan → Specify → Scaffold → Implement → Validate → Document. Re-engaging the
+   same task after a gate continues into the next phase. The task is **DONE only when it
+   reaches the LAST phase of its declared span** (Document for a normal unit; Scaffold
+   for the root unit — see Root Unit Lifecycle). Only then does it move to =* Complete=.
+
+5. **Cross-cutting work is a UNIT, not a spanning task.** If work touches several units,
+   define a new coordinating unit (a parent with the others as children / dependencies —
+   see Parent Context) and give IT the single task. A task is always scoped to one
+   development unit; "unit" is defined flexibly — a leaf module or a coordinating parent.
+
+The audit trail is the accumulated body log + =SPEC_FLOW_PHASE=, not a chain of
+per-phase DONE tasks. This resumes work at the exact phase and (in a board-integrated
+project) keeps the unit's ONE task live and dispatchable through every gate instead of
+stranding the board at each phase boundary.
+
+Exception: the Patch Protocol — trivial single-step fixes skip the full cycle and are
+not phased tasks.
+
+* Root Unit Lifecycle
+  :PROPERTIES:
+  :RULE_ID: root-unit-lifecycle
+  :PRIORITY: mandatory
+  :PHASE: all
+  :TAGS: root units lifecycle
+  :END:
+
+The root unit owns the project-level spec and the master TODO — not implementation
+code — so its declared span is **Plan → Specify → Scaffold**:
+- Plan: align on project vision / approach.
+- Specify: write =.specflow/units/root/spec.org= (intent, architecture, constraints).
+- Scaffold: write =.specflow/todo.org= — the child-unit roster in dependency order,
+  each a future unit task.
+
+The root unit STOPS after Scaffold and hands off to child units; it does **NOT**
+Implement, Validate, or Document — there is no root-level code, and documentation is
+owned by each child unit during its own Document phase, produced while that unit is
+built (there is no deferred root Document pass). Each child unit runs its own full span
+(typically Plan → Document). Root heading: =** root: <project> spec + unit roster
+(Plan → Scaffold)=; it is DONE when Scaffold is complete.
 
 * Phase Enforcement
   :PROPERTIES:
@@ -770,7 +814,10 @@ The =.specflow/todo.org= file uses three sections:
 ** Active
 
 Contains tasks currently being worked on:
-- Exactly ONE =NEXT= task at the top (the current focus)
+- At most ONE =NEXT= task at the top (the active unit). ZERO is valid: while that unit
+  is =IN-PROGRESS= or =NEEDS-REVIEW= (mid phase-cycle) there is no =NEXT=, and nothing
+  new is dispatchable until it reaches =DONE= (the end of its span) and the next unit
+  becomes =NEXT=.
 - Followed by ranked =TODO= tasks (well-defined, high priority)
 - Tasks should be outcome-based (Given/When/Then style)
 
@@ -787,7 +834,8 @@ Contains =DONE= tasks with:
 - =CLOSED: [YYYY-MM-DD]= timestamp
 - 1-2 line summary of what was accomplished
 
-When a task is completed:
+A unit reaches Complete only when it finishes the LAST phase of its declared span — a
+phase gate does NOT complete it. When that happens:
 1. Change =NEXT= or =TODO= to =DONE=
 2. Add =CLOSED: [YYYY-MM-DD]= timestamp
 3. Add brief summary
@@ -816,6 +864,9 @@ This ensures:
 
 Format: =git commit -m "<unit>: <phase> phase complete"= then =git push=
 
+These are commit checkpoints, not task completion — the unit task is not marked DONE
+here; it stays in =* Active= at =NEEDS-REVIEW= until the end of its declared span.
+
 * Phase Transition Stops
   :PROPERTIES:
   :RULE_ID: phase-transition-stops
@@ -829,6 +880,9 @@ At EVERY phase transition, Claude MUST:
 1. **STOP** and announce the phase is complete
 2. **Summarize** what was accomplished in the phase
 3. **Wait** for explicit confirmation before proceeding
+
+The unit's task stays in =* Active= as =NEEDS-REVIEW= across the stop — it is not marked
+DONE and no new task is created; "proceed" re-engages the SAME task into the next phase.
 
 Do NOT auto-advance through phases. Even if the next phase seems obvious,
 wait for the user to say "proceed to <phase>" or equivalent.
