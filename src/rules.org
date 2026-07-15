@@ -64,9 +64,18 @@ NOT board-integrated is unaffected: follow the normal =DONE=-based completion in
 
 4) **Completion is human-gated, and you never set state yourself (this OVERRIDES "mark
    the NEXT task as DONE").** A unit is ONE task moving through its declared span (see
-   Phase Transition Protocol). At each phase gate: do the phase's work, append one
-   compact dated log line (a few =- did:= / =- verify:= bullets) to the task body in
-   =.specflow/todo.org=, leave it in =* Active=, and STOP. Do **NOT** touch the task's
+   Phase Transition Protocol). At each phase gate: do the phase's work, log the gate
+   with ONE =org-scribe log_update(task, project, entry)= call — the entry's first
+   line is a one-line status of what the phase produced (e.g. "Specify: unit spec
+   written (proceed → Scaffold)"), then =did:= / =verify:= sub-bullets, and =Q:= /
+   =DECISION:= ONLY when reviewer attention is genuinely needed — leave the task in
+   =* Active=, and STOP. log_update owns the mechanics: it stamps the date, keeps only
+   the newest entry visible (older entries rotate into the task's =log= child heading,
+   which boards never project), and writes the source =.specflow/todo.org= then
+   re-syncs sheet + board for you. FALLBACK (org-scribe unavailable): hand-write the
+   same shape — prepend a dated =- [YYYY-MM-DD] <status>= entry at the TOP of the task
+   body in =.specflow/todo.org=; do NOT hand-rotate older entries, log_update
+   self-heals rotation on its next run. Do **NOT** touch the task's
    state keyword by any means — not =org-scribe set_state=, not a hand-edit of the
    =TODO= / =NEXT= / =NEEDS-REVIEW= / =DONE= word in the file. The board's hooks own
    state: the Stop hook flips the task to =NEEDS-REVIEW= when you idle, and re-engaging
@@ -562,9 +571,10 @@ When working on a task:
    - Update tests
    - Update specs/docs if behavior changed
    - Commit changes (or provide exact git commands)
-   - Append a compact log entry to the unit task and set it =NEEDS-REVIEW= — do NOT
-     mark it DONE (DONE only at the end of the declared span; see Phase Transition
-     Protocol)
+   - Log the gate on the unit task via =org-scribe log_update= (or the prepend-only
+     fallback — see Board Integration rule 4); do NOT touch the state keyword and do
+     NOT mark it DONE (hooks flip state; DONE only at the end of the declared span —
+     see Phase Transition Protocol)
    - Summarize:
      - what changed and why
      - files touched
@@ -587,10 +597,12 @@ phase lives in the control plane (=SPEC_FLOW_PHASE=), never in the heading.
 
 At a phase gate (a phase within the unit is complete):
 
-1. **Append to the unit task in =.specflow/todo.org=** — do NOT mark it DONE and do
-   NOT create a new task:
-   - append one compact dated log entry recording what the phase produced
-   - set the task to =NEEDS-REVIEW= (it stays in =* Active=)
+1. **Log the gate on the unit task** — do NOT mark it DONE and do NOT create a new
+   task:
+   - record what the phase produced with ONE =org-scribe log_update= call (or the
+     prepend-only fallback from Board Integration rule 4)
+   - do NOT touch the state keyword — the board's hooks flip =NEEDS-REVIEW= /
+     =IN-PROGRESS= as you stop and re-engage (the task stays in =* Active=)
 
 2. **Update the control plane** (=.specflow/specflow.org=): set =SPEC_FLOW_PHASE= to the
    next phase.
@@ -599,13 +611,18 @@ At a phase gate (a phase within the unit is complete):
 
    #+BEGIN_EXAMPLE
    ** NEEDS-REVIEW <unit>: <well-defined task> (Plan → Document)
-      - [YYYY-MM-DD] Specify: <what this phase produced> (proceed → Scaffold)
-      - [YYYY-MM-DD] Plan: <what this phase produced>
+      - [YYYY-MM-DD Day] Specify: <what this phase produced> (proceed → Scaffold)
+        - did: <one line>
+        - verify: <one line>
+      <stable context: the task's outcome description / Given-When-Then>
+      *** log
+      - [YYYY-MM-DD Day] Plan: <prior gate entries, newest-first>
    #+END_EXAMPLE
 
-   Body = one compact log entry appended per completed phase (newest first). The
-   granular work items produced during Scaffold live in the unit's own
-   =.specflow/units/<unit>/todo.org=, not here.
+   Body = ONE visible dated entry (the latest gate) above the task's stable context;
+   the full gate history lives under the task's =log= child heading, rotated there by
+   log_update. The granular work items produced during Scaffold live in the unit's
+   own =.specflow/units/<unit>/todo.org=, not here.
 
 4. **Phase progression** — the phases the single task moves through, up to its declared
    span: Plan → Specify → Scaffold → Implement → Validate → Document. Re-engaging the
@@ -618,8 +635,8 @@ At a phase gate (a phase within the unit is complete):
    see Parent Context) and give IT the single task. A task is always scoped to one
    development unit; "unit" is defined flexibly — a leaf module or a coordinating parent.
 
-The audit trail is the accumulated body log + =SPEC_FLOW_PHASE=, not a chain of
-per-phase DONE tasks. This resumes work at the exact phase and (in a board-integrated
+The audit trail is the latest visible entry plus the task's =log= child (the
+accumulated gate entries) + =SPEC_FLOW_PHASE=, not a chain of per-phase DONE tasks. This resumes work at the exact phase and (in a board-integrated
 project) keeps the unit's ONE task live and dispatchable through every gate instead of
 stranding the board at each phase boundary.
 
